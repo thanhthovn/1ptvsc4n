@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#16a34a">
+<title>Chat Nhóm Realtime</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+:root{
+    --green:#16a34a;
+    --green-dark:#15803d;
+    --bg:#f1f5f9;
+    --panel:#fff;
+    --border:#e5e7eb;
+    --text:#17202a;
+    --muted:#64748b;
+}
+html,body{margin:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+body{background:var(--bg);overflow:hidden}
+button,input{font:inherit}
+button{cursor:pointer}
+
+.app{height:100dvh;display:flex;overflow:hidden}
+.sidebar{
+    width:290px;background:#fff;border-right:1px solid var(--border);
+    display:flex;flex-direction:column;flex-shrink:0
+}
+.brand{
+    height:66px;display:flex;align-items:center;padding:0 18px;
+    font-size:20px;font-weight:800;border-bottom:1px solid var(--border)
+}
+.brand span{margin-right:9px}
+.user-area{padding:14px;border-bottom:1px solid var(--border)}
+.user-area label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.user-row{display:flex;gap:7px}
+.user-row input{
+    min-width:0;flex:1;padding:10px 12px;border:1px solid #d7dde5;
+    border-radius:10px;outline:none
+}
+.user-row input:focus{border-color:var(--green)}
+.save-name{
+    border:0;background:var(--green);color:#fff;border-radius:10px;padding:0 12px
+}
+.rooms-title{padding:15px 16px 9px;font-size:12px;font-weight:800;color:var(--muted)}
+.rooms{overflow:auto;padding:0 8px 15px}
+.room{
+    padding:12px 12px;border-radius:10px;margin-bottom:4px;
+    cursor:pointer;display:flex;align-items:center;gap:10px
+}
+.room:hover{background:#f8fafc}
+.room.active{background:#dcfce7;color:#166534;font-weight:700}
+.room-icon{
+    width:34px;height:34px;border-radius:10px;background:#ecfdf5;
+    display:grid;place-items:center;flex-shrink:0
+}
+.empty-room{padding:12px;color:var(--muted);font-size:13px}
+
+.chat{min-width:0;flex:1;display:flex;flex-direction:column}
+.chat-header{
+    height:66px;background:#fff;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;padding:0 20px;gap:10px
+}
+.chat-title{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.realtime{
+    font-size:12px;color:#15803d;background:#dcfce7;
+    padding:5px 8px;border-radius:999px;white-space:nowrap
+}
+.connection{
+    margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap
+}
+
+.messages{
+    flex:1;overflow-y:auto;padding:20px;scroll-behavior:smooth
+}
+.message{display:flex;margin-bottom:14px}
+.message.mine{justify-content:flex-end}
+.message-content{max-width:min(72%,600px)}
+.username{font-size:12px;color:var(--muted);margin:0 0 5px 4px}
+.mine .username{text-align:right;margin-right:4px}
+.bubble{
+    background:#fff;border:1px solid #eef0f3;border-radius:15px;
+    padding:10px 13px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+    white-space:pre-wrap;overflow-wrap:anywhere
+}
+.mine .bubble{
+    background:var(--green);border-color:var(--green);color:#fff
+}
+.time{font-size:10px;color:#94a3b8;margin:4px 4px 0}
+.mine .time{text-align:right}
+
+.welcome{
+    height:100%;display:grid;place-items:center;text-align:center;color:var(--muted)
+}
+.welcome-box{max-width:430px;padding:30px}
+.welcome-icon{font-size:52px;margin-bottom:12px}
+
+.composer{
+    background:#fff;border-top:1px solid var(--border);
+    padding:12px;display:flex;gap:9px
+}
+.composer input{
+    min-width:0;flex:1;border:1px solid #d7dde5;border-radius:24px;
+    padding:12px 16px;outline:none
+}
+.composer input:focus{border-color:var(--green)}
+.send{
+    width:46px;height:46px;border:0;border-radius:50%;
+    background:var(--green);color:#fff;font-size:19px
+}
+.send:hover{background:var(--green-dark)}
+.send:disabled{opacity:.5;cursor:not-allowed}
+
+.toast{
+    position:fixed;left:50%;bottom:80px;transform:translateX(-50%);
+    background:#111827;color:#fff;padding:10px 15px;border-radius:10px;
+    font-size:13px;display:none;z-index:20;box-shadow:0 5px 20px rgba(0,0,0,.18)
+}
+
+@media(max-width:700px){
+    .sidebar{width:74px}
+    .brand{height:58px;justify-content:center;padding:0;font-size:0}
+    .brand span{font-size:23px;margin:0}
+    .user-area{padding:8px}
+    .user-area label{display:none}
+    .user-row{display:block}
+    .user-row input{width:100%;padding:8px 5px;font-size:10px;text-align:center}
+    .save-name{display:none}
+    .rooms-title{display:none}
+    .room{justify-content:center;padding:9px 4px}
+    .room-name{display:none}
+    .room-icon{width:42px;height:42px}
+    .chat-header{padding:0 12px;height:58px}
+    .chat-title{font-size:16px}
+    .connection{display:none}
+    .messages{padding:14px 10px}
+    .message-content{max-width:86%}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+    <aside class="sidebar">
+        <div class="brand"><span>💬</span> CHAT NHÓM</div>
+
+        <div class="user-area">
+            <label for="username">Tên hiển thị</label>
+            <div class="user-row">
+                <input id="username" maxlength="30" placeholder="Tên của bạn">
+                <button id="saveName" class="save-name">Lưu</button>
+            </div>
+        </div>
+
+        <div class="rooms-title">PHÒNG CHAT</div>
+        <div id="rooms" class="rooms">
+            <div class="empty-room">Đang tải phòng...</div>
+        </div>
+    </aside>
+
+    <main class="chat">
+        <header class="chat-header">
+            <div id="chatTitle" class="chat-title">Đang tải...</div>
+            <div class="realtime">● Realtime</div>
+            <div id="connection" class="connection">Đang kết nối...</div>
+        </header>
+
+        <section id="messages" class="messages">
+            <div class="welcome">
+                <div class="welcome-box">
+                    <div class="welcome-icon">💬</div>
+                    <h2>Chat nhóm</h2>
+                    <p>Chọn một phòng để bắt đầu trò chuyện.</p>
+                </div>
+            </div>
+        </section>
+
+        <form id="composer" class="composer">
+            <input id="messageInput" autocomplete="off" maxlength="2000"
+                   placeholder="Nhập tin nhắn...">
+            <button id="sendBtn" class="send" type="submit" aria-label="Gửi">➤</button>
+        </form>
+    </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* =========================================================
+   1. ĐIỀN 2 THÔNG TIN SUPABASE CỦA BẠN VÀO ĐÂY
+   ========================================================= */
+const SUPABASE_URL = "DAN_URL_SUPABASE_CUA_BAN";
+const SUPABASE_KEY = "DAN_PUBLISHABLE_KEY_CUA_BAN";
+
+/* =========================================================
+   2. KHỞI TẠO
+   ========================================================= */
+const client = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+const usernameInput = document.getElementById("username");
+const saveNameBtn = document.getElementById("saveName");
+const roomsBox = document.getElementById("rooms");
+const messagesBox = document.getElementById("messages");
+const chatTitle = document.getElementById("chatTitle");
+const connection = document.getElementById("connection");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const composer = document.getElementById("composer");
+const toast = document.getElementById("toast");
+
+let username = localStorage.getItem("chat_username") || "";
+let currentRoom = null;
+let realtimeChannel = null;
+let rooms = [];
+
+usernameInput.value = username;
+
+/* =========================================================
+   3. TIỆN ÍCH
+   ========================================================= */
+function showToast(text) {
+    toast.textContent = text;
+    toast.style.display = "block";
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => {
+        toast.style.display = "none";
+    }, 2500);
+}
+
+function getUsername() {
+    const name = usernameInput.value.trim();
+    if (name) {
+        username = name;
+        localStorage.setItem("chat_username", username);
+    }
+    return username;
+}
+
+function formatTime(value) {
+    return new Date(value).toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function scrollBottom() {
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+}
+
+function escapeText(text) {
+    return String(text);
+}
+
+/* =========================================================
+   4. LƯU TÊN
+   ========================================================= */
+saveNameBtn.addEventListener("click", () => {
+    if (!getUsername()) {
+        showToast("Hãy nhập tên trước nhé!");
+        usernameInput.focus();
+        return;
+    }
+    showToast("Đã lưu tên: " + username);
+    renderCurrentMessages();
+});
+
+usernameInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        saveNameBtn.click();
+    }
+});
+
+/* =========================================================
+   5. LOAD PHÒNG
+   ========================================================= */
+async function loadRooms() {
+    const { data, error } = await client
+        .from("rooms")
+        .select("id,name,created_at")
+        .order("id", { ascending: true });
+
+    if (error) {
+        console.error(error);
+        roomsBox.innerHTML = '<div class="empty-room">Không tải được phòng.</div>';
+        showToast("Không kết nối được database.");
+        connection.textContent = "● Lỗi kết nối";
+        return;
+    }
+
+    rooms = data || [];
+    renderRooms();
+
+    if (rooms.length) {
+        await selectRoom(rooms[0]);
+    } else {
+        roomsBox.innerHTML = '<div class="empty-room">Chưa có phòng chat.</div>';
+        chatTitle.textContent = "Chưa có phòng";
+    }
+}
+
+function renderRooms() {
+    roomsBox.innerHTML = "";
+
+    rooms.forEach(room => {
+        const item = document.createElement("div");
+        item.className = "room" + (
+            currentRoom && currentRoom.id === room.id ? " active" : ""
+        );
+
+        const icon = document.createElement("div");
+        icon.className = "room-icon";
+        icon.textContent = "💬";
+
+        const name = document.createElement("div");
+        name.className = "room-name";
+        name.textContent = room.name;
+
+        item.appendChild(icon);
+        item.appendChild(name);
+
+        item.addEventListener("click", () => selectRoom(room));
+        roomsBox.appendChild(item);
+    });
+}
+
+/* =========================================================
+   6. CHỌN PHÒNG
+   ========================================================= */
+async function selectRoom(room) {
+    currentRoom = room;
+    chatTitle.textContent = room.name;
+    renderRooms();
+
+    messagesBox.innerHTML = `
+        <div class="welcome">
+            <div class="welcome-box">
+                <div class="welcome-icon">⏳</div>
+                <p>Đang tải tin nhắn...</p>
+            </div>
+        </div>
+    `;
+
+    await loadMessages();
+    messageInput.focus();
+}
+
+/* =========================================================
+   7. LOAD TIN NHẮN
+   ========================================================= */
+async function loadMessages() {
+    if (!currentRoom) return;
+
+    const { data, error } = await client
+        .from("messages")
+        .select("id,room_id,username,content,created_at")
+        .eq("room_id", currentRoom.id)
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        console.error(error);
+        showToast("Không tải được tin nhắn.");
+        return;
+    }
+
+    messagesBox.innerHTML = "";
+
+    if (!data || data.length === 0) {
+        messagesBox.innerHTML = `
+            <div class="welcome">
+                <div class="welcome-box">
+                    <div class="welcome-icon">👋</div>
+                    <h2>Chưa có tin nhắn</h2>
+                    <p>Hãy gửi tin nhắn đầu tiên!</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    data.forEach(displayMessage);
+    scrollBottom();
+}
+
+/* =========================================================
+   8. HIỂN THỊ TIN NHẮN
+   ========================================================= */
+function displayMessage(message) {
+    if (!currentRoom || Number(message.room_id) !== Number(currentRoom.id)) {
+        return;
+    }
+
+    const isMine = message.username === username;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "message" + (isMine ? " mine" : "");
+
+    const content = document.createElement("div");
+    content.className = "message-content";
+
+    const user = document.createElement("div");
+    user.className = "username";
+    user.textContent = escapeText(message.username);
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = escapeText(message.content);
+
+    const time = document.createElement("div");
+    time.className = "time";
+    time.textContent = formatTime(message.created_at);
+
+    content.appendChild(user);
+    content.appendChild(bubble);
+    content.appendChild(time);
+    wrapper.appendChild(content);
+    messagesBox.appendChild(wrapper);
+}
+
+/* =========================================================
+   9. GỬI TIN NHẮN
+   ========================================================= */
+async function sendMessage() {
+    const name = getUsername();
+
+    if (!name) {
+        showToast("Hãy nhập tên của bạn trước.");
+        usernameInput.focus();
+        return;
+    }
+
+    if (!currentRoom) {
+        showToast("Chưa chọn phòng chat.");
+        return;
+    }
+
+    const content = messageInput.value.trim();
+    if (!content) return;
+
+    sendBtn.disabled = true;
+
+    const { error } = await client
+        .from("messages")
+        .insert({
+            room_id: currentRoom.id,
+            username: name,
+            content: content
+        });
+
+    sendBtn.disabled = false;
+
+    if (error) {
+        console.error(error);
+        showToast("Gửi tin nhắn thất bại.");
+        return;
+    }
+
+    messageInput.value = "";
+    messageInput.focus();
+}
+
+composer.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await sendMessage();
+});
+
+/* =========================================================
+   10. REALTIME
+   ========================================================= */
+function subscribeRealtime() {
+    if (realtimeChannel) {
+        client.removeChannel(realtimeChannel);
+    }
+
+    realtimeChannel = client
+        .channel("chat-messages-realtime")
+        .on(
+            "postgres_changes",
+            {
+                event: "INSERT",
+                schema: "public",
+                table: "messages"
+            },
+            (payload) => {
+                const message = payload.new;
+
+                if (
+                    currentRoom &&
+                    Number(message.room_id) === Number(currentRoom.id)
+                ) {
+                    // Tránh thêm trùng nếu giao diện đã nhận sự kiện realtime.
+                    displayMessage(message);
+                    scrollBottom();
+                }
+            }
+        )
+        .subscribe((status) => {
+            if (status === "SUBSCRIBED") {
+                connection.textContent = "● Đã kết nối";
+                connection.style.color = "#15803d";
+            } else if (status === "CHANNEL_ERROR") {
+                connection.textContent = "● Lỗi realtime";
+                connection.style.color = "#dc2626";
+            } else if (status === "TIMED_OUT") {
+                connection.textContent = "● Timeout";
+                connection.style.color = "#dc2626";
+            } else {
+                connection.textContent = "● " + status;
+            }
+        });
+}
+
+/* =========================================================
+   11. KHỞI ĐỘNG
+   ========================================================= */
+async function init() {
+    // Kiểm tra cấu hình trước khi gọi Supabase.
+    if (
+        SUPABASE_URL.includes("DAN_URL") ||
+        SUPABASE_KEY.includes("DAN_PUBLISHABLE")
+    ) {
+        connection.textContent = "● Chưa cấu hình";
+        connection.style.color = "#dc2626";
+
+        messagesBox.innerHTML = `
+            <div class="welcome">
+                <div class="welcome-box">
+                    <div class="welcome-icon">⚙️</div>
+                    <h2>Chưa kết nối Supabase</h2>
+                    <p>
+                        Mở file index.html và điền
+                        <b>SUPABASE_URL</b> cùng
+                        <b>SUPABASE_KEY</b>.
+                    </p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    subscribeRealtime();
+    await loadRooms();
+}
+
+init();
+</script>
+</body>
+</html>
