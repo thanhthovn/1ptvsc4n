@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PHÒNG KỸ THUẬT TQC</title>
+<title>Chat Nhóm</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
@@ -321,7 +321,7 @@ button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
 <section id="auth">
 <div class="login-card">
     <div class="wa-login-icon">💬</div>
-    <h1>PHÒNG KỸ THUẬT TQC</h1>
+    <h1>Chat Nhóm</h1>
     <p class="login-subtitle">Đăng nhập để tiếp tục</p>
     <form id="form">
         <div class="field">
@@ -341,7 +341,7 @@ button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
 <section id="app" class="hidden">
 <aside class="side">
     <div class="wa-topbar">
-        <div class="brand">PHÒNG KỸ THUẬT TQC</div>
+        <div class="brand">Chat Nhóm</div>
         <div class="top-actions">
             <button title="Tìm kiếm">⌕</button>
             <button title="Menu">⋮</button>
@@ -1217,30 +1217,39 @@ function renderTasks(tasks){
             await postTaskUpdate(task,"status");
         };
 
-        const del=document.createElement("button");
-        del.className="task-delete";
-        del.type="button";
-        del.textContent="🗑";
-        del.title="Xóa công việc";
-        del.onclick=async()=>{
-            if(!confirm("Xóa công việc này?"))return;
+        let del=null;
 
-            const r=await db.from("tasks").delete().eq("id",task.id);
+        /* Chỉ người giao việc (created_by) mới nhìn thấy nút Xóa */
+        if(user && task.created_by===user.id){
+            del=document.createElement("button");
+            del.className="task-delete";
+            del.type="button";
+            del.textContent="🗑";
+            del.title="Xóa công việc";
+            del.onclick=async()=>{
+                if(!confirm("Xóa công việc này?"))return;
 
-            if(r.error){
-                alert("Không xóa được:\n"+r.error.message);
-                return;
-            }
+                const r=await db.from("tasks")
+                    .delete()
+                    .eq("id",task.id)
+                    .eq("created_by",user.id);
 
-            await postTaskUpdate(task,"deleted");
-            await loadTasks();
-        };
+                if(r.error){
+                    alert("Không xóa được:\n"+r.error.message);
+                    return;
+                }
+
+                await postTaskUpdate(task,"deleted");
+                await loadTasks();
+            };
+        }
 
         main.append(title);
         if(task.description)main.append(desc);
         main.append(meta);
 
-        item.append(main,status,del);
+        item.append(main,status);
+        if(del)item.append(del);
         $("tasksList").append(item);
     });
 }
