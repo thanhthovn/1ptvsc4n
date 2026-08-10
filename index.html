@@ -4,174 +4,1489 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chat Nhóm</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#17202a}
-button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
-#auth{min-height:100vh;display:grid;place-items:center;padding:20px}
-.card{width:min(390px,100%);background:#fff;border-radius:18px;padding:26px;box-shadow:0 12px 35px #0001}
-.logo{text-align:center;font-size:42px}.card h1{text-align:center;margin:8px 0}.desc{text-align:center;color:#64748b}
-.tabs{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:9px;margin:20px 0 16px}
-.tab{flex:1;border:0;background:transparent;padding:10px;border-radius:7px;font-weight:bold;color:#64748b}
-.tab.active{background:#fff;color:#16a34a;box-shadow:0 1px 4px #0001}
-.field{margin-bottom:12px}.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:5px}
-.field input{width:100%;padding:11px;border:1px solid #d5dbe3;border-radius:8px;outline:0}
-.primary{width:100%;padding:12px;border:0;border-radius:8px;background:#16a34a;color:#fff;font-weight:bold}
-.primary:disabled{opacity:.5}.msg{min-height:20px;text-align:center;font-size:13px;color:#dc2626;margin-top:10px}.ok{color:#15803d!important}
-#app{height:100vh;display:flex}.side{width:260px;background:#fff;border-right:1px solid #ddd}
-.brand{padding:18px;font-weight:bold;font-size:19px;border-bottom:1px solid #eee}.me{padding:12px;border-bottom:1px solid #eee;display:flex;gap:10px;align-items:center}
-.avatar{width:40px;height:40px;border-radius:50%;background:#dcfce7;display:grid;place-items:center;color:#166534;font-weight:bold}
-.meinfo{flex:1;min-width:0}.name{font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.role{font-size:11px;color:#64748b}
-.logout{border:0;border-radius:7px;padding:8px;background:#f1f5f9}.room{margin:10px;padding:11px;border-radius:8px;background:#dcfce7;color:#166534;font-weight:bold}
-.chat{flex:1;display:flex;flex-direction:column;min-width:0}.head{height:60px;background:#fff;border-bottom:1px solid #ddd;display:flex;align-items:center;padding:0 16px;gap:8px}
-.live{font-size:11px;background:#dcfce7;color:#15803d;border-radius:15px;padding:5px}.status{margin-left:auto;font-size:12px;color:#64748b}
-.messages{flex:1;overflow:auto;padding:18px}.row{display:flex;margin-bottom:12px}.mine{justify-content:flex-end}.box{max-width:min(75%,600px)}.user{font-size:11px;color:#64748b;margin:0 3px 3px}.mine .user{text-align:right}
-.bubble{background:#fff;border:1px solid #eee;border-radius:13px;padding:9px 12px;white-space:pre-wrap;overflow-wrap:anywhere}.mine .bubble{background:#16a34a;color:#fff;border-color:#16a34a}
-.time{font-size:10px;color:#94a3b8;margin:3px}.mine .time{text-align:right}
-.composer{display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid #ddd}.composer input{flex:1;border:1px solid #ddd;border-radius:22px;padding:11px 14px;outline:0}.send{width:44px;border:0;border-radius:50%;background:#16a34a;color:#fff}
-@media(max-width:650px){.side{width:68px}.brand{font-size:0;text-align:center}.brand:first-letter{font-size:25px}.me{justify-content:center}.meinfo,.logout{display:none}.room{margin:8px 6px;text-align:center;font-size:0}.room:before{content:"💬";font-size:22px}.head{height:56px;padding:0 10px}.status{display:none}.messages{padding:10px}.box{max-width:88%}}
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f1f5f9;
+    color:#17202a;
+}
+
+button,
+input{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.hidden{
+    display:none!important;
+}
+
+/* ================= LOGIN ================= */
+
+#auth{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:20px;
+}
+
+.card{
+    width:min(390px,100%);
+    background:#fff;
+    border-radius:18px;
+    padding:26px;
+    box-shadow:0 12px 35px #0001;
+}
+
+.logo{
+    text-align:center;
+    font-size:42px;
+}
+
+.card h1{
+    text-align:center;
+    margin:8px 0;
+}
+
+.desc{
+    text-align:center;
+    color:#64748b;
+}
+
+.tabs{
+    display:flex;
+    gap:4px;
+    background:#f1f5f9;
+    padding:4px;
+    border-radius:9px;
+    margin:20px 0 16px;
+}
+
+.tab{
+    flex:1;
+    border:0;
+    background:transparent;
+    padding:10px;
+    border-radius:7px;
+    font-weight:bold;
+    color:#64748b;
+}
+
+.tab.active{
+    background:#fff;
+    color:#16a34a;
+    box-shadow:0 1px 4px #0001;
+}
+
+.field{
+    margin-bottom:12px;
+}
+
+.field label{
+    display:block;
+    font-size:13px;
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+.field input{
+    width:100%;
+    padding:11px;
+    border:1px solid #d5dbe3;
+    border-radius:8px;
+    outline:0;
+}
+
+.field input:focus{
+    border-color:#16a34a;
+}
+
+.primary{
+    width:100%;
+    padding:12px;
+    border:0;
+    border-radius:8px;
+    background:#16a34a;
+    color:#fff;
+    font-weight:bold;
+}
+
+.primary:disabled{
+    opacity:.5;
+}
+
+.msg{
+    min-height:20px;
+    text-align:center;
+    font-size:13px;
+    color:#dc2626;
+    margin-top:10px;
+}
+
+.msg.ok{
+    color:#15803d;
+}
+
+/* ================= APP ================= */
+
+#app{
+    height:100vh;
+    display:flex;
+}
+
+.side{
+    width:260px;
+    background:#fff;
+    border-right:1px solid #ddd;
+}
+
+.brand{
+    padding:18px;
+    font-weight:bold;
+    font-size:19px;
+    border-bottom:1px solid #eee;
+}
+
+.me{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background:#dcfce7;
+    display:grid;
+    place-items:center;
+    color:#166534;
+    font-weight:bold;
+}
+
+.meinfo{
+    flex:1;
+    min-width:0;
+}
+
+.name{
+    font-weight:bold;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.role{
+    font-size:11px;
+    color:#64748b;
+}
+
+.logout{
+    border:0;
+    border-radius:7px;
+    padding:8px;
+    background:#f1f5f9;
+}
+
+.room{
+    margin:10px;
+    padding:11px;
+    border-radius:8px;
+    background:#dcfce7;
+    color:#166534;
+    font-weight:bold;
+}
+
+.chat{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+}
+
+.head{
+    height:60px;
+    background:#fff;
+    border-bottom:1px solid #ddd;
+    display:flex;
+    align-items:center;
+    padding:0 16px;
+    gap:8px;
+}
+
+.live{
+    font-size:11px;
+    background:#dcfce7;
+    color:#15803d;
+    border-radius:15px;
+    padding:5px;
+}
+
+.status{
+    margin-left:auto;
+    font-size:12px;
+    color:#64748b;
+}
+
+.messages{
+    flex:1;
+    overflow:auto;
+    padding:18px;
+}
+
+.row{
+    display:flex;
+    margin-bottom:12px;
+}
+
+.mine{
+    justify-content:flex-end;
+}
+
+.box{
+    max-width:min(75%,600px);
+}
+
+.user{
+    font-size:11px;
+    color:#64748b;
+    margin:0 3px 3px;
+}
+
+.mine .user{
+    text-align:right;
+}
+
+.bubble{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:13px;
+    padding:9px 12px;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+}
+
+.mine .bubble{
+    background:#16a34a;
+    color:#fff;
+    border-color:#16a34a;
+}
+
+.time{
+    font-size:10px;
+    color:#94a3b8;
+    margin:3px;
+}
+
+.mine .time{
+    text-align:right;
+}
+
+.composer{
+    display:flex;
+    gap:8px;
+    padding:10px;
+    background:#fff;
+    border-top:1px solid #ddd;
+}
+
+.composer input{
+    flex:1;
+    border:1px solid #ddd;
+    border-radius:22px;
+    padding:11px 14px;
+    outline:0;
+}
+
+.send{
+    width:44px;
+    border:0;
+    border-radius:50%;
+    background:#16a34a;
+    color:#fff;
+}
+
+.send:disabled{
+    opacity:.5;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:650px){
+
+    .side{
+        width:68px;
+    }
+
+    .brand{
+        font-size:0;
+        text-align:center;
+    }
+
+    .me{
+        justify-content:center;
+    }
+
+    .meinfo,
+    .logout{
+        display:none;
+    }
+
+    .room{
+        text-align:center;
+        font-size:0;
+    }
+
+    .room:before{
+        content:"💬";
+        font-size:22px;
+    }
+
+    .head{
+        height:56px;
+        padding:0 10px;
+    }
+
+    .status{
+        display:none;
+    }
+
+    .messages{
+        padding:10px;
+    }
+
+    .box{
+        max-width:88%;
+    }
+}
 </style>
 </head>
+
 <body>
 
+<!-- ================= LOGIN ================= -->
+
 <section id="auth">
+
 <div class="card">
+
 <div class="logo">💬</div>
+
 <h1>Chat Nhóm</h1>
-<p class="desc">Đăng nhập bằng tài khoản + mật khẩu</p>
+
+<p class="desc">
+Đăng nhập bằng tài khoản + mật khẩu
+</p>
+
 <div class="tabs">
-<button id="loginTab" class="tab active" type="button">Đăng nhập</button>
-<button id="registerTab" class="tab" type="button">Đăng ký</button>
+
+<button
+id="loginTab"
+class="tab active"
+type="button">
+Đăng nhập
+</button>
+
+<button
+id="registerTab"
+class="tab"
+type="button">
+Đăng ký
+</button>
+
 </div>
+
 <form id="form">
-<div class="field"><label>Tài khoản</label><input id="username" maxlength="30" required placeholder="Ví dụ: thanh" autocomplete="username"></div>
-<div class="field"><label>Mật khẩu</label><input id="password" type="password" minlength="6" required placeholder="Tối thiểu 6 ký tự" autocomplete="current-password"></div>
-<div id="confirmBox" class="field hidden"><label>Nhập lại mật khẩu</label><input id="confirm" type="password" minlength="6" autocomplete="new-password"></div>
-<button id="submit" class="primary">Đăng nhập</button>
-<div id="msg" class="msg"></div>
-</form>
+
+<div class="field">
+
+<label>Tài khoản</label>
+
+<input
+id="username"
+maxlength="30"
+required
+placeholder="Ví dụ: thanh"
+autocomplete="username">
+
 </div>
+
+<div class="field">
+
+<label>Mật khẩu</label>
+
+<input
+id="password"
+type="password"
+minlength="6"
+required
+placeholder="Tối thiểu 6 ký tự"
+autocomplete="current-password">
+
+</div>
+
+<div
+id="confirmBox"
+class="field hidden">
+
+<label>Nhập lại mật khẩu</label>
+
+<input
+id="confirm"
+type="password"
+minlength="6"
+autocomplete="new-password">
+
+</div>
+
+<button
+id="submit"
+class="primary"
+type="submit">
+
+Đăng nhập
+
+</button>
+
+<div
+id="msg"
+class="msg">
+</div>
+
+</form>
+
+</div>
+
 </section>
+
+
+<!-- ================= CHAT ================= -->
 
 <section id="app" class="hidden">
+
 <aside class="side">
-<div class="brand">💬 CHAT</div>
-<div class="me"><div id="avatar" class="avatar">?</div><div class="meinfo"><div id="myName" class="name"></div><div id="role" class="role">Thành viên</div></div><button id="logout" class="logout">↪</button></div>
-<div class="room">Phòng chung</div>
+
+<div class="brand">
+💬 CHAT
+</div>
+
+<div class="me">
+
+<div
+id="avatar"
+class="avatar">
+?
+</div>
+
+<div class="meinfo">
+
+<div
+id="myName"
+class="name">
+</div>
+
+<div
+id="role"
+class="role">
+Thành viên
+</div>
+
+</div>
+
+<button
+id="logout"
+class="logout">
+
+↪
+
+</button>
+
+</div>
+
+<div
+id="roomBox"
+class="room">
+
+Đang tải phòng...
+
+</div>
+
 </aside>
+
+
 <main class="chat">
-<div class="head"><b>Phòng chung</b><span class="live">● Realtime</span><span id="status" class="status">Đang kết nối...</span></div>
-<div id="messages" class="messages"></div>
-<form id="sendForm" class="composer"><input id="message" maxlength="2000" placeholder="Nhập tin nhắn..." autocomplete="off"><button id="send" class="send">➤</button></form>
+
+<div class="head">
+
+<b id="roomTitle">
+Phòng chung
+</b>
+
+<span class="live">
+● Realtime
+</span>
+
+<span
+id="status"
+class="status">
+
+Đang kết nối...
+
+</span>
+
+</div>
+
+
+<div
+id="messages"
+class="messages">
+
+</div>
+
+
+<form
+id="sendForm"
+class="composer">
+
+<input
+id="message"
+maxlength="2000"
+placeholder="Nhập tin nhắn..."
+autocomplete="off">
+
+<button
+id="send"
+class="send"
+type="submit">
+
+➤
+
+</button>
+
+</form>
+
 </main>
+
 </section>
 
+
 <script>
-const SUPABASE_URL="https://xowmhluzkljftsajjfhz.supabase.co";
-const SUPABASE_KEY="sb_publishable_mZIMNlMuc64aB7ns2SZxmw_4Nugl6PO";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let mode="login",user=null,channel=null;
-const $=id=>document.getElementById(id);
+/* =========================================================
+   SUPABASE
+   ========================================================= */
 
-function show(t,ok=false){$("msg").textContent=t;$("msg").className="msg"+(ok?" ok":"")}
-function setMode(m){
-  mode=m;
-  $("loginTab").classList.toggle("active",m==="login");
-  $("registerTab").classList.toggle("active",m==="register");
-  $("confirmBox").classList.toggle("hidden",m!=="register");
-  $("submit").textContent=m==="register"?"Đăng ký":"Đăng nhập";
-  show("");
+const SUPABASE_URL =
+"https://xowmhluzkljftsajjfhz.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_mZIMNlMuc64aB7ns2SZxmw_4Nugl6PO";
+
+const db =
+window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+
+/* =========================================================
+   BIẾN
+   ========================================================= */
+
+let mode = "login";
+
+let user = null;
+
+let roomId = null;
+
+let channel = null;
+
+
+/* =========================================================
+   HELPER
+   ========================================================= */
+
+const $ = id =>
+document.getElementById(id);
+
+
+function showMessage(text, ok = false){
+
+    $("msg").textContent = text;
+
+    $("msg").className =
+        "msg" + (ok ? " ok" : "");
+
 }
-$("loginTab").onclick=()=>setMode("login");
-$("registerTab").onclick=()=>setMode("register");
 
-function internalEmail(username){return username.toLowerCase()+"@chat.local"}
 
-$("form").onsubmit=async e=>{
-  e.preventDefault();
-  const username=$("username").value.trim();
-  const password=$("password").value;
-  if(!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)){show("Tài khoản 3-30 ký tự, chỉ chữ/số/._-");return}
-  if(password.length<6){show("Mật khẩu tối thiểu 6 ký tự.");return}
-  if(mode==="register"&&password!==$("confirm").value){show("Hai mật khẩu không giống nhau.");return}
-  $("submit").disabled=true;
-  try{
-    const email=internalEmail(username);
-    if(mode==="register"){
-      const r=await db.auth.signUp({email,password,options:{data:{username}}});
-      if(r.error)throw r.error;
-      if(r.data.session){show("Đăng ký thành công!",true)}
-      else show("Đã tạo tài khoản. Hãy tắt Confirm email trong Supabase để đăng nhập ngay.",true);
-    }else{
-      const r=await db.auth.signInWithPassword({email,password});
-      if(r.error)throw r.error;
+function setMode(newMode){
+
+    mode = newMode;
+
+    $("loginTab")
+        .classList
+        .toggle(
+            "active",
+            mode === "login"
+        );
+
+    $("registerTab")
+        .classList
+        .toggle(
+            "active",
+            mode === "register"
+        );
+
+    $("confirmBox")
+        .classList
+        .toggle(
+            "hidden",
+            mode !== "register"
+        );
+
+    $("submit").textContent =
+        mode === "register"
+            ? "Đăng ký"
+            : "Đăng nhập";
+
+    showMessage("");
+
+}
+
+
+$("loginTab").onclick =
+() => setMode("login");
+
+
+$("registerTab").onclick =
+() => setMode("register");
+
+
+/* =========================================================
+   EMAIL NỘI BỘ
+   ========================================================= */
+
+function internalEmail(username){
+
+    return (
+        username
+        .toLowerCase()
+        + "@chat.local"
+    );
+
+}
+
+
+/* =========================================================
+   ĐĂNG KÝ / ĐĂNG NHẬP
+   ========================================================= */
+
+$("form").onsubmit = async event => {
+
+    event.preventDefault();
+
+    const username =
+        $("username")
+        .value
+        .trim();
+
+    const password =
+        $("password")
+        .value;
+
+
+    if(
+        !/^[a-zA-Z0-9_.-]{3,30}$/
+        .test(username)
+    ){
+
+        showMessage(
+            "Tài khoản 3-30 ký tự, chỉ chữ, số, ., _, -."
+        );
+
+        return;
     }
-  }catch(err){
-    console.error(err);
-    let t=err.message||"Có lỗi xảy ra";
-    if(t.toLowerCase().includes("invalid login credentials"))t="Tài khoản hoặc mật khẩu không đúng.";
-    if(t.toLowerCase().includes("already registered"))t="Tài khoản đã tồn tại.";
-    show(t);
-  }finally{$("submit").disabled=false;$("submit").textContent=mode==="register"?"Đăng ký":"Đăng nhập"}
+
+
+    if(password.length < 6){
+
+        showMessage(
+            "Mật khẩu tối thiểu 6 ký tự."
+        );
+
+        return;
+    }
+
+
+    if(
+        mode === "register" &&
+        password !== $("confirm").value
+    ){
+
+        showMessage(
+            "Hai mật khẩu không giống nhau."
+        );
+
+        return;
+    }
+
+
+    $("submit").disabled = true;
+
+
+    try{
+
+        const email =
+            internalEmail(username);
+
+
+        let result;
+
+
+        if(mode === "register"){
+
+            result =
+                await db.auth.signUp({
+
+                    email: email,
+
+                    password: password,
+
+                    options:{
+                        data:{
+                            username: username
+                        }
+                    }
+
+                });
+
+        }else{
+
+            result =
+                await db.auth.signInWithPassword({
+
+                    email: email,
+
+                    password: password
+
+                });
+
+        }
+
+
+        if(result.error){
+
+            throw result.error;
+
+        }
+
+
+        if(
+            mode === "register" &&
+            !result.data.session
+        ){
+
+            showMessage(
+                "Tài khoản đã tạo. Hãy tắt Confirm email trong Supabase để đăng nhập ngay.",
+                true
+            );
+
+        }
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        let text =
+            error.message ||
+            "Có lỗi xảy ra.";
+
+
+        if(
+            text
+            .toLowerCase()
+            .includes("invalid login credentials")
+        ){
+
+            text =
+                "Tài khoản hoặc mật khẩu không đúng.";
+
+        }
+
+
+        if(
+            text
+            .toLowerCase()
+            .includes("already registered")
+        ){
+
+            text =
+                "Tài khoản đã tồn tại.";
+
+        }
+
+
+        showMessage(text);
+
+    }
+    finally{
+
+        $("submit").disabled = false;
+
+        $("submit").textContent =
+            mode === "register"
+                ? "Đăng ký"
+                : "Đăng nhập";
+
+    }
+
 };
 
-db.auth.onAuthStateChange(async(_,session)=>{
-  if(session?.user)await open(session.user);
-  else closeApp();
-});
 
-async function open(u){
-  user=u;
-  $("auth").classList.add("hidden");$("app").classList.remove("hidden");
-  const username=u.user_metadata?.username||u.email.split("@")[0];
-  $("myName").textContent=username;$("avatar").textContent=username[0].toUpperCase();
-  const a=await db.from("accounts").select("is_admin").eq("id",u.id).maybeSingle();
-  if(!a.error&&a.data?.is_admin)$("role").textContent="Quản trị viên";
-  await load();
-  realtime();
-}
-function closeApp(){
-  $("app").classList.add("hidden");$("auth").classList.remove("hidden");
-  if(channel){db.removeChannel(channel);channel=null}
-}
-$("logout").onclick=()=>db.auth.signOut();
+/* =========================================================
+   AUTH STATE
+   ========================================================= */
 
-async function load(){
-  const r=await db.from("messages").select("id,user_id,username,content,created_at").order("created_at",{ascending:true}).limit(100);
-  if(r.error){$("messages").innerHTML="<p>Không tải được tin nhắn.</p>";console.error(r.error);return}
-  $("messages").innerHTML="";r.data.forEach(add);$("messages").scrollTop=$("messages").scrollHeight;
+db.auth.onAuthStateChange(
+    async (event, session) => {
+
+        if(session?.user){
+
+            await openChat(
+                session.user
+            );
+
+        }
+        else{
+
+            closeChat();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   MỞ CHAT
+   ========================================================= */
+
+async function openChat(currentUser){
+
+    user = currentUser;
+
+
+    $("auth")
+        .classList
+        .add("hidden");
+
+
+    $("app")
+        .classList
+        .remove("hidden");
+
+
+    const username =
+        currentUser
+        .user_metadata
+        ?.username ||
+        currentUser
+        .email
+        .split("@")[0];
+
+
+    $("myName")
+        .textContent = username;
+
+
+    $("avatar")
+        .textContent =
+        username
+        .charAt(0)
+        .toUpperCase();
+
+
+    /* Kiểm tra admin */
+
+    const account =
+        await db
+        .from("accounts")
+        .select("is_admin")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+
+    if(
+        !account.error &&
+        account.data?.is_admin
+    ){
+
+        $("role")
+            .textContent =
+            "Quản trị viên";
+
+    }
+
+
+    /* Lấy phòng */
+
+    const rooms =
+        await db
+        .from("rooms")
+        .select("id,name")
+        .order("id")
+        .limit(1);
+
+
+    if(rooms.error){
+
+        console.error(
+            rooms.error
+        );
+
+        $("roomBox")
+            .textContent =
+            "Lỗi tải phòng";
+
+        return;
+
+    }
+
+
+    if(
+        !rooms.data ||
+        rooms.data.length === 0
+    ){
+
+        $("roomBox")
+            .textContent =
+            "Chưa có phòng";
+
+        return;
+
+    }
+
+
+    /* LƯU ID PHÒNG */
+
+    roomId =
+        rooms.data[0].id;
+
+
+    $("roomBox")
+        .textContent =
+        rooms.data[0].name;
+
+
+    $("roomTitle")
+        .textContent =
+        rooms.data[0].name;
+
+
+    console.log(
+        "ROOM ID:",
+        roomId
+    );
+
+
+    await loadMessages();
+
+    startRealtime();
+
 }
-function add(m){
-  if($("messages").querySelector('[data-id="'+m.id+'"]'))return;
-  const row=document.createElement("div");row.className="row"+(user&&m.user_id===user.id?" mine":"");row.dataset.id=m.id;
-  const box=document.createElement("div");box.className="box";
-  const u=document.createElement("div");u.className="user";u.textContent=m.username;
-  const b=document.createElement("div");b.className="bubble";b.textContent=m.content;
-  const t=document.createElement("div");t.className="time";t.textContent=new Date(m.created_at).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
-  box.append(u,b,t);row.append(box);$("messages").append(row);
+
+
+/* =========================================================
+   ĐÓNG CHAT
+   ========================================================= */
+
+function closeChat(){
+
+    user = null;
+
+    roomId = null;
+
+
+    if(channel){
+
+        db.removeChannel(
+            channel
+        );
+
+        channel = null;
+
+    }
+
+
+    $("app")
+        .classList
+        .add("hidden");
+
+
+    $("auth")
+        .classList
+        .remove("hidden");
+
 }
-$("sendForm").onsubmit=async e=>{
-  e.preventDefault();const content=$("message").value.trim();if(!content)return;
-  $("send").disabled=true;
-  const r=await db.from("messages").insert({user_id:user.id,username:$("myName").textContent,content}).select().single();
-  $("send").disabled=false;
-  if(r.error){alert(r.error.message);return}
-  $("message").value="";$("message").focus();
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+$("logout").onclick =
+async () => {
+
+    await db.auth.signOut();
+
 };
-function realtime(){
-  if(channel)db.removeChannel(channel);
-  channel=db.channel("chat-messages").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},p=>{
-    add(p.new);$("messages").scrollTop=$("messages").scrollHeight;
-  }).subscribe(s=>{
-    $("status").textContent=s==="SUBSCRIBED"?"● Đã kết nối":"● "+s;
-    $("status").style.color=s==="SUBSCRIBED"?"#15803d":"#64748b";
-  });
+
+
+/* =========================================================
+   LOAD TIN NHẮN
+   ========================================================= */
+
+async function loadMessages(){
+
+    if(!roomId){
+
+        console.error(
+            "Không có roomId"
+        );
+
+        return;
+
+    }
+
+
+    const result =
+        await db
+        .from("messages")
+        .select(
+            "id,room_id,user_id,username,content,created_at"
+        )
+        .eq(
+            "room_id",
+            roomId
+        )
+        .order(
+            "created_at",
+            {
+                ascending:true
+            }
+        )
+        .limit(100);
+
+
+    if(result.error){
+
+        console.error(
+            result.error
+        );
+
+        $("messages")
+            .innerHTML =
+            "<p>Không tải được tin nhắn.</p>";
+
+        return;
+
+    }
+
+
+    $("messages")
+        .innerHTML = "";
+
+
+    result.data.forEach(
+        addMessage
+    );
+
+
+    scrollBottom();
+
 }
-(async()=>{
-  const r=await db.auth.getSession();
-  if(r.data.session)await open(r.data.session.user);
+
+
+/* =========================================================
+   HIỂN THỊ TIN NHẮN
+   ========================================================= */
+
+function addMessage(message){
+
+    if(
+        Number(message.room_id) !==
+        Number(roomId)
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        $("messages")
+        .querySelector(
+            '[data-id="' +
+            message.id +
+            '"]'
+        )
+    ){
+
+        return;
+
+    }
+
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.className =
+        "row" +
+        (
+            user &&
+            message.user_id === user.id
+                ? " mine"
+                : ""
+        );
+
+
+    row.dataset.id =
+        message.id;
+
+
+    const box =
+        document.createElement(
+            "div"
+        );
+
+
+    box.className =
+        "box";
+
+
+    const username =
+        document.createElement(
+            "div"
+        );
+
+
+    username.className =
+        "user";
+
+
+    username.textContent =
+        message.username;
+
+
+    const bubble =
+        document.createElement(
+            "div"
+        );
+
+
+    bubble.className =
+        "bubble";
+
+
+    bubble.textContent =
+        message.content;
+
+
+    const time =
+        document.createElement(
+            "div"
+        );
+
+
+    time.className =
+        "time";
+
+
+    time.textContent =
+        new Date(
+            message.created_at
+        ).toLocaleTimeString(
+            "vi-VN",
+            {
+                hour:"2-digit",
+                minute:"2-digit"
+            }
+        );
+
+
+    box.append(
+        username,
+        bubble,
+        time
+    );
+
+
+    row.append(
+        box
+    );
+
+
+    $("messages")
+        .append(
+            row
+        );
+
+}
+
+
+/* =========================================================
+   SCROLL
+   ========================================================= */
+
+function scrollBottom(){
+
+    $("messages")
+        .scrollTop =
+        $("messages")
+        .scrollHeight;
+
+}
+
+
+/* =========================================================
+   GỬI TIN NHẮN
+   ========================================================= */
+
+$("sendForm").onsubmit =
+async event => {
+
+    event.preventDefault();
+
+
+    const content =
+        $("message")
+        .value
+        .trim();
+
+
+    if(!content){
+
+        return;
+
+    }
+
+
+    if(!roomId){
+
+        alert(
+            "Chưa xác định được phòng chat."
+        );
+
+        return;
+
+    }
+
+
+    if(!user){
+
+        alert(
+            "Bạn chưa đăng nhập."
+        );
+
+        return;
+
+    }
+
+
+    $("send")
+        .disabled = true;
+
+
+    try{
+
+        /*
+         * QUAN TRỌNG:
+         * room_id được gửi ở đây.
+         */
+
+        const result =
+            await db
+            .from("messages")
+            .insert({
+
+                room_id: roomId,
+
+                user_id: user.id,
+
+                username:
+                    $("myName")
+                    .textContent,
+
+                content: content
+
+            })
+            .select()
+            .single();
+
+
+        if(result.error){
+
+            throw result.error;
+
+        }
+
+
+        $("message")
+            .value = "";
+
+
+        $("message")
+            .focus();
+
+
+        scrollBottom();
+
+    }
+    catch(error){
+
+        console.error(
+            error
+        );
+
+        alert(
+            "Không gửi được tin nhắn:\n" +
+            error.message
+        );
+
+    }
+    finally{
+
+        $("send")
+            .disabled = false;
+
+    }
+
+};
+
+
+/* =========================================================
+   REALTIME
+   ========================================================= */
+
+function startRealtime(){
+
+    if(!roomId){
+
+        return;
+
+    }
+
+
+    if(channel){
+
+        db.removeChannel(
+            channel
+        );
+
+    }
+
+
+    channel =
+        db
+        .channel(
+            "chat-room-" +
+            roomId
+        )
+        .on(
+            "postgres_changes",
+            {
+                event:"INSERT",
+                schema:"public",
+                table:"messages",
+                filter:
+                    "room_id=eq." +
+                    roomId
+            },
+            payload => {
+
+                addMessage(
+                    payload.new
+                );
+
+                scrollBottom();
+
+            }
+        )
+        .subscribe(
+            status => {
+
+                if(
+                    status ===
+                    "SUBSCRIBED"
+                ){
+
+                    $("status")
+                        .textContent =
+                        "● Đã kết nối";
+
+
+                    $("status")
+                        .style.color =
+                        "#15803d";
+
+                }
+                else{
+
+                    $("status")
+                        .textContent =
+                        "● " +
+                        status;
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   KIỂM TRA SESSION KHI MỞ TRANG
+   ========================================================= */
+
+(async () => {
+
+    const result =
+        await db.auth.getSession();
+
+
+    if(
+        result.data &&
+        result.data.session
+    ){
+
+        await openChat(
+            result.data.session.user
+        );
+
+    }
+
 })();
+
 </script>
+
 </body>
 </html>
