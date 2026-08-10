@@ -7,435 +7,1359 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-
-:root{
-    --army:#4b5320;
-    --army-dark:#384017;
-    --army-deep:#2d3312;
-    --army-input:#303614;
-    --red:#d96b6b;
-    --red-dark:#c65353;
-    --red-light:#f08b8b;
-    --text:#f4f4e8;
-    --muted:#d9ddbd;
-}
-
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:var(--army-dark);
-    color:var(--text);
-}
-
-button,input{font:inherit}
-button{cursor:pointer}
-.hidden{display:none!important}
+:root{--green:#00a884;--green-dark:#008069;--green-soft:#d9fdd3;--bg:#efeae2;--line:#e9edef;--text:#111b21;--muted:#667781}
+html,body{height:100%}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:var(--bg)}
+button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
 
 /* LOGIN */
-#auth{
-    min-height:100vh;
-    display:grid;
-    place-items:center;
-    padding:20px;
-    background:
-        radial-gradient(circle at center,
-        #596126 0%,
-        var(--army-dark) 55%,
-        var(--army-deep) 100%);
-}
-
-.card{
-    width:min(390px,100%);
-    background:var(--army);
-    border:2px solid var(--red);
-    border-radius:18px;
-    padding:26px;
-    box-shadow:0 10px 35px #0008;
-}
-
-.logo{text-align:center;font-size:42px}
-.card h1{text-align:center;margin:8px 0;color:#fff}
-.desc{text-align:center;color:#e3e5c8}
-
-.tabs{
-    display:flex;
-    gap:4px;
-    background:#343a16;
-    border:1px solid #c95f5f;
-    padding:4px;
-    border-radius:9px;
-    margin:20px 0 16px;
-}
-
-.tab{
-    flex:1;
-    border:1px solid transparent;
-    background:transparent;
-    color:#e1e4c8;
-    padding:10px;
-    border-radius:7px;
-    font-weight:bold;
-}
-
-.tab:hover{border-color:var(--red);color:#fff}
-
-.tab.active{
-    background:var(--red);
-    color:#fff;
-    border-color:var(--red-light);
-    box-shadow:0 2px 8px #0004;
-}
-
-.field{margin-bottom:12px}
-
-.field label{
-    display:block;
-    font-size:13px;
-    font-weight:bold;
-    margin-bottom:5px;
-    color:#f0f1d9;
-}
-
-.field input{
-    width:100%;
-    padding:11px;
-    background:var(--army-input);
-    color:#fff;
-    border:1px solid var(--red);
-    border-radius:8px;
-    outline:0;
-}
-
-.field input::placeholder{color:#aeb394}
-
-.field input:focus{
-    border-color:var(--red-light);
-    box-shadow:0 0 0 2px #d96b6b33;
-}
-
-.primary{
-    width:100%;
-    padding:12px;
-    border:1px solid var(--red-light);
-    border-radius:8px;
-    background:var(--red);
-    color:#fff;
-    font-weight:bold;
-    transition:.15s;
-}
-
-.primary:hover{background:var(--red-dark);border-color:#ff9a9a}
-.primary:active{transform:scale(.98)}
-.primary:disabled{opacity:.5;cursor:not-allowed}
-
-.msg{
-    min-height:20px;
-    text-align:center;
-    font-size:13px;
-    color:#ffb0b0;
-    margin-top:10px;
-}
-
-.msg.ok{color:#b8e6a5}
+#auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:#f0f2f5}
+.login-card{width:min(410px,100%);background:#fff;border-radius:10px;padding:36px 34px 32px;box-shadow:0 2px 12px #0002}
+.wa-login-icon{width:72px;height:72px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#fff;font-size:34px}
+.login-card h1{text-align:center;margin:0;font-size:25px;font-weight:400}
+.login-subtitle{text-align:center;color:var(--muted);margin:8px 0 28px}
+.field{margin-bottom:18px}.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px}
+.field input{width:100%;border:1px solid #d1d7db;border-radius:6px;padding:13px 12px;outline:none;color:var(--text);background:#fff}
+.field input:focus{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+.primary{width:100%;border:0;border-radius:7px;padding:12px;background:var(--green);color:#fff;font-weight:600}
+.primary:hover{background:var(--green-dark)}.primary:disabled{opacity:.6;cursor:not-allowed}
+.msg{min-height:22px;margin-top:13px;text-align:center;font-size:13px;color:#d93025}.msg.ok{color:#188038}
 
 /* APP */
-#app{
-    height:100vh;
-    display:flex;
-    background:var(--army-dark);
-}
+#app{height:100vh;display:flex;background:var(--bg)}
+.side{width:390px;min-width:300px;background:#fff;border-right:1px solid #d1d7db;display:flex;flex-direction:column}
+.wa-topbar{height:60px;padding:0 16px;background:#f0f2f5;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:20px;font-weight:600}.top-actions{display:flex;gap:8px}
+.top-actions button,.header-actions button{width:38px;height:38px;border:0;border-radius:50%;background:transparent;color:#54656f;font-size:24px}
+.top-actions button:hover,.header-actions button:hover{background:#dfe5e8}
+.me{display:flex;align-items:center;gap:11px;padding:10px 14px;background:#f0f2f5;border-bottom:1px solid var(--line)}
+.avatar{width:42px;height:42px;flex:none;border-radius:50%;background:#d9fdd3;color:#008069;display:grid;place-items:center;font-weight:600;font-size:18px}
+.meinfo{flex:1;min-width:0}.name{font-size:15px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.role{margin-top:3px;color:var(--muted);font-size:12px}
+.logout{border:0;background:transparent;color:#54656f;font-size:22px;width:38px;height:38px;border-radius:50%}
+.logout:hover{background:#dfe5e8}
+.search-box{margin:8px 12px;height:36px;border-radius:8px;background:#f0f2f5;display:flex;align-items:center;padding:0 12px;gap:8px;color:#667781}
+.search-box input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#667781;font-size:13px}
+.chat-list{flex:1;overflow:auto}
+.room{min-height:72px;padding:10px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);background:#fff;cursor:pointer}
+.room:hover{background:#f5f6f6}
+.room-avatar{width:50px;height:50px;flex:none;border-radius:50%;background:#d9fdd3;display:grid;place-items:center;font-size:23px}
+.room-info{min-width:0;flex:1}.room-name{font-size:16px;margin-bottom:5px}.room-preview{font-size:13px;color:var(--muted)}
 
-/* SIDEBAR */
-.side{
-    width:260px;
-    background:var(--army);
-    border-right:2px solid #c95f5f;
-}
+/* HEADER */
+.chat{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg)}
+.head{height:60px;background:#f0f2f5;border-bottom:1px solid #d1d7db;display:flex;align-items:center;padding:0 16px;gap:11px}
+.header-avatar{width:42px;height:42px;border-radius:50%;background:#d9fdd3;display:grid;place-items:center;font-size:20px}
+.header-info{min-width:0;flex:1}.header-title{font-size:16px;font-weight:500}
+.status{color:var(--muted);font-size:12px;margin-top:3px}.header-actions{display:flex;gap:4px}
 
-.brand{
-    padding:18px;
-    font-weight:bold;
-    font-size:19px;
-    color:#fff;
-    border-bottom:1px solid #c95f5f;
-}
-
-.me{
-    padding:12px;
-    border-bottom:1px solid #c95f5f;
-    display:flex;
-    gap:10px;
-    align-items:center;
-}
-
-.avatar{
-    width:40px;
-    height:40px;
-    border-radius:50%;
-    background:var(--red);
-    border:2px solid var(--red-light);
-    display:grid;
-    place-items:center;
-    color:#fff;
-    font-weight:bold;
-}
-
-.meinfo{flex:1;min-width:0}
-
-.name{
-    font-weight:bold;
-    color:#fff;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-}
-
-.role{font-size:11px;color:var(--muted)}
-
-.logout{
-    border:1px solid var(--red);
-    border-radius:7px;
-    padding:8px;
-    background:#343a16;
-    color:#fff;
-}
-
-.logout:hover{background:var(--red)}
-
-.room{
-    margin:10px;
-    padding:11px;
-    border-radius:8px;
-    background:#343a16;
-    border:1px solid var(--red);
-    color:#fff;
-    font-weight:bold;
-}
-
-.room:hover{background:var(--red)}
-
-/* CHAT */
-.chat{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    min-width:0;
-    background:var(--army-dark);
-}
-
-.head{
-    height:60px;
-    background:var(--army);
-    border-bottom:2px solid #c95f5f;
-    display:flex;
-    align-items:center;
-    padding:0 16px;
-    gap:8px;
-    color:#fff;
-}
-
-.live{
-    font-size:11px;
-    background:#343a16;
-    color:#b8e6a5;
-    border:1px solid var(--red);
-    border-radius:15px;
-    padding:5px;
-}
-
-.status{
-    margin-left:auto;
-    font-size:12px;
-    color:var(--muted);
-}
-
-.messages{
-    flex:1;
-    overflow:auto;
-    padding:18px;
-    background:linear-gradient(135deg,var(--army-dark),#41491a);
-}
-
-.row{display:flex;margin-bottom:12px}
-.mine{justify-content:flex-end}
-.box{max-width:min(75%,600px)}
-
-.user{
-    font-size:11px;
-    color:#cdd2aa;
-    margin:0 3px 3px;
-}
-
-.mine .user{text-align:right}
-
-.bubble{
-    background:var(--army);
-    border:1px solid #c96a6a;
-    border-radius:13px;
-    padding:9px 12px;
-    color:#fff;
-    white-space:pre-wrap;
-    overflow-wrap:anywhere;
-    box-shadow:0 2px 5px #0003;
-}
-
-.mine .bubble{
-    background:var(--red);
-    color:#fff;
-    border-color:var(--red-light);
-}
-
-.time{
-    font-size:10px;
-    color:#aeb394;
-    margin:3px;
-}
-
-.mine .time{text-align:right}
+/* MESSAGES */
+.messages{flex:1;overflow:auto;padding:20px 6%;background-color:var(--bg);background-image:radial-gradient(#d6d0c7 1px,transparent 1px);background-size:18px 18px}
+.row{display:flex;margin-bottom:4px}.mine{justify-content:flex-end}.box{max-width:min(65%,650px)}
+.user{display:none}.bubble{display:inline-block;background:#fff;border-radius:8px;padding:7px 9px;box-shadow:0 1px 1px #0002;font-size:14px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere}
+.mine .bubble{background:var(--green-soft)}.time{display:inline;margin-left:7px;color:#667781;font-size:10px}
 
 /* COMPOSER */
-.composer{
+.composer{min-height:62px;padding:10px 14px;display:flex;align-items:center;gap:10px;background:#f0f2f5}
+.composer input{flex:1;min-width:0;height:42px;border:0;border-radius:22px;padding:0 17px;outline:none;background:#fff;color:var(--text)}
+.send{width:42px;height:42px;border:0;border-radius:50%;background:var(--green);color:#fff;font-size:18px}
+.send:hover{background:var(--green-dark)}.send:disabled{opacity:.55}
+
+@media(max-width:800px){.side{width:300px;min-width:300px}.box{max-width:78%}}
+@media(max-width:600px){
+.side{width:72px;min-width:72px}.brand{font-size:0}.brand:after{content:"💬";font-size:24px}
+.top-actions,.meinfo,.logout,.search-box,.room-info{display:none}.me{justify-content:center;padding:9px 0}
+.room{justify-content:center;padding:10px 0}.room-avatar{width:48px;height:48px}
+.head{padding:0 9px}.header-actions{display:none}.messages{padding:12px 8px}.box{max-width:88%}.composer{padding:8px}
+}
+@media(max-width:420px){#auth{padding:12px}.login-card{padding:28px 20px}}
+
+/* TASK MENU */
+.tasks-menu{
+    width:calc(100% - 24px);
+    margin:4px 12px 8px;
+    height:44px;
+    border:0;
+    border-radius:8px;
+    background:#fff;
     display:flex;
-    gap:8px;
-    padding:10px;
-    background:var(--army);
-    border-top:2px solid #c95f5f;
+    align-items:center;
+    gap:10px;
+    padding:0 12px;
+    color:#111b21;
+    text-align:left;
+}
+.tasks-menu:hover{background:#f0f2f5}
+.tasks-menu-icon{
+    width:28px;height:28px;border-radius:50%;
+    display:grid;place-items:center;
+    background:#d9fdd3;color:#008069;font-weight:700;
+}
+.task-count{
+    margin-left:auto;
+    min-width:22px;height:22px;
+    padding:0 6px;border-radius:11px;
+    display:grid;place-items:center;
+    background:#00a884;color:#fff;
+    font-size:11px;
 }
 
-.composer input{
-    flex:1;
-    background:var(--army-input);
+/* TASK MODAL */
+.modal{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    background:#0007;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+.task-panel{
+    width:min(760px,100%);
+    max-height:min(88vh,800px);
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 8px 40px #0005;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+.task-panel-head{
+    min-height:72px;
+    padding:16px 18px;
+    background:#f0f2f5;
+    border-bottom:1px solid #d1d7db;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+.task-panel-title{font-size:20px;font-weight:600}
+.task-panel-subtitle{font-size:12px;color:#667781;margin-top:4px}
+.modal-close{
+    width:38px;height:38px;border:0;border-radius:50%;
+    background:transparent;color:#54656f;font-size:28px;
+}
+.modal-close:hover{background:#dfe5e8}
+.task-toolbar{
+    padding:12px 16px;
+    display:flex;
+    gap:10px;
+    border-bottom:1px solid #e9edef;
+}
+.new-task-btn{
+    border:0;border-radius:7px;
+    background:#00a884;color:#fff;
+    padding:10px 14px;font-weight:600;
+}
+.new-task-btn:hover{background:#008069}
+.task-filter{
+    margin-left:auto;
+    border:1px solid #d1d7db;
+    border-radius:7px;
+    padding:8px 10px;
+    background:#fff;
+    color:#111b21;
+}
+.task-form{
+    padding:14px 16px;
+    background:#f8f9fa;
+    border-bottom:1px solid #e9edef;
+}
+.task-form-title{font-weight:600;margin-bottom:10px}
+.task-input{
+    width:100%;
+    border:1px solid #d1d7db;
+    border-radius:7px;
+    padding:10px 11px;
+    outline:none;
+    background:#fff;
+    color:#111b21;
+    margin-bottom:9px;
+}
+.task-input:focus{border-color:#00a884;box-shadow:0 0 0 1px #00a884}
+.task-textarea{min-height:70px;resize:vertical}
+.task-two{display:grid;grid-template-columns:1fr 180px;gap:9px}
+.task-form-actions{display:flex;justify-content:flex-end;gap:8px}
+.cancel-task{
+    border:1px solid #d1d7db;
+    border-radius:7px;
+    background:#fff;
+    color:#54656f;
+    padding:9px 13px;
+}
+.task-msg{min-height:18px;color:#d93025;font-size:12px;margin-top:7px}
+.tasks-list{overflow:auto;padding:8px 0}
+.tasks-empty{text-align:center;color:#667781;padding:35px 20px}
+.task-item{
+    padding:13px 16px;
+    border-bottom:1px solid #e9edef;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+}
+.task-main{flex:1;min-width:0}
+.task-title{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.task-description{font-size:13px;color:#667781;margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.task-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.task-badge{
+    font-size:11px;padding:4px 7px;border-radius:12px;
+    background:#f0f2f5;color:#54656f;
+}
+.task-status{
+    border:1px solid #d1d7db;border-radius:6px;
+    padding:6px 8px;background:#fff;color:#111b21;
+    font-size:12px;
+}
+.task-delete{
+    border:0;background:transparent;color:#8696a0;
+    font-size:18px;padding:4px;
+}
+.task-delete:hover{color:#d93025}
+@media(max-width:600px){
+    .tasks-menu{width:52px;margin:4px auto;padding:0;justify-content:center}
+    .tasks-menu span:not(.tasks-menu-icon):not(.task-count){display:none}
+    .task-count{display:none}
+    .task-two{grid-template-columns:1fr}
+    .task-panel{max-height:94vh}
+}
+
+/* SHARED DRIVE */
+.drive-menu{
+    width:calc(100% - 24px);
+    margin:4px 12px 4px;
+    height:44px;
+    border:0;
+    border-radius:8px;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 12px;
+    color:#111b21;
+    text-align:left;
+}
+.drive-menu:hover{background:#f0f2f5}
+.drive-menu-icon{
+    width:28px;height:28px;border-radius:50%;
+    display:grid;place-items:center;
+    background:#d9fdd3;
+}
+.drive-panel{width:min(850px,100%)}
+.drive-toolbar{
+    min-height:58px;
+    padding:10px 16px;
+    border-bottom:1px solid #e9edef;
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+.upload-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:0;
+    border-radius:7px;
+    background:#00a884;
     color:#fff;
-    border:1px solid var(--red);
-    border-radius:22px;
-    padding:11px 14px;
-    outline:0;
+    padding:10px 14px;
+    font-weight:600;
+    cursor:pointer;
 }
-
-.composer input::placeholder{color:#aeb394}
-
-.composer input:focus{
-    border-color:var(--red-light);
-    box-shadow:0 0 0 2px #d96b6b33;
+.upload-btn:hover{background:#008069}
+.upload-status{font-size:12px;color:#667781}
+.files-list{overflow:auto;max-height:65vh}
+.file-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px;
+    border-bottom:1px solid #e9edef;
 }
-
-.send{
-    width:44px;
-    border:1px solid var(--red-light);
-    border-radius:50%;
-    background:var(--red);
-    color:#fff;
-    transition:.15s;
+.file-icon{
+    width:44px;height:44px;flex:none;
+    border-radius:8px;
+    background:#f0f2f5;
+    display:grid;place-items:center;
+    font-size:22px;
 }
-
-.send:hover{
-    background:var(--red-dark);
-    transform:scale(1.05);
+.file-main{min-width:0;flex:1}
+.file-name{
+    font-size:14px;
+    font-weight:500;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
 }
+.file-meta{
+    margin-top:4px;
+    color:#667781;
+    font-size:11px;
+}
+.file-actions{display:flex;gap:6px}
+.file-action{
+    border:1px solid #d1d7db;
+    border-radius:6px;
+    background:#fff;
+    color:#54656f;
+    padding:7px 9px;
+    text-decoration:none;
+    font-size:12px;
+}
+.file-action:hover{background:#f0f2f5}
+.file-delete:hover{color:#d93025;border-color:#d93025}
 
-.send:disabled{opacity:.5}
-
-/* MOBILE */
-@media(max-width:650px){
-    .side{width:68px}
-    .brand{font-size:0;text-align:center}
-    .me{justify-content:center}
-    .meinfo,.logout{display:none}
-    .room{text-align:center;font-size:0}
-    .room:before{content:"💬";font-size:22px}
-    .head{height:56px;padding:0 10px}
-    .status{display:none}
-    .messages{padding:10px}
-    .box{max-width:88%}
+@media(max-width:600px){
+    .drive-menu{
+        width:52px;margin:4px auto;padding:0;justify-content:center;
+    }
+    .drive-menu span:not(.drive-menu-icon):not(.task-count){display:none}
 }
 </style>
 </head>
 <body>
-<section id="auth"><div class="card">
-<div class="logo">💬</div><h1>Chat Nhóm</h1><p class="desc">Đăng nhập bằng tài khoản + mật khẩu</p>
-<div class="tabs"><button id="loginTab" class="tab active" type="button">Đăng nhập</button><button id="registerTab" class="tab" type="button">Đăng ký</button></div>
-<form id="form">
-<div class="field"><label>Tài khoản</label><input id="username" maxlength="30" required placeholder="Ví dụ: thanh"></div>
-<div class="field"><label>Mật khẩu</label><input id="password" type="password" minlength="6" required placeholder="Tối thiểu 6 ký tự"></div>
-<div id="confirmBox" class="field hidden"><label>Nhập lại mật khẩu</label><input id="confirm" type="password" minlength="6"></div>
-<button id="submit" class="primary">Đăng nhập</button><div id="msg" class="msg"></div>
-</form></div></section>
+<section id="auth">
+<div class="login-card">
+    <div class="wa-login-icon">💬</div>
+    <h1>Chat Nhóm</h1>
+    <p class="login-subtitle">Đăng nhập để tiếp tục</p>
+    <form id="form">
+        <div class="field">
+            <label>Tài khoản</label>
+            <input id="username" maxlength="30" required placeholder="Tên tài khoản" autocomplete="username">
+        </div>
+        <div class="field">
+            <label>Mật khẩu</label>
+            <input id="password" type="password" minlength="6" required placeholder="Mật khẩu" autocomplete="current-password">
+        </div>
+        <button id="submit" class="primary" type="submit">Đăng nhập</button>
+        <div id="msg" class="msg"></div>
+    </form>
+</div>
+</section>
 
 <section id="app" class="hidden">
-<aside class="side"><div class="brand">💬 CHAT</div>
-<div class="me"><div id="avatar" class="avatar">?</div><div class="meinfo"><div id="myName" class="name"></div><div id="role" class="role">Thành viên</div></div><button id="logout" class="logout">↪</button></div>
-<div class="room">Phòng chung</div></aside>
-<main class="chat"><div class="head"><b>Phòng chung</b><span class="live">● Realtime</span><span id="status" class="status">Đang kết nối...</span></div>
+<aside class="side">
+    <div class="wa-topbar">
+        <div class="brand">Chat Nhóm</div>
+        <div class="top-actions">
+            <button title="Tìm kiếm">⌕</button>
+            <button title="Menu">⋮</button>
+        </div>
+    </div>
+    <div class="me">
+        <div id="avatar" class="avatar">?</div>
+        <div class="meinfo">
+            <div id="myName" class="name"></div>
+            <div id="role" class="role">Thành viên</div>
+        </div>
+        <button id="logout" class="logout" title="Đăng xuất">↪</button>
+    </div>
+    <div class="search-box">
+        <span>⌕</span>
+        <input placeholder="Tìm kiếm hoặc bắt đầu cuộc trò chuyện" disabled>
+    </div>
+    <button id="driveMenu" class="drive-menu" type="button">
+        <span class="drive-menu-icon">📁</span>
+        <span>Ổ đĩa chung</span>
+        <span id="fileCount" class="task-count">0</span>
+    </button>
+
+    <button id="tasksMenu" class="tasks-menu" type="button">
+        <span class="tasks-menu-icon">✓</span>
+        <span>Công việc</span>
+        <span id="taskCount" class="task-count">0</span>
+    </button>
+
+    <div class="chat-list">
+        <div id="roomBox" class="room">
+            <div class="room-avatar">💬</div>
+            <div class="room-info">
+                <div id="roomName" class="room-name">Phòng chung</div>
+                <div class="room-preview">Nhóm chat</div>
+            </div>
+        </div>
+    </div>
+</aside>
+<main class="chat"><div class="head">
+    <div class="header-avatar">💬</div>
+    <div class="header-info">
+        <div id="roomTitle" class="header-title">Phòng chung</div>
+        <div id="status" class="status">đang kết nối...</div>
+    </div>
+    <div class="header-actions">
+        <button title="Tìm kiếm">⌕</button>
+        <button title="Menu">⋮</button>
+    </div>
+</div>
 <div id="messages" class="messages"></div>
 <form id="sendForm" class="composer"><input id="message" maxlength="2000" placeholder="Nhập tin nhắn..." autocomplete="off"><button id="send" class="send">➤</button></form></main>
 </section>
+
+
+<!-- ================= Ổ ĐĨA CHUNG ================= -->
+<div id="driveModal" class="modal hidden">
+    <div class="task-panel drive-panel">
+
+        <div class="task-panel-head">
+            <div>
+                <div class="task-panel-title">Ổ đĩa chung</div>
+                <div class="task-panel-subtitle">Kho lưu trữ file dùng chung cho nhóm</div>
+            </div>
+            <button id="closeDrive" class="modal-close" type="button">×</button>
+        </div>
+
+        <div class="drive-toolbar">
+            <label class="upload-btn" for="fileInput">⬆ Tải file lên</label>
+            <input id="fileInput" type="file" multiple hidden>
+            <span id="uploadStatus" class="upload-status"></span>
+        </div>
+
+        <div id="filesList" class="files-list">
+            <div class="tasks-empty">Chưa có file nào.</div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= CÔNG VIỆC ================= -->
+<div id="tasksModal" class="modal hidden">
+    <div class="task-panel">
+
+        <div class="task-panel-head">
+            <div>
+                <div class="task-panel-title">Công việc nhóm</div>
+                <div class="task-panel-subtitle">Phân công và theo dõi công việc</div>
+            </div>
+            <button id="closeTasks" class="modal-close" type="button">×</button>
+        </div>
+
+        <div class="task-toolbar">
+            <button id="newTaskBtn" class="new-task-btn" type="button">
+                ＋ Tạo công việc
+            </button>
+
+            <select id="taskFilter" class="task-filter">
+                <option value="all">Tất cả</option>
+                <option value="todo">Chưa làm</option>
+                <option value="doing">Đang làm</option>
+                <option value="done">Hoàn thành</option>
+            </select>
+        </div>
+
+        <div id="taskForm" class="task-form hidden">
+            <div class="task-form-title">Tạo công việc mới</div>
+
+            <input id="taskTitle" class="task-input" maxlength="150"
+                   placeholder="Tên công việc *">
+
+            <textarea id="taskDescription" class="task-input task-textarea"
+                      maxlength="1000" placeholder="Mô tả công việc"></textarea>
+
+            <div class="task-two">
+                <select id="taskAssignee" class="task-input">
+                    <option value="">Chọn thành viên được phân công</option>
+                </select>
+                <input id="taskDue" class="task-input" type="datetime-local">
+            </div>
+
+            <div class="task-form-actions">
+                <button id="cancelTask" class="cancel-task" type="button">Hủy</button>
+                <button id="saveTask" class="new-task-btn" type="button">Lưu công việc</button>
+            </div>
+
+            <div id="taskMsg" class="task-msg"></div>
+        </div>
+
+        <div id="tasksList" class="tasks-list">
+            <div class="tasks-empty">Chưa có công việc nào.</div>
+        </div>
+
+    </div>
+</div>
 
 <script>
 const SUPABASE_URL="https://xowmhluzkljftsajjfhz.supabase.co";
 const SUPABASE_KEY="sb_publishable_mZIMNlMuc64aB7ns2SZxmw_4Nugl6PO";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let mode="login",user=null,roomId=null,channel=null;
+
+let user=null;
+let roomId=null;
+let channel=null;
+
 const $=id=>document.getElementById(id);
 
-function show(t,ok=false){$("msg").textContent=t;$("msg").className="msg"+(ok?" ok":"")}
-function setMode(m){mode=m;$("loginTab").classList.toggle("active",m==="login");$("registerTab").classList.toggle("active",m==="register");$("confirmBox").classList.toggle("hidden",m!=="register");$("submit").textContent=m==="register"?"Đăng ký":"Đăng nhập";show("")}
-$("loginTab").onclick=()=>setMode("login");$("registerTab").onclick=()=>setMode("register");
-function internalEmail(u){return u.toLowerCase()+"@chat.local"}
+function showMessage(text,ok=false){
+    $("msg").textContent=text;
+    $("msg").className="msg"+(ok?" ok":"");
+}
 
-$("form").onsubmit=async e=>{
- e.preventDefault();const username=$("username").value.trim(),password=$("password").value;
- if(!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)){show("Tài khoản 3-30 ký tự, chỉ chữ/số/._-");return}
- if(password.length<6){show("Mật khẩu tối thiểu 6 ký tự.");return}
- if(mode==="register"&&password!==$("confirm").value){show("Hai mật khẩu không giống nhau.");return}
- $("submit").disabled=true;
- try{
-  const email=internalEmail(username);
-  const r=mode==="register"
-   ?await db.auth.signUp({email,password,options:{data:{username}}})
-   :await db.auth.signInWithPassword({email,password});
-  if(r.error)throw r.error;
-  if(mode==="register"&&!r.data.session){show("Tài khoản đã tạo. Hãy tắt Confirm email trong Supabase để đăng nhập ngay.",true)}
- }catch(err){console.error(err);let t=err.message||"Có lỗi xảy ra";if(t.toLowerCase().includes("invalid login credentials"))t="Tài khoản hoặc mật khẩu không đúng.";if(t.toLowerCase().includes("already registered"))t="Tài khoản đã tồn tại.";show(t)}
- finally{$("submit").disabled=false;$("submit").textContent=mode==="register"?"Đăng ký":"Đăng nhập"}
+function internalEmail(username){
+    return username.toLowerCase()+"@chat.local";
+}
+
+$("form").onsubmit=async event=>{
+    event.preventDefault();
+
+    const username=$("username").value.trim();
+    const password=$("password").value;
+
+    if(!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)){
+        showMessage("Tài khoản 3-30 ký tự, chỉ chữ, số, ., _, -.");
+        return;
+    }
+
+    if(password.length<6){
+        showMessage("Mật khẩu tối thiểu 6 ký tự.");
+        return;
+    }
+
+    $("submit").disabled=true;
+
+    try{
+        const result=await db.auth.signInWithPassword({
+            email:internalEmail(username),
+            password:password
+        });
+
+        if(result.error)throw result.error;
+
+    }catch(error){
+        console.error(error);
+
+        let text=error.message||"Có lỗi xảy ra.";
+
+        if(text.toLowerCase().includes("invalid login credentials")){
+            text="Tài khoản hoặc mật khẩu không đúng.";
+        }
+
+        showMessage(text);
+
+    }finally{
+        $("submit").disabled=false;
+    }
 };
 
-db.auth.onAuthStateChange(async(_,session)=>{if(session?.user)await open(session.user);else closeApp()});
+db.auth.onAuthStateChange(async(event,session)=>{
+    if(session?.user){
+        await openChat(session.user);
+    }else if(event==="SIGNED_OUT"){
+        closeChat();
+    }
+});
 
-async function open(u){
- user=u;$("auth").classList.add("hidden");$("app").classList.remove("hidden");
- const username=u.user_metadata?.username||u.email.split("@")[0];$("myName").textContent=username;$("avatar").textContent=username[0].toUpperCase();
- const a=await db.from("accounts").select("is_admin").eq("id",u.id).maybeSingle();if(!a.error&&a.data?.is_admin)$("role").textContent="Quản trị viên";
- const rr=await db.from("rooms").select("id,name").order("id").limit(1);
- if(rr.error||!rr.data?.length){$("messages").innerHTML="<p>Chưa có phòng chat.</p>";return}
- roomId=rr.data[0].id;await load();realtime();
-}
-function closeApp(){if(channel){db.removeChannel(channel);channel=null}$("app").classList.add("hidden");$("auth").classList.remove("hidden")}
-$("logout").onclick=()=>db.auth.signOut();
+async function openChat(currentUser){
+    user=currentUser;
 
-async function load(){
- const r=await db.from("messages").select("id,room_id,user_id,username,content,created_at").eq("room_id",roomId).order("created_at",{ascending:true}).limit(100);
- if(r.error){console.error(r.error);$("messages").innerHTML="<p>Không tải được tin nhắn.</p>";return}
- $("messages").innerHTML="";r.data.forEach(add);$("messages").scrollTop=$("messages").scrollHeight;
+    $("auth").classList.add("hidden");
+    $("app").classList.remove("hidden");
+
+    const username=currentUser.user_metadata?.username||currentUser.email.split("@")[0];
+
+    $("myName").textContent=username;
+    $("avatar").textContent=username.charAt(0).toUpperCase();
+
+    const account=await db
+        .from("accounts")
+        .select("is_admin")
+        .eq("id",currentUser.id)
+        .maybeSingle();
+
+    $("role").textContent=(!account.error&&account.data?.is_admin)
+        ?"Quản trị viên":"Thành viên";
+
+    const rooms=await db
+        .from("rooms")
+        .select("id,name")
+        .order("id")
+        .limit(1);
+
+    if(rooms.error){
+        console.error(rooms.error);
+        $("roomName").textContent="Lỗi tải phòng";
+        $("roomTitle").textContent="Lỗi tải phòng";
+        return;
+    }
+
+    if(!rooms.data||rooms.data.length===0){
+        $("roomName").textContent="Chưa có phòng";
+        $("roomTitle").textContent="Chưa có phòng";
+        return;
+    }
+
+    roomId=rooms.data[0].id;
+
+    $("roomName").textContent=rooms.data[0].name;
+    $("roomTitle").textContent=rooms.data[0].name;
+
+    await loadMessages();
+    startRealtime();
+    startTaskRealtime();
 }
-function add(m){
- if(Number(m.room_id)!==Number(roomId)||$("messages").querySelector('[data-id="'+m.id+'"]'))return;
- const row=document.createElement("div");row.className="row"+(user&&m.user_id===user.id?" mine":"");row.dataset.id=m.id;
- const box=document.createElement("div");box.className="box";const u=document.createElement("div");u.className="user";u.textContent=m.username;
- const b=document.createElement("div");b.className="bubble";b.textContent=m.content;const t=document.createElement("div");t.className="time";t.textContent=new Date(m.created_at).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
- box.append(u,b,t);row.append(box);$("messages").append(row);
+
+function closeChat(){
+    user=null;
+    roomId=null;
+
+    if(channel){
+        db.removeChannel(channel);
+        channel=null;
+    }
+
+    if(window.taskChannel){
+        db.removeChannel(window.taskChannel);
+        window.taskChannel=null;
+    }
+
+    $("app").classList.add("hidden");
+    $("auth").classList.remove("hidden");
 }
-$("sendForm").onsubmit=async e=>{
- e.preventDefault();const content=$("message").value.trim();if(!content||!roomId)return;
- $("send").disabled=true;
- const r=await db.from("messages").insert({room_id:roomId,user_id:user.id,username:$("myName").textContent,content}).select().single();
- $("send").disabled=false;if(r.error){alert(r.error.message);return}
- $("message").value="";$("message").focus();
+
+$("logout").onclick=async()=>{
+    await db.auth.signOut();
 };
-function realtime(){
- if(channel)db.removeChannel(channel);
- channel=db.channel("chat-messages").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"room_id=eq."+roomId},p=>{add(p.new);$("messages").scrollTop=$("messages").scrollHeight}).subscribe(s=>{$("status").textContent=s==="SUBSCRIBED"?"● Đã kết nối":"● "+s;$("status").style.color=s==="SUBSCRIBED"?"#15803d":"#64748b"});
+
+async function loadMessages(){
+    if(!roomId)return;
+
+    const result=await db
+        .from("messages")
+        .select("id,room_id,user_id,username,content,created_at")
+        .eq("room_id",roomId)
+        .order("created_at",{ascending:true})
+        .limit(100);
+
+    if(result.error){
+        console.error(result.error);
+        $("messages").innerHTML="<p>Không tải được tin nhắn.</p>";
+        return;
+    }
+
+    $("messages").innerHTML="";
+    result.data.forEach(addMessage);
+    scrollBottom();
 }
-(async()=>{const r=await db.auth.getSession();if(r.data.session)await open(r.data.session.user)})();
+
+function addMessage(message){
+    if(Number(message.room_id)!==Number(roomId))return;
+
+    if($("messages").querySelector('[data-id="'+message.id+'"]'))return;
+
+    const row=document.createElement("div");
+    row.className="row"+(user&&message.user_id===user.id?" mine":"");
+    row.dataset.id=message.id;
+
+    const box=document.createElement("div");
+    box.className="box";
+
+    const username=document.createElement("div");
+    username.className="user";
+    username.textContent=message.username;
+
+    const bubble=document.createElement("div");
+    bubble.className="bubble";
+    bubble.textContent=message.content;
+
+    const time=document.createElement("div");
+    time.className="time";
+    time.textContent=new Date(message.created_at).toLocaleTimeString("vi-VN",{
+        hour:"2-digit",
+        minute:"2-digit"
+    });
+
+    box.append(username,bubble,time);
+    row.append(box);
+    $("messages").append(row);
+}
+
+function scrollBottom(){
+    $("messages").scrollTop=$("messages").scrollHeight;
+}
+
+$("sendForm").onsubmit=async event=>{
+    event.preventDefault();
+
+    const content=$("message").value.trim();
+
+    if(!content)return;
+
+    if(!roomId){
+        alert("Chưa xác định được phòng chat.");
+        return;
+    }
+
+    if(!user){
+        alert("Bạn chưa đăng nhập.");
+        return;
+    }
+
+    $("send").disabled=true;
+
+    try{
+        const result=await db
+            .from("messages")
+            .insert({
+                room_id:roomId,
+                user_id:user.id,
+                username:$("myName").textContent,
+                content:content
+            })
+            .select()
+            .single();
+
+        if(result.error)throw result.error;
+
+        $("message").value="";
+        $("message").focus();
+        scrollBottom();
+
+    }catch(error){
+        console.error(error);
+        alert("Không gửi được tin nhắn:\n"+error.message);
+
+    }finally{
+        $("send").disabled=false;
+    }
+};
+
+
+/* ================= ĐỒNG BỘ CÔNG VIỆC VỚI CHAT ================= */
+
+function taskStatusLabel(status){
+    if(status==="done") return "✅ ĐÃ HOÀN THÀNH";
+    if(status==="doing") return "🔄 ĐANG THỰC HIỆN";
+    return "⏳ CHƯA HOÀN THÀNH";
+}
+
+function taskStatusText(status){
+    if(status==="done") return "đã hoàn thành";
+    if(status==="doing") return "đang thực hiện";
+    return "chưa hoàn thành";
+}
+
+async function postTaskUpdate(task, type="status"){
+    if(!roomId || !user)return;
+
+    let content="";
+
+    if(type==="deleted"){
+        content =
+            "🗑️ CÔNG VIỆC ĐÃ XÓA\n" +
+            "━━━━━━━━━━━━━━\n" +
+            "📝 " + task.title + "\n" +
+            "👤 Phân công: " + (task.assignee_username || "Chưa phân công");
+    }else{
+        content =
+            taskStatusLabel(task.status) + "\n" +
+            "━━━━━━━━━━━━━━\n" +
+            "📝 " + task.title + "\n" +
+            "👤 Phân công: " + (task.assignee_username || "Chưa phân công") + "\n" +
+            "📌 Trạng thái: " + taskStatusText(task.status);
+    }
+
+    const result=await db.from("messages").insert({
+        room_id:roomId,
+        user_id:user.id,
+        username:$("myName").textContent,
+        content:content
+    });
+
+    if(result.error){
+        console.error("Không đăng cập nhật công việc vào chat:",result.error);
+    }
+}
+
+async function handleTaskRealtime(payload){
+    if(payload.eventType==="INSERT"){
+        await loadTasks();
+        return;
+    }
+
+    if(payload.eventType==="UPDATE"){
+        await loadTasks();
+        return;
+    }
+
+    if(payload.eventType==="DELETE"){
+        await loadTasks();
+        return;
+    }
+}
+
+function startTaskRealtime(){
+    if(window.taskChannel){
+        db.removeChannel(window.taskChannel);
+    }
+
+    window.taskChannel=db
+        .channel("tasks-realtime")
+        .on("postgres_changes",{
+            event:"*",
+            schema:"public",
+            table:"tasks"
+        },payload=>{
+            handleTaskRealtime(payload);
+        })
+        .subscribe();
+}
+
+function startRealtime(){
+    if(!roomId)return;
+
+    if(channel){
+        db.removeChannel(channel);
+    }
+
+    channel=db
+        .channel("chat-room-"+roomId)
+        .on("postgres_changes",{
+            event:"INSERT",
+            schema:"public",
+            table:"messages",
+            filter:"room_id=eq."+roomId
+        },payload=>{
+            addMessage(payload.new);
+            scrollBottom();
+        })
+        .subscribe(status=>{
+            if(status==="SUBSCRIBED"){
+                $("status").textContent="đang hoạt động";
+                $("status").style.color="#00a884";
+            }else{
+                $("status").textContent="đang kết nối...";
+                $("status").style.color="#667781";
+            }
+        });
+}
+
+
+
+/* ================= Ổ ĐĨA CHUNG ================= */
+
+const DRIVE_BUCKET="shared-files";
+
+$("driveMenu").onclick=async()=>{
+    $("driveModal").classList.remove("hidden");
+    await loadFiles();
+};
+
+$("closeDrive").onclick=()=>{
+    $("driveModal").classList.add("hidden");
+};
+
+$("driveModal").addEventListener("click",event=>{
+    if(event.target===$("driveModal")){
+        $("driveModal").classList.add("hidden");
+    }
+});
+
+$("fileInput").onchange=async event=>{
+    const files=[...(event.target.files||[])];
+    if(!files.length)return;
+
+    $("uploadStatus").textContent="Đang tải...";
+    $("fileInput").disabled=true;
+
+    try{
+        for(const file of files){
+            const safeName=file.name.replace(/[^\w.\- ()\u00C0-\u024F]/g,"_");
+            const path=Date.now()+"_"+Math.random().toString(36).slice(2)+"_"+safeName;
+
+            const upload=await db.storage
+                .from(DRIVE_BUCKET)
+                .upload(path,file,{
+                    upsert:false,
+                    cacheControl:"3600"
+                });
+
+            if(upload.error)throw upload.error;
+
+            const record=await db.from("shared_files").insert({
+                file_name:file.name,
+                file_path:path,
+                file_size:file.size,
+                mime_type:file.type||"application/octet-stream",
+                uploaded_by:user.id,
+                uploader_username:$("myName").textContent
+            });
+
+            if(record.error){
+                await db.storage.from(DRIVE_BUCKET).remove([path]);
+                throw record.error;
+            }
+        }
+
+        $("uploadStatus").textContent="Tải lên thành công";
+        $("fileInput").value="";
+        await loadFiles();
+
+    }catch(error){
+        console.error(error);
+        $("uploadStatus").textContent="Lỗi: "+(error.message||"Không tải được file");
+    }finally{
+        $("fileInput").disabled=false;
+    }
+};
+
+async function loadFiles(){
+    const result=await db.from("shared_files")
+        .select("id,file_name,file_path,file_size,mime_type,uploaded_by,uploader_username,created_at")
+        .order("created_at",{ascending:false});
+
+    if(result.error){
+        console.error(result.error);
+        $("filesList").innerHTML='<div class="tasks-empty">Không tải được danh sách file. Hãy chạy SQL tạo ổ đĩa trước.</div>';
+        return;
+    }
+
+    const files=result.data||[];
+    $("fileCount").textContent=files.length;
+
+    if(!files.length){
+        $("filesList").innerHTML='<div class="tasks-empty">Chưa có file nào. Hãy tải file đầu tiên.</div>';
+        return;
+    }
+
+    $("filesList").innerHTML="";
+
+    files.forEach(file=>{
+        const item=document.createElement("div");
+        item.className="file-item";
+
+        const icon=document.createElement("div");
+        icon.className="file-icon";
+        icon.textContent=getFileIcon(file.mime_type,file.file_name);
+
+        const main=document.createElement("div");
+        main.className="file-main";
+
+        const name=document.createElement("div");
+        name.className="file-name";
+        name.title=file.file_name;
+        name.textContent=file.file_name;
+
+        const meta=document.createElement("div");
+        meta.className="file-meta";
+        meta.textContent=
+            formatBytes(file.file_size)+
+            " • "+(file.uploader_username||"Không rõ")+
+            " • "+formatDate(file.created_at);
+
+        main.append(name,meta);
+
+        const actions=document.createElement("div");
+        actions.className="file-actions";
+
+        const download=document.createElement("button");
+        download.className="file-action";
+        download.type="button";
+        download.textContent="⬇ Tải";
+        download.onclick=()=>downloadSharedFile(file);
+
+        actions.append(download);
+
+        const del=document.createElement("button");
+        del.className="file-action file-delete";
+        del.type="button";
+        del.textContent="🗑";
+        del.title="Xóa file";
+        del.onclick=()=>deleteSharedFile(file);
+
+        actions.append(del);
+
+        item.append(icon,main,actions);
+        $("filesList").append(item);
+    });
+}
+
+function getFileIcon(mime,name){
+    if((mime||"").startsWith("image/"))return"🖼️";
+    if((mime||"").startsWith("video/"))return"🎬";
+    if((mime||"").startsWith("audio/"))return"🎵";
+    if((mime||"").includes("pdf")||name.toLowerCase().endsWith(".pdf"))return"📕";
+    if(/\.(doc|docx)$/i.test(name))return"📘";
+    if(/\.(xls|xlsx|csv)$/i.test(name))return"📊";
+    if(/\.(zip|rar|7z)$/i.test(name))return"🗜️";
+    return"📄";
+}
+
+function formatBytes(bytes){
+    if(!bytes)return"0 B";
+    const units=["B","KB","MB","GB"];
+    const i=Math.floor(Math.log(bytes)/Math.log(1024));
+    return (bytes/Math.pow(1024,i)).toFixed(i?1:0)+" "+units[i];
+}
+
+async function downloadSharedFile(file){
+    const result=await db.storage
+        .from(DRIVE_BUCKET)
+        .download(file.file_path);
+
+    if(result.error){
+        alert("Không tải được file:\n"+result.error.message);
+        return;
+    }
+
+    const url=URL.createObjectURL(result.data);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=file.file_name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+async function deleteSharedFile(file){
+    if(!confirm("Xóa file '"+file.file_name+"' khỏi ổ đĩa chung?"))return;
+
+    const storage=await db.storage
+        .from(DRIVE_BUCKET)
+        .remove([file.file_path]);
+
+    if(storage.error){
+        alert("Không xóa được file:\n"+storage.error.message);
+        return;
+    }
+
+    const record=await db.from("shared_files")
+        .delete()
+        .eq("id",file.id);
+
+    if(record.error){
+        alert("File đã xóa khỏi kho nhưng không xóa được bản ghi:\n"+record.error.message);
+        return;
+    }
+
+    await loadFiles();
+}
+
+
+/* ================= CÔNG VIỆC ================= */
+
+let tasksLoaded = false;
+
+$("tasksMenu").onclick = async () => {
+    $("tasksModal").classList.remove("hidden");
+    $("taskForm").classList.add("hidden");
+    await loadMembers();
+    await loadTasks();
+};
+
+$("closeTasks").onclick = () => {
+    $("tasksModal").classList.add("hidden");
+};
+
+$("tasksModal").addEventListener("click", event => {
+    if(event.target === $("tasksModal")){
+        $("tasksModal").classList.add("hidden");
+    }
+});
+
+$("newTaskBtn").onclick = () => {
+    $("taskForm").classList.remove("hidden");
+    $("taskTitle").focus();
+};
+
+$("cancelTask").onclick = () => {
+    resetTaskForm();
+};
+
+$("taskFilter").onchange = () => {
+    renderTasks(window.__tasks || []);
+};
+
+function resetTaskForm(){
+    $("taskTitle").value="";
+    $("taskDescription").value="";
+    $("taskAssignee").value="";
+    $("taskDue").value="";
+    $("taskMsg").textContent="";
+    $("taskForm").classList.add("hidden");
+}
+
+
+async function loadMembers(){
+    const select=$("taskAssignee");
+    select.innerHTML='<option value="">Đang tải thành viên...</option>';
+
+    const result=await db
+        .from("accounts")
+        .select("id,username")
+        .order("username",{ascending:true});
+
+    if(result.error){
+        console.error(result.error);
+        select.innerHTML='<option value="">Không tải được danh sách thành viên</option>';
+        return;
+    }
+
+    select.innerHTML='<option value="">Chọn thành viên được phân công</option>';
+
+    (result.data||[]).forEach(member=>{
+        if(!member.username)return;
+
+        const option=document.createElement("option");
+        option.value=member.username;
+        option.textContent=member.username;
+
+        if(user && member.id===user.id){
+            option.textContent += " (bạn)";
+        }
+
+        select.append(option);
+    });
+}
+
+async function loadTasks(){
+    const result=await db
+        .from("tasks")
+        .select("id,title,description,assignee_username,assigned_at,due_date,status,created_by,created_at")
+        .order("created_at",{ascending:false});
+
+    if(result.error){
+        console.error(result.error);
+        $("tasksList").innerHTML='<div class="tasks-empty">Không tải được công việc. Hãy chạy SQL tạo bảng tasks trước.</div>';
+        return;
+    }
+
+    window.__tasks=result.data||[];
+    tasksLoaded=true;
+    renderTasks(window.__tasks);
+}
+
+function renderTasks(tasks){
+    const filter=$("taskFilter").value;
+    const filtered=filter==="all"
+        ?tasks
+        :tasks.filter(t=>t.status===filter);
+
+    $("taskCount").textContent=tasks.filter(t=>t.status!=="done").length;
+
+    if(!filtered.length){
+        $("tasksList").innerHTML='<div class="tasks-empty">Chưa có công việc phù hợp.</div>';
+        return;
+    }
+
+    $("tasksList").innerHTML="";
+
+    filtered.forEach(task=>{
+        const item=document.createElement("div");
+        item.className="task-item";
+
+        const main=document.createElement("div");
+        main.className="task-main";
+
+        const title=document.createElement("div");
+        title.className="task-title";
+        title.textContent=task.title;
+
+        const desc=document.createElement("div");
+        desc.className="task-description";
+        desc.textContent=task.description||"";
+
+        const meta=document.createElement("div");
+        meta.className="task-meta";
+
+        if(task.assignee_username){
+            const badge=document.createElement("span");
+            badge.className="task-badge";
+            badge.textContent="👤 "+task.assignee_username;
+            meta.append(badge);
+        }
+
+        if(task.assigned_at){
+            const badge=document.createElement("span");
+            badge.className="task-badge";
+            badge.textContent="🟢 Giao: "+formatDate(task.assigned_at);
+            meta.append(badge);
+        }
+
+        if(task.due_date){
+            const badge=document.createElement("span");
+            badge.className="task-badge";
+            badge.textContent="🏁 Hạn hoàn thành: "+formatDate(task.due_date);
+            meta.append(badge);
+        }
+
+        const stateBadge=document.createElement("span");
+        stateBadge.className="task-badge";
+        stateBadge.textContent=taskStatusLabel(task.status);
+        meta.append(stateBadge);
+
+        const status=document.createElement("select");
+        status.className="task-status";
+        [
+            ["todo","Chưa làm"],
+            ["doing","Đang làm"],
+            ["done","Hoàn thành"]
+        ].forEach(([value,label])=>{
+            const option=document.createElement("option");
+            option.value=value;
+            option.textContent=label;
+            option.selected=task.status===value;
+            status.append(option);
+        });
+
+        status.onchange=async()=>{
+            const r=await db.from("tasks")
+                .update({status:status.value})
+                .eq("id",task.id);
+
+            if(r.error){
+                alert("Không cập nhật được công việc:\n"+r.error.message);
+                await loadTasks();
+                return;
+            }
+
+            task.status=status.value;
+            renderTasks(window.__tasks||[]);
+            await postTaskUpdate(task,"status");
+        };
+
+        const del=document.createElement("button");
+        del.className="task-delete";
+        del.type="button";
+        del.textContent="🗑";
+        del.title="Xóa công việc";
+        del.onclick=async()=>{
+            if(!confirm("Xóa công việc này?"))return;
+
+            const r=await db.from("tasks").delete().eq("id",task.id);
+
+            if(r.error){
+                alert("Không xóa được:\n"+r.error.message);
+                return;
+            }
+
+            await postTaskUpdate(task,"deleted");
+            await loadTasks();
+        };
+
+        main.append(title);
+        if(task.description)main.append(desc);
+        main.append(meta);
+
+        item.append(main,status,del);
+        $("tasksList").append(item);
+    });
+}
+
+function formatDate(value){
+    if(!value)return "";
+    const d=new Date(value);
+    if(Number.isNaN(d.getTime()))return value;
+    return d.toLocaleString("vi-VN",{
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit"
+    });
+}
+
+$("saveTask").onclick=async()=>{
+    const title=$("taskTitle").value.trim();
+    const assignee=$("taskAssignee").value;
+    const dueValue=$("taskDue").value;
+
+    if(!title){
+        $("taskMsg").textContent="Vui lòng nhập tên công việc.";
+        $("taskTitle").focus();
+        return;
+    }
+
+    if(!assignee){
+        $("taskMsg").textContent="Vui lòng chọn thành viên được phân công.";
+        $("taskAssignee").focus();
+        return;
+    }
+
+    if(!dueValue){
+        $("taskMsg").textContent="Vui lòng chọn ngày giờ hoàn thành.";
+        $("taskDue").focus();
+        return;
+    }
+
+    const assignedAt=new Date();
+    const completionDueAt=new Date(dueValue);
+
+    if(Number.isNaN(completionDueAt.getTime())){
+        $("taskMsg").textContent="Ngày giờ hoàn thành không hợp lệ.";
+        $("taskDue").focus();
+        return;
+    }
+
+    if(completionDueAt <= assignedAt){
+        $("taskMsg").textContent="Ngày giờ hoàn thành phải sau thời điểm giao việc.";
+        $("taskDue").focus();
+        return;
+    }
+
+    $("saveTask").disabled=true;
+    $("taskMsg").textContent="";
+
+    try{
+        const result=await db.from("tasks").insert({
+            title:title,
+            description:$("taskDescription").value.trim()||null,
+            assignee_username:assignee,
+            assigned_at:assignedAt.toISOString(),
+            due_date:completionDueAt.toISOString(),
+            status:"doing",
+            created_by:user.id
+        }).select().single();
+
+        if(result.error)throw result.error;
+
+        /* Đưa thông báo công việc vào chat nhóm để mọi người cùng thấy */
+        const assigneeLabel = $("taskAssignee").selectedOptions[0]?.textContent || assignee;
+        const taskMessage =
+            "🔄 CÔNG VIỆC MỚI - ĐANG THỰC HIỆN\n" +
+            "━━━━━━━━━━━━━━\n" +
+            "📝 " + title + "\n" +
+            ( $("taskDescription").value.trim()
+                ? "📌 " + $("taskDescription").value.trim() + "\n"
+                : "" ) +
+            "👤 Phân công: " + assigneeLabel.replace(" (bạn)", "") + "\n" +
+            "🟢 Ngày giao: " + formatDate(assignedAt.toISOString()) + "\n" +
+            "🏁 Hạn hoàn thành: " + formatDate(completionDueAt.toISOString()) + "\n" +
+            "📌 Trạng thái: đang thực hiện";
+
+        const chatResult = await db
+            .from("messages")
+            .insert({
+                room_id: roomId,
+                user_id: user.id,
+                username: $("myName").textContent,
+                content: taskMessage
+            });
+
+        if(chatResult.error){
+            console.error("Không đăng thông báo công việc vào chat:", chatResult.error);
+        }
+
+        resetTaskForm();
+        await loadTasks();
+
+    }catch(error){
+        console.error(error);
+        $("taskMsg").textContent=error.message||"Không tạo được công việc.";
+    }finally{
+        $("saveTask").disabled=false;
+    }
+};
+
+(async()=>{
+    const result=await db.auth.getSession();
+
+    if(result.data&&result.data.session){
+        await openChat(result.data.session.user);
+    }
+})();
 </script>
+
+
+
 </body>
 </html>
