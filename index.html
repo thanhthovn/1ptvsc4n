@@ -26,8 +26,8 @@ button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
 .msg{min-height:22px;margin-top:13px;text-align:center;font-size:13px;color:#d93025}.msg.ok{color:#188038}
 
 /* APP */
-#app{height:100vh;display:flex;background:var(--bg)}
-.side{width:390px;min-width:300px;background:rgba(246,246,248,.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:1px solid #c7c7cc;display:flex;flex-direction:column}
+#app{position:relative;height:100vh;display:flex;background:var(--bg)}
+.side{position:relative;z-index:100;width:390px;min-width:300px;background:rgba(246,246,248,.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:1px solid #c7c7cc;display:flex;flex-direction:column}
 .wa-topbar{height:60px;padding:0 16px;background:rgba(242,242,247,.86);display:flex;align-items:center;justify-content:space-between}
 .brand{font-size:20px;font-weight:600}.top-actions{display:flex;gap:8px}
 .top-actions button,.header-actions button{width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#6e6e73;font-size:20px}
@@ -842,6 +842,336 @@ html,body,body{background:#171c16;color:#eef1e8}
 .progress-file-link,.catalog-work-open{color:#a8c489}
 .task-status{background:#272f24}
 
+
+/* ===== MODULES BEHAVE LIKE THE MAIN CHAT PANE ===== */
+#driveModal,#tasksModal,#catalogModal,#progressModal{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    padding:0;
+    background:transparent;
+    display:flex;
+    align-items:stretch;
+    justify-content:flex-end;
+    pointer-events:auto;
+}
+#driveModal .task-panel,
+#tasksModal .task-panel,
+#catalogModal .task-panel,
+#progressModal .task-panel{
+    width:calc(100% - 390px);
+    max-width:none;
+    max-height:none;
+    height:100vh;
+    margin:0;
+    border-radius:0;
+    border:0;
+    border-left:1px solid #3b4637;
+    box-shadow:none;
+    background:#171b16;
+    overflow:hidden;
+}
+#driveModal .task-panel-head,
+#tasksModal .task-panel-head,
+#catalogModal .task-panel-head,
+#progressModal .task-panel-head{
+    height:60px;
+    min-height:60px;
+    padding:0 16px;
+    border-radius:0;
+    border-bottom:1px solid #3b4637;
+    background:rgba(42,50,38,.96);
+}
+#driveModal .task-panel-title,
+#tasksModal .task-panel-title,
+#catalogModal .task-panel-title,
+#progressModal .task-panel-title{
+    font-size:16px;
+    font-weight:600;
+}
+#driveModal .task-panel-subtitle,
+#tasksModal .task-panel-subtitle,
+#catalogModal .task-panel-subtitle,
+#progressModal .task-panel-subtitle{
+    margin-top:2px;
+}
+#driveModal .modal-close,
+#tasksModal .modal-close,
+#catalogModal .modal-close,
+#progressModal .modal-close{
+    width:36px;
+    height:36px;
+    border-radius:9px;
+    font-size:25px;
+    color:#b5bdac;
+}
+#driveModal .modal-close:hover,
+#tasksModal .modal-close:hover,
+#catalogModal .modal-close:hover,
+#progressModal .modal-close:hover{
+    background:#35402f;
+}
+
+/* Make the module toolbars feel like the chat composer/header rather than dialogs */
+#driveModal .drive-toolbar,
+#tasksModal .task-toolbar,
+#catalogModal .catalog-work-head,
+#progressModal .progress-toolbar{
+    min-height:58px;
+    padding:10px 16px;
+    background:#20271e;
+    border-bottom:1px solid #3b4637;
+}
+#driveModal .files-list,
+#tasksModal .tasks-list,
+#catalogModal .catalog-body,
+#progressModal .progress-table-wrap{
+    height:calc(100vh - 118px);
+    max-height:none;
+}
+#catalogModal .catalog-body{
+    min-height:0;
+}
+#catalogModal .catalog-categories{
+    max-height:none;
+}
+#catalogModal .catalog-work-list{
+    min-height:0;
+}
+
+/* Close button reads as "back to chat" */
+#driveModal .modal-close::after,
+#tasksModal .modal-close::after,
+#catalogModal .modal-close::after,
+#progressModal .modal-close::after{
+    content:"";
+}
+
+/* Mobile: module takes the full available screen just like the chat pane */
+@media(max-width:800px){
+    #driveModal .task-panel,
+    #tasksModal .task-panel,
+    #catalogModal .task-panel,
+    #progressModal .task-panel{
+        width:calc(100% - 300px);
+    }
+}
+@media(max-width:600px){
+    #driveModal .task-panel,
+    #tasksModal .task-panel,
+    #catalogModal .task-panel,
+    #progressModal .task-panel{
+        width:calc(100% - 72px);
+    }
+    #driveModal .task-panel-head,
+    #tasksModal .task-panel-head,
+    #catalogModal .task-panel-head,
+    #progressModal .task-panel-head{
+        padding:0 10px;
+    }
+}
+
+/* Keep the main chat visible structurally behind the module, exactly like switching conversation panes */
+#driveModal.hidden,#tasksModal.hidden,#catalogModal.hidden,#progressModal.hidden{
+    display:none !important;
+}
+
+
+/* ===== CHAT-LIST PEERS: modules are conversations too ===== */
+.module-room{
+    width:100%;
+    min-height:72px;
+    border:0;
+    border-bottom:1px solid #394136;
+    border-radius:0;
+    margin:0;
+    padding:10px 14px;
+    text-align:left;
+    font:inherit;
+    color:#edf0e8;
+    position:relative;
+}
+.module-room:hover{background:#30382c}
+.module-room .room-avatar{
+    width:50px;
+    height:50px;
+    flex:none;
+    border-radius:14px;
+}
+.module-room .module-avatar{
+    background:#35412f;
+    color:#b4c98f;
+    font-size:22px;
+}
+.module-room .task-count,
+.module-room .catalog-count{
+    margin-left:0;
+    flex:none;
+}
+.module-room:focus-visible{
+    outline:2px solid #718355;
+    outline-offset:-2px;
+}
+.module-room.active{
+    background:#35412f;
+}
+.module-room.active .room-name{
+    color:#c5d4a7;
+}
+
+
+/* ===== TRUE CHAT-STYLE MODULES ===== */
+#driveModal,#tasksModal,#catalogModal,#progressModal{
+    position:absolute !important;
+    inset:0 0 0 390px !important;
+    z-index:20 !important;
+    display:block !important;
+    padding:0 !important;
+    background:#171b16 !important;
+    overflow:hidden !important;
+}
+#driveModal.hidden,#tasksModal.hidden,#catalogModal.hidden,#progressModal.hidden{
+    display:none !important;
+}
+#driveModal .task-panel,
+#tasksModal .task-panel,
+#catalogModal .task-panel,
+#progressModal .task-panel{
+    width:100% !important;
+    height:100% !important;
+    max-width:none !important;
+    max-height:none !important;
+    margin:0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    background:#171b16 !important;
+    overflow:hidden !important;
+}
+
+/* Identical 60px header to the normal chat */
+#driveModal .task-panel-head,
+#tasksModal .task-panel-head,
+#catalogModal .task-panel-head,
+#progressModal .task-panel-head{
+    height:60px !important;
+    min-height:60px !important;
+    padding:0 16px !important;
+    background:rgba(42,50,38,.93) !important;
+    border-bottom:1px solid #394136 !important;
+}
+#driveModal .task-panel-title,
+#tasksModal .task-panel-title,
+#catalogModal .task-panel-title,
+#progressModal .task-panel-title{
+    font-size:16px !important;
+    font-weight:600 !important;
+}
+#driveModal .task-panel-subtitle,
+#tasksModal .task-panel-subtitle,
+#catalogModal .task-panel-subtitle,
+#progressModal .task-panel-subtitle{
+    font-size:12px !important;
+    margin-top:2px !important;
+}
+
+/* Hide dialog-looking close button and make it a chat-header back button */
+#driveModal .modal-close,
+#tasksModal .modal-close,
+#catalogModal .modal-close,
+#progressModal .modal-close{
+    order:-1;
+    margin-right:2px;
+    width:34px !important;
+    height:34px !important;
+    border-radius:9px !important;
+    font-size:0 !important;
+    color:#b5bdac !important;
+}
+#driveModal .modal-close:before,
+#tasksModal .modal-close:before,
+#catalogModal .modal-close:before,
+#progressModal .modal-close:before{
+    content:"‹";
+    font-size:28px;
+    line-height:1;
+}
+#driveModal .modal-close:hover,
+#tasksModal .modal-close:hover,
+#catalogModal .modal-close:hover,
+#progressModal .modal-close:hover{
+    background:#35402f !important;
+}
+
+/* Content fills the entire chat area */
+#driveModal .drive-toolbar,
+#tasksModal .task-toolbar,
+#catalogModal .catalog-work-head,
+#progressModal .progress-toolbar{
+    min-height:58px;
+    background:#20271e;
+    border-bottom:1px solid #394136;
+}
+#driveModal .files-list,
+#tasksModal .tasks-list,
+#catalogModal .catalog-body,
+#progressModal .progress-table-wrap{
+    height:calc(100% - 118px) !important;
+    max-height:none !important;
+}
+
+/* Composer-like bottom strip for modules */
+#driveModal .drive-toolbar{
+    justify-content:flex-start;
+}
+#driveModal .upload-btn,
+#tasksModal .new-task-btn,
+#catalogModal .catalog-add-btn,
+#progressModal .progress-add-btn{
+    border-radius:20px;
+}
+#tasksModal .task-toolbar,
+#driveModal .drive-toolbar{
+    padding:10px 16px;
+}
+
+/* Catalog remains a workspace internally, but is still inside the same chat pane */
+#catalogModal .catalog-body{
+    display:flex;
+}
+#catalogModal .catalog-categories{
+    height:100%;
+}
+#catalogModal .catalog-work-area{
+    height:100%;
+}
+
+/* Responsive follows the real sidebar width */
+@media(max-width:800px){
+    #driveModal,#tasksModal,#catalogModal,#progressModal{
+        inset:0 0 0 300px !important;
+    }
+}
+@media(max-width:600px){
+    #driveModal,#tasksModal,#catalogModal,#progressModal{
+        inset:0 0 0 72px !important;
+    }
+}
+
+
+/* ===== Sidebar navigation: always return to main chat ===== */
+#roomBox{
+    position:relative;
+    z-index:100;
+}
+#roomBox:hover{background:#30382c}
+#roomBox.active{
+    background:#35402f;
+}
+#roomBox.active .room-name{
+    color:#c5d4a7;
+}
+
 </style>
 </head>
 <body>
@@ -886,24 +1216,6 @@ html,body,body{background:#171c16;color:#eef1e8}
         <span>⌕</span>
         <input placeholder="Tìm kiếm hoặc bắt đầu cuộc trò chuyện" disabled>
     </div>
-    <button id="driveMenu" class="drive-menu" type="button">
-        <span class="drive-menu-icon">▱</span>
-        <span>Ổ đĩa chung</span>
-        <span id="fileCount" class="task-count">0</span>
-    </button>
-
-    <button id="tasksMenu" class="tasks-menu" type="button">
-        <span class="tasks-menu-icon">✓</span>
-        <span>Công việc</span>
-        <span id="taskCount" class="task-count">0</span>
-    </button>
-
-    <button id="catalogMenu" class="catalog-menu" type="button">
-        <span class="catalog-menu-icon">☷</span>
-        <span>Danh mục công việc</span>
-        <span id="catalogCount" class="catalog-count">0</span>
-    </button>
-
     <div class="chat-list">
         <div id="roomBox" class="room">
             <div class="room-avatar">●</div>
@@ -912,6 +1224,33 @@ html,body,body{background:#171c16;color:#eef1e8}
                 <div class="room-preview">Nhóm chat</div>
             </div>
         </div>
+
+        <button id="driveMenu" class="room module-room" type="button">
+            <div class="room-avatar module-avatar">▱</div>
+            <div class="room-info">
+                <div class="room-name">Ổ đĩa chung</div>
+                <div class="room-preview">Kho lưu trữ file dùng chung</div>
+            </div>
+            <span id="fileCount" class="task-count">0</span>
+        </button>
+
+        <button id="tasksMenu" class="room module-room" type="button">
+            <div class="room-avatar module-avatar">✓</div>
+            <div class="room-info">
+                <div class="room-name">Công việc</div>
+                <div class="room-preview">Phân công và theo dõi công việc</div>
+            </div>
+            <span id="taskCount" class="task-count">0</span>
+        </button>
+
+        <button id="catalogMenu" class="room module-room" type="button">
+            <div class="room-avatar module-avatar">☷</div>
+            <div class="room-info">
+                <div class="room-name">Danh mục công việc</div>
+                <div class="room-preview">Quản lý chuyên môn và công việc</div>
+            </div>
+            <span id="catalogCount" class="catalog-count">0</span>
+        </button>
     </div>
 </aside>
 <main class="chat"><div class="head">
@@ -1118,7 +1457,38 @@ html,body,body{background:#171c16;color:#eef1e8}
     </div>
 </div>
 
-<script>const getEl=id=>document.getElementById(id);
+<script>
+
+const getEl=id=>document.getElementById(id);
+/* ===== Equal chat navigation ===== */
+function showModulePane(id){
+    ["driveModal","tasksModal","catalogModal","progressModal"].forEach(mid=>{
+        const el=getEl(mid);
+        if(el) el.classList.add("hidden");
+    });
+    const target=getEl(id);
+    if(target) target.classList.remove("hidden");
+
+    getEl("messages").style.visibility="hidden";
+    getEl("sendForm").style.visibility="hidden";
+    getEl("roomBox").classList.remove("active");
+    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
+}
+
+function showMainChatPane(){
+    ["driveModal","tasksModal","catalogModal","progressModal"].forEach(mid=>{
+        const el=getEl(mid);
+        if(el) el.classList.add("hidden");
+    });
+    getEl("messages").style.visibility="visible";
+    getEl("sendForm").style.visibility="visible";
+    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
+    getEl("roomBox").classList.add("active");
+    getEl("roomTitle").textContent=getEl("roomName").textContent;
+}
+
+getEl("roomBox").onclick=showMainChatPane;
+
 /* ================= TIẾN ĐỘ CÔNG VIỆC ================= */
 
 const PROGRESS_BUCKET = "shared-files";
@@ -1738,18 +2108,21 @@ let catalogEditingType = null; // "category" | "work"
 let catalogEditingId = null;
 
 getEl("catalogMenu").onclick = async () => {
-    getEl("catalogModal").classList.remove("hidden");
+    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
+    getEl("catalogMenu").classList.add("active");
+    showModulePane("catalogModal");
     resetCatalogForm();
     await loadCatalog();
 };
 
 getEl("closeCatalog").onclick = () => {
-    getEl("catalogModal").classList.add("hidden");
+    showMainChatPane();
+    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
 };
 
 getEl("catalogModal").addEventListener("click", event => {
     if(event.target === getEl("catalogModal")){
-        getEl("catalogModal").classList.add("hidden");
+        showMainChatPane();
     }
 });
 
@@ -2243,17 +2616,19 @@ function startRealtime(){
 const DRIVE_BUCKET="shared-files";
 
 getEl("driveMenu").onclick=async()=>{
-    getEl("driveModal").classList.remove("hidden");
+    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
+    getEl("driveMenu").classList.add("active");
+    showModulePane("driveModal");
     await loadFiles();
 };
 
 getEl("closeDrive").onclick=()=>{
-    getEl("driveModal").classList.add("hidden");
+    showMainChatPane();
 };
 
 getEl("driveModal").addEventListener("click",event=>{
     if(event.target===getEl("driveModal")){
-        getEl("driveModal").classList.add("hidden");
+        showMainChatPane();
     }
 });
 
@@ -2497,19 +2872,21 @@ function startCatalogRealtime(){
 let tasksLoaded = false;
 
 getEl("tasksMenu").onclick = async () => {
-    getEl("tasksModal").classList.remove("hidden");
+    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
+    getEl("tasksMenu").classList.add("active");
+    showModulePane("tasksModal");
     getEl("taskForm").classList.add("hidden");
     await loadMembers();
     await loadTasks();
 };
 
 getEl("closeTasks").onclick = () => {
-    getEl("tasksModal").classList.add("hidden");
+    showMainChatPane();
 };
 
 getEl("tasksModal").addEventListener("click", event => {
     if(event.target === getEl("tasksModal")){
-        getEl("tasksModal").classList.add("hidden");
+        showMainChatPane();
     }
 });
 
