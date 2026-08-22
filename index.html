@@ -1172,6 +1172,84 @@ html,body,body{background:#171c16;color:#eef1e8}
     color:#c5d4a7;
 }
 
+
+/* ===== Tree children under Danh mục công việc ===== */
+.module-tree{
+    display:none;
+    background:#20261e;
+    border-bottom:1px solid #394136;
+}
+.module-tree.open{display:block}
+.module-tree-item{
+    min-height:46px;
+    padding:7px 14px 7px 42px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    color:#c6cebd;
+    background:transparent;
+    border:0;
+    width:100%;
+    text-align:left;
+    font:inherit;
+    cursor:pointer;
+    position:relative;
+}
+.module-tree-item:before{
+    content:"";
+    position:absolute;
+    left:27px;
+    top:0;
+    bottom:0;
+    border-left:1px solid #4b5645;
+}
+.module-tree-item:after{
+    content:"";
+    position:absolute;
+    left:27px;
+    top:50%;
+    width:10px;
+    border-top:1px solid #4b5645;
+}
+.module-tree-item:hover{background:#30382c;color:#e5ebdc}
+.module-tree-icon{
+    width:27px;height:27px;border-radius:8px;
+    display:grid;place-items:center;
+    background:#35412f;color:#b4c98f;
+    font-size:14px;flex:none;
+}
+.module-tree-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.module-tree-item.active{background:#35442e;color:#c5d4a7}
+
+/* When expanded, the catalog row acts as the tree parent */
+#catalogMenu.tree-open{background:#30382c}
+#catalogMenu.tree-open .catalog-expand{
+    transform:rotate(90deg);
+}
+.catalog-expand{
+    margin-left:auto;
+    color:#9da791;
+    transition:transform .15s ease;
+    font-size:15px;
+}
+
+
+/* ===== Catalog: specialties live in sidebar tree only ===== */
+#catalogModal .catalog-categories,
+#catalogModal .catalog-cat-head{
+    display:none !important;
+}
+#catalogModal .catalog-body{
+    display:block !important;
+}
+#catalogModal .catalog-work-area{
+    width:100% !important;
+    flex:1 1 auto !important;
+}
+#catalogModal .catalog-work-list{
+    width:100% !important;
+}
+
 </style>
 </head>
 <body>
@@ -1249,8 +1327,10 @@ html,body,body{background:#171c16;color:#eef1e8}
                 <div class="room-name">Danh mục công việc</div>
                 <div class="room-preview">Quản lý chuyên môn và công việc</div>
             </div>
-            <span id="catalogCount" class="catalog-count">0</span>
+            <span id="catalogCount" class="catalog-count">0</span><span class="catalog-expand">›</span>
         </button>
+        <div id="catalogTree" class="module-tree" aria-label="Cây chuyên môn">
+        </div>
     </div>
 </aside>
 <main class="chat"><div class="head">
@@ -1488,6 +1568,50 @@ function showMainChatPane(){
 }
 
 getEl("roomBox").onclick=showMainChatPane;
+getEl("catalogMenu").addEventListener("click",(e)=>{
+    e.preventDefault();
+    const tree=getEl("catalogTree");
+    const open=tree.classList.toggle("open");
+    getEl("catalogMenu").classList.toggle("tree-open",open);
+    getEl("catalogMenu").setAttribute("aria-expanded",String(open));
+    if(open){
+        showModulePane("catalogModal");
+        resetCatalogForm();
+        loadCatalog();
+    } else {
+        showMainChatPane();
+    }
+});
+
+async function renderCatalogTree(){
+    const tree=getEl("catalogTree");
+    if(!tree) return;
+    tree.querySelectorAll(".module-tree-item").forEach(x=>x.remove());
+
+    if(typeof catalogWorks!=="undefined" && Array.isArray(catalogWorks)){
+        const categories = Array.isArray(catalogCategories) ? catalogCategories : [];
+        categories.forEach(cat=>{
+            const btn=document.createElement("button");
+            btn.type="button";
+            btn.className="module-tree-item";
+            btn.dataset.specialty=cat.id;
+            btn.innerHTML='<span class="module-tree-icon">⌘</span><span class="module-tree-name"></span>';
+            btn.querySelector(".module-tree-name").textContent=cat.name || "Chuyên môn";
+            btn.onclick=(ev)=>{
+                ev.stopPropagation();
+                document.querySelectorAll(".module-tree-item").forEach(x=>x.classList.remove("active"));
+                btn.classList.add("active");
+                showModulePane("catalogModal");
+                if(typeof selectedCatalogCategoryId!=="undefined"){
+                    selectedCatalogCategoryId=cat.id;
+                }
+                if(typeof renderCatalogWorks==="function") renderCatalogWorks();
+            };
+            tree.appendChild(btn);
+        });
+    }
+}
+
 
 /* ================= TIẾN ĐỘ CÔNG VIỆC ================= */
 
@@ -2113,6 +2237,7 @@ getEl("catalogMenu").onclick = async () => {
     showModulePane("catalogModal");
     resetCatalogForm();
     await loadCatalog();
+    if(typeof renderCatalogTree==="function") renderCatalogTree();
 };
 
 getEl("closeCatalog").onclick = () => {
