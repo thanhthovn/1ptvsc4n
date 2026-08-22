@@ -1259,6 +1259,45 @@ html,body,body{background:#171c16;color:#eef1e8}
     .progress-agency,.progress-note{min-width:120px}
 }
 
+
+/* ===== Better date/time input ===== */
+#progressDate{
+    color-scheme:dark;
+    min-height:42px;
+    padding:0 12px;
+    font-family:inherit;
+    font-size:14px;
+    letter-spacing:.1px;
+}
+#progressDate::-webkit-calendar-picker-indicator{
+    filter:invert(72%) sepia(12%) saturate(520%) hue-rotate(45deg);
+    opacity:.9;
+    cursor:pointer;
+    width:18px;
+    height:18px;
+}
+#progressDate:focus{
+    border-color:#82966a !important;
+    box-shadow:0 0 0 2px rgba(130,150,106,.16) !important;
+}
+.progress-date-label{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin-bottom:6px;
+    color:#aeb7a4;
+    font-size:12px;
+    font-weight:600;
+}
+.progress-date-label .calendar-icon{
+    color:#b4c98f;
+    font-size:14px;
+}
+.progress-date-field{
+    display:flex;
+    flex-direction:column;
+}
+
 </style>
 </head>
 <body>
@@ -1510,7 +1549,12 @@ html,body,body{background:#171c16;color:#eef1e8}
             <div id="progressFormTitle" class="catalog-form-title">Thêm bước tiến độ</div>
 
             <div class="progress-form-grid">
-                <input id="progressDate" class="progress-input" type="datetime-local">
+                <div class="progress-date-field">
+                    <label class="progress-date-label" for="progressDate">
+                        <span class="calendar-icon">▣</span> Ngày & giờ
+                    </label>
+                    <input id="progressDate" class="progress-input" type="datetime-local">
+                </div>
                 <input id="progressContent" class="progress-input" maxlength="300"
                        placeholder="Nội dung tiến độ *">
 
