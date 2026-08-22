@@ -1250,6 +1250,15 @@ html,body,body{background:#171c16;color:#eef1e8}
     width:100% !important;
 }
 
+
+.progress-agency{min-width:150px}
+.progress-note{min-width:150px}
+#progressModal .progress-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:900px){
+    #progressModal .progress-form-grid{grid-template-columns:1fr}
+    .progress-agency,.progress-note{min-width:120px}
+}
+
 </style>
 </head>
 <body>
@@ -1505,8 +1514,14 @@ html,body,body{background:#171c16;color:#eef1e8}
                 <input id="progressContent" class="progress-input" maxlength="300"
                        placeholder="Nội dung tiến độ *">
 
+                <input id="progressAgency" class="progress-input" maxlength="300"
+                       placeholder="Cơ quan thực hiện">
+
                 <textarea id="progressDescription" class="progress-input progress-textarea"
                           maxlength="2000" placeholder="Diễn giải"></textarea>
+
+                <textarea id="progressNote" class="progress-input progress-textarea"
+                          maxlength="2000" placeholder="Ghi chú"></textarea>
 
                 <input id="progressFiles" class="progress-input progress-file-input"
                        type="file" multiple>
@@ -1526,8 +1541,10 @@ html,body,body{background:#171c16;color:#eef1e8}
                     <tr>
                         <th class="progress-date">Ngày tháng</th>
                         <th class="progress-content">Nội dung</th>
+                        <th class="progress-agency">Cơ quan thực hiện</th>
                         <th class="progress-description">Diễn giải</th>
                         <th class="progress-file">File đính kèm</th>
+                        <th class="progress-note">Ghi chú</th>
                         <th class="progress-actions">Thao tác</th>
                     </tr>
                 </thead>
@@ -1655,7 +1672,9 @@ getEl("addProgressBtn").onclick = () => {
     getEl("progressFormTitle").textContent = "Thêm bước tiến độ";
     getEl("progressDate").value = toDateTimeLocal(new Date());
     getEl("progressContent").value = "";
+    getEl("progressAgency").value = "";
     getEl("progressDescription").value = "";
+    getEl("progressNote").value = "";
     getEl("progressFiles").value = "";
     getEl("progressMsg").textContent = "";
     getEl("progressForm").classList.remove("hidden");
@@ -1684,7 +1703,7 @@ async function loadProgress(){
     if(!selectedProgressWork)return;
 
     const result = await db.from("work_progress")
-        .select("id,work_id,progress_date,content,description,created_by,created_at")
+        .select("id,work_id,progress_date,content,agency,description,note,created_by,created_at")
         .eq("work_id",selectedProgressWork.id)
         .order("progress_date",{ascending:true})
         .order("created_at",{ascending:true});
@@ -1692,7 +1711,7 @@ async function loadProgress(){
     if(result.error){
         console.error(result.error);
         getEl("progressList").innerHTML =
-            '<tr><td colspan="5" class="progress-empty">Không tải được tiến độ.</td></tr>';
+            '<tr><td colspan="7" class="progress-empty">Không tải được tiến độ.</td></tr>';
         return;
     }
 
@@ -1728,7 +1747,7 @@ async function loadProgressFiles(rows){
 function renderProgress(){
     if(!progressRows.length){
         getEl("progressList").innerHTML =
-            '<tr><td colspan="5" class="progress-empty">Chưa có bước tiến độ nào. Bấm “＋ Thêm tiến độ” để bắt đầu.</td></tr>';
+            '<tr><td colspan="7" class="progress-empty">Chưa có bước tiến độ nào. Bấm “＋ Thêm tiến độ” để bắt đầu.</td></tr>';
         return;
     }
 
@@ -1744,6 +1763,10 @@ function renderProgress(){
         const content = document.createElement("td");
         content.className = "progress-content";
         content.textContent = row.content;
+
+        const agency = document.createElement("td");
+        agency.className = "progress-agency";
+        agency.textContent = row.agency || "—";
 
         const description = document.createElement("td");
         description.className = "progress-description";
@@ -1786,6 +1809,10 @@ function renderProgress(){
             fileCell.textContent = "Không có file";
         }
 
+        const note = document.createElement("td");
+        note.className = "progress-note";
+        note.textContent = row.note || "—";
+
         const actions = document.createElement("td");
         actions.className = "progress-actions";
 
@@ -1802,7 +1829,7 @@ function renderProgress(){
         del.onclick = () => deleteProgress(row);
 
         actions.append(edit,del);
-        tr.append(date,content,description,fileCell,actions);
+        tr.append(date,content,agency,description,fileCell,note,actions);
         getEl("progressList").append(tr);
     });
 }
@@ -1812,7 +1839,9 @@ function editProgress(row){
     getEl("progressFormTitle").textContent = "Chỉnh sửa bước tiến độ";
     getEl("progressDate").value = toDateTimeLocal(new Date(row.progress_date));
     getEl("progressContent").value = row.content || "";
+    getEl("progressAgency").value = row.agency || "";
     getEl("progressDescription").value = row.description || "";
+    getEl("progressNote").value = row.note || "";
     getEl("progressFiles").value = "";
     getEl("progressMsg").textContent =
         "Lưu ý: file cũ vẫn được giữ nguyên; file mới sẽ được thêm vào.";
@@ -1825,7 +1854,9 @@ getEl("saveProgress").onclick = async () => {
 
     const dateValue = getEl("progressDate").value;
     const content = getEl("progressContent").value.trim();
+    const agency = getEl("progressAgency").value.trim() || null;
     const description = getEl("progressDescription").value.trim() || null;
+    const note = getEl("progressNote").value.trim() || null;
     const files = [...(getEl("progressFiles").files || [])];
 
     if(!dateValue){
@@ -1851,7 +1882,9 @@ getEl("saveProgress").onclick = async () => {
                 .update({
                     progress_date:new Date(dateValue).toISOString(),
                     content:content,
-                    description:description
+                    agency:agency,
+                    description:description,
+                    note:note
                 })
                 .eq("id",progressId);
         }else{
@@ -1860,7 +1893,9 @@ getEl("saveProgress").onclick = async () => {
                     work_id:selectedProgressWork.id,
                     progress_date:new Date(dateValue).toISOString(),
                     content:content,
+                    agency:agency,
                     description:description,
+                    note:note,
                     created_by:user.id
                 })
                 .select("id")
