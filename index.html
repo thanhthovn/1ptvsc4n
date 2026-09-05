@@ -139,12 +139,62 @@ select:focus,input:focus{
   margin-top:10px;
 }
 
+/* CHANNEL + nút KÊNH TRƯỚC / KÊNH SAU cùng một hàng */
+.channel-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.channel-row select{
+  flex:1;
+  min-width:0;
+}
+
+.channel-nav{
+  display:flex;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+.channel-nav button{
+  white-space:nowrap;
+}
+
+@media(max-width:600px){
+  .channel-row{
+    flex-wrap:wrap;
+  }
+
+  .channel-row select{
+    width:100%;
+    flex:0 0 100%;
+  }
+
+  .channel-nav{
+    width:100%;
+  }
+
+  .channel-nav button{
+    flex:1;
+  }
+}
+
 /* Bố cục riêng cho các nút FREEM3U */
 .vid-scan-control{
   display:flex;
   align-items:flex-end;
   gap:8px;
   margin-top:10px;
+}
+
+.vid-scan-control .vid-scan-actions{
+  margin-top:0;
+  flex:1;
+}
+
+.vid-scan-control .vid-scan-actions button{
+  width:100%;
 }
 
 .vid-scan-number{
@@ -196,6 +246,10 @@ select:focus,input:focus{
   }
 
   .vid-scan-nav{
+    width:100%;
+  }
+
+  .vid-scan-control .vid-scan-actions{
     width:100%;
   }
 }
@@ -355,11 +409,12 @@ button.danger:hover{
         </div>
 
         <label style="margin-top:12px">▸ CHANNEL</label>
-        <select id="channelSelect"></select>
-
-        <div class="actions">
-          <button class="secondary" onclick="prevChannel()">⬅ KÊNH TRƯỚC</button>
-          <button class="secondary" onclick="nextChannel()">KÊNH SAU ➡</button>
+        <div class="channel-row">
+          <select id="channelSelect"></select>
+          <div class="channel-nav">
+            <button class="secondary" onclick="prevChannel()">⬅ KÊNH TRƯỚC</button>
+            <button class="secondary" onclick="nextChannel()">KÊNH SAU ➡</button>
+          </div>
         </div>
 
         <div id="channelCounter" class="counter"></div>
@@ -396,11 +451,10 @@ button.danger:hover{
       <button class="secondary" onclick="scanBackward()">◀️ DÒ LÙI</button>
       <button id="vidScanBtn" onclick="startVidScan()">🔎 DÒ TỚI</button>
     </div>
-  </div>
 
-  <div class="vid-scan-actions">
-    <button class="secondary" onclick="resetVidScan()">↺ DÒ LẠI TỪ ĐẦU</button>
-    <button class="danger" onclick="stopVidScan()">■ DỪNG DÒ</button>
+    <div class="vid-scan-actions">
+      <button class="secondary" onclick="resetVidScan()">↺ DÒ LẠI TỪ ĐẦU</button>
+    </div>
   </div>
 
   <div id="vidScanStatus" class="counter">
