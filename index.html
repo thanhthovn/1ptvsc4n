@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE 12</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 15</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -164,7 +164,7 @@ input:focus{
 
 .url-row input{
   font-family:Consolas,monospace;
-  font-size:14px;        /* vẫn giữ 14px nhưng không bị zoom vì đã có 16px chung */
+  font-size:14px;
   flex:1 1 260px;
   min-width:0;
 }
@@ -1010,6 +1010,17 @@ const nextChannelBtn = document.getElementById("nextChannelBtn");
 const autoScanBtn = document.getElementById("autoScanBtn");
 const resetAutoScanBtn = document.getElementById("resetAutoScanBtn");
 
+/* =========================================================
+   HÀM HELPER KIỂM TRA HLS SUPPORT
+========================================================= */
+function isHlsSupported() {
+  return window.Hls && Hls.isSupported && Hls.isSupported();
+}
+
+function isHlsEventsAvailable() {
+  return window.Hls && Hls.Events;
+}
+
 /*
    iOS/Safari BUTTON HANDLERS
    Không dùng inline onclick.
@@ -1410,7 +1421,7 @@ function setupHlsPlayback(url, {
     if (onError) {
       video.removeEventListener("error", onVideoError);
     }
-    if (hls && window.Hls) {
+    if (hls && isHlsEventsAvailable()) {
       hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
       hls.off(Hls.Events.ERROR, onHlsError);
     }
@@ -1476,15 +1487,17 @@ function setupHlsPlayback(url, {
     video.src = url;
   }
   // PC/Android/macOS: hls.js khi MSE được hỗ trợ.
-  else if (window.Hls && Hls.isSupported()) {
+  else if (isHlsSupported()) {
     hls = new Hls({
       enableWorker:true,
       lowLatencyMode:true,
       backBufferLength:30
     });
 
-    hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-    hls.on(Hls.Events.ERROR, onHlsError);
+    if (isHlsEventsAvailable()) {
+      hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      hls.on(Hls.Events.ERROR, onHlsError);
+    }
 
     hls.loadSource(url);
     hls.attachMedia(video);
@@ -1595,12 +1608,17 @@ function tryAutoScanLink(index, token) {
       if(done) return;
       done = true;
       clearTimeout(timer);
+      
+      // Fix: Sửa lỗi tham chiếu probe
       if(probeHls) {
         const probe = probeHls;
         probeHls = null;
-        if (activeProbeHls === probe) activeProbeHls = null;
+        if (activeProbeHls === probe) {
+          activeProbeHls = null;
+        }
         try { probe.destroy(); } catch(e) {}
       }
+      
       if(nativeCleanup) {
         nativeCleanup();
         nativeCleanup = null;
@@ -1615,24 +1633,31 @@ function tryAutoScanLink(index, token) {
     timer = setTimeout(() => finish(false), 10000);
 
     // Dùng một Hls instance riêng để kiểm tra manifest.
-    if(window.Hls && Hls.isSupported()) {
+    if(isHlsSupported()) {
       try {
         probeHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
         activeProbeHls = probeHls; // lưu để hủy khi cần
-        probeHls.once(Hls.Events.MANIFEST_PARSED, () => finish(true));
-        probeHls.once(Hls.Events.ERROR, (event, data) => {
-          if(data && data.fatal) {
-            if(probeHls) {
-              probeHls.destroy();
-              probeHls = null;
-              if (activeProbeHls === probeHls) activeProbeHls = null;
+        
+        // Fix: Kiểm tra Hls.Events trước khi sử dụng
+        if (isHlsEventsAvailable()) {
+          probeHls.once(Hls.Events.MANIFEST_PARSED, () => finish(true));
+          probeHls.once(Hls.Events.ERROR, (event, data) => {
+            if(data && data.fatal) {
+              if(probeHls) {
+                probeHls.destroy();
+                probeHls = null;
+                if (activeProbeHls === probeHls) activeProbeHls = null;
+              }
+              finish(false);
             }
-            finish(false);
-          }
-        });
+          });
+        } else {
+          // Fallback nếu Hls.Events không có sẵn
+          setTimeout(() => finish(false), 5000);
+        }
+        
         probeHls.attachMedia(video);
         probeHls.loadSource(url);
-        // Lưu cancel function (không cần thiết vì đã có probeHls.destroy)
       } catch(e) {
         console.error("Probe HLS:", e);
         if(probeHls) {
@@ -1717,12 +1742,17 @@ function autoScanLinks() {
   setAutoScanButton(true);
 
   const scanNext = () => {
-    if(token !== autoScanToken || !autoScanning) return;
+    if(token !== autoScanToken || !autoScanning) {
+      // Dọn dẹp timers khi kết thúc
+      autoScanTimers = [];
+      return;
+    }
 
     if(index >= templates.length) {
       autoScanNextIndex = templates.length;
       autoScanning = false;
       setAutoScanButton(false);
+      autoScanTimers = [];
       setStatus("🔴 " + code + " — đã dò hết " + templates.length + " link, không tìm thấy link hợp lệ", "error");
       return;
     }
@@ -1731,11 +1761,15 @@ function autoScanLinks() {
     autoScanNextIndex = index;
 
     tryAutoScanLink(testIndex, token).then(success => {
-      if(token !== autoScanToken || !autoScanning) return;
+      if(token !== autoScanToken || !autoScanning) {
+        autoScanTimers = [];
+        return;
+      }
 
       if(success) {
         autoScanning = false;
         setAutoScanButton(false);
+        autoScanTimers = [];
         templateSelect.selectedIndex = testIndex;
         updateUrl();
         showQuality(testIndex, true);
@@ -1749,8 +1783,10 @@ function autoScanLinks() {
     }).catch(err => {
       console.error("Auto scan:", err);
       if(token === autoScanToken && autoScanning) {
-        const timer = setTimeout(scanNext, 30);
+        const timer = setTimeout(scanNext, 100);
         autoScanTimers.push(timer);
+      } else {
+        autoScanTimers = [];
       }
     });
   };
@@ -1760,12 +1796,6 @@ function autoScanLinks() {
   setStatus("🔎 Bắt đầu dò kênh " + code + " từ Link 1...");
   setTimeout(scanNext, 0);
 }
-
-/* =========================================================
-   DÒ LẠI TỪ ĐẦU (chỉ reset index, không xóa kênh)
-========================================================= */
-
-
 
 /* =========================================================
    FREEM3U // DÒ KÊNH THEO SỐ
@@ -1901,7 +1931,7 @@ function startVidScan() {
 
         setVidScanStatus(
           "🎯 TÌM THẤY TÍN HIỆU Ở KÊNH #" + number +
-          " — ĐÃ DỪNG. Bấm ĐANG DÒ KÊNH ... để dò tiếp từ #" +
+          " — ĐÃ DỪNG. Bấm DÒ TỚI để dò tiếp từ #" +
           vidScanNumber + ".",
           "ok"
         );
@@ -1968,7 +1998,7 @@ function stopVidScan() {
   destroyPlayer();
 
   setVidScanStatus(
-    "⚪ Đã dừng dò tại số " + vidScanNumber + ". Bấm DÒ SỐ TỰ ĐỘNG để tiếp tục."
+    "⚪ Đã dừng dò tại số " + vidScanNumber + ". Bấm DÒ TỚI để tiếp tục."
   );
 }
 
@@ -2069,11 +2099,11 @@ async function copyUrl() {
     await navigator.clipboard.writeText(url);
     setStatus("📋 Đã copy link", "ok");
   } catch(error) {
-    // Fallback: select and copy
+    // Fallback: hiển thị thông báo và chọn text
     try {
       urlBox.select();
-      document.execCommand("copy");
-      setStatus("📋 Đã copy link (fallback)", "ok");
+      urlBox.setSelectionRange(0, 99999);
+      setStatus("📋 Đã chọn URL, bấm Ctrl+C để copy", "ok");
     } catch(e) {
       setStatus("❌ Không thể copy link", "error");
     }
