@@ -319,20 +319,13 @@ button.danger:hover{
   </div>
 
   <div class="panel-body" id="vidScanBody">
-  <div class="url-row">
-    <input id="vidScanUrl" value="https://freem3u.xyz/api/live/play.m3u8?vid={number}" readonly>
-  </div>
-
-  <div class="grid" style="margin-top:10px;">
+  <div class="grid">
     <div>
       <label>SỐ ĐANG DÒ</label>
       <input id="vidCurrent" value="1" readonly>
     </div>
 
-    <div>
-      <label>KÊNH TÌM THẤY</label>
-      <input id="vidFound" value="Chưa dò" readonly>
-    </div>
+
   </div>
 
   <div class="actions">
@@ -413,13 +406,13 @@ const templates = [
   },
 
   {
-    name:"Link 6 — Live HLS AVC INDEX",
-    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8"
+    name:"Link 5 — EPZ SD1 2.5M",
+    url:"https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 5 — EPZ SD1 2.5M",
-    url:"https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
+    name:"Link 6 — Live HLS AVC INDEX",
+    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8"
   },
 
   {
@@ -569,7 +562,6 @@ const linkCounter = document.getElementById("linkCounter");
 const qualityText = document.getElementById("qualityText");
 
 const vidCurrent = document.getElementById("vidCurrent");
-const vidFound = document.getElementById("vidFound");
 const vidScanStatus = document.getElementById("vidScanStatus");
 const vidScanBtn = document.getElementById("vidScanBtn");
 
@@ -873,6 +865,29 @@ function isIOS() {
    PC/Android: dùng hls.js khi có MSE.
 ========================================================= */
 
+function attachHls(url, onManifestParsed, onHlsError) {
+  if(window.Hls && Hls.isSupported()) {
+    hls = new Hls({
+      enableWorker:true,
+      lowLatencyMode:true,
+      backBufferLength:30
+    });
+
+    hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+    hls.on(Hls.Events.ERROR, onHlsError);
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    return true;
+  }
+
+  if(video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = url;
+    return true;
+  }
+
+  return false;
+}
+
 function playUrl(url,index) {
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
@@ -1068,26 +1083,11 @@ function tryAutoScanLink(index, token) {
       video.addEventListener("loadedmetadata", onMetadata, {once:true});
       video.src = url;
     }
-    else if(window.Hls && Hls.isSupported()) {
-      hls = new Hls({
-        enableWorker:true,
-        lowLatencyMode:true,
-        backBufferLength:30
-      });
-
-      hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      hls.on(Hls.Events.ERROR, onHlsError);
-
-      hls.loadSource(url);
-      hls.attachMedia(video);
-    }
-    else if(video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.addEventListener("loadedmetadata", onMetadata, {once:true});
-      video.src = url;
-    }
     else {
-      finish(false);
-      return;
+      if(!attachHls(url, onManifestParsed, onHlsError)) {
+        finish(false);
+        return;
+      }
     }
 
     // iOS đôi khi không phát sinh error khi stream không vào được,
@@ -1287,26 +1287,11 @@ function tryVidNumber(number, token) {
       video.addEventListener("loadedmetadata", onMetadata, {once:true});
       video.src = url;
     }
-    else if(window.Hls && Hls.isSupported()) {
-      hls = new Hls({
-        enableWorker:true,
-        lowLatencyMode:true,
-        backBufferLength:30
-      });
-
-      hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      hls.on(Hls.Events.ERROR, onHlsError);
-
-      hls.loadSource(url);
-      hls.attachMedia(video);
-    }
-    else if(video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.addEventListener("loadedmetadata", onMetadata, {once:true});
-      video.src = url;
-    }
     else {
-      finish(false);
-      return;
+      if(!attachHls(url, onManifestParsed, onHlsError)) {
+        finish(false);
+        return;
+      }
     }
 
     // Không để một số lỗi mạng treo việc dò.
@@ -1341,7 +1326,6 @@ function startVidScan() {
   const token = vidScanToken;
   setVidScanButton(true);
 
-  if(vidFound) vidFound.value = vidFoundNumbers.length ? vidFoundNumbers.join(", ") : "Đang dò...";
 
   function scanNext() {
     if(token !== vidScanToken || !vidScanning) return;
@@ -1373,10 +1357,6 @@ function startVidScan() {
         // Tìm thấy tín hiệu: dừng NGAY tại số này để người dùng xem.
         vidFoundNumbers.push(number);
         updateVidScanDisplay(number);
-
-        if(vidFound) {
-          vidFound.value = vidFoundNumbers.join(", ");
-        }
 
         urlBox.value = getVidUrl(number);
         freem3uPlaying = true;
@@ -1487,8 +1467,6 @@ function resetVidScan() {
 
   setVidScanButton(false);
   updateVidScanDisplay(1);
-
-  if(vidFound) vidFound.value = "Chưa dò";
 
   setVidScanStatus(
     "🔄 Đã reset — lần dò tiếp theo bắt đầu từ kênh số 1."
@@ -1605,10 +1583,6 @@ video.addEventListener(
   function() {
 
     if(freem3uPlaying) {
-      if(vidFound && freem3uPlayingNumber !== null) {
-        vidFound.value = "KÊNH " + freem3uPlayingNumber;
-      }
-
       if(qualityText && freem3uPlayingNumber !== null) {
         qualityText.textContent =
           "FreeM3U — Kênh số " + freem3uPlayingNumber;
