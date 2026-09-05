@@ -381,7 +381,7 @@ button.danger:hover{
   <div class="panel-head">
     <label>▸ CHỌN KÊNH / LINK</label>
     <button class="secondary panel-toggle" type="button"
-            onclick="togglePanel('channelBody','channelToggle')">
+            onclick="togglePanel('channelBody','channelToggle')" aria-expanded="true">
       <span id="channelToggle">▲ ẨN</span>
     </button>
   </div>
@@ -433,32 +433,33 @@ button.danger:hover{
 <div class="card scan-panel" id="vidScanPanel">
   <div class="panel-head">
     <label>▸ FREEM3U // DÒ KÊNH THEO SỐ</label>
-    <button class="secondary panel-toggle" type="button" onclick="togglePanel('vidScanBody','vidScanToggle')">
+    <button class="secondary panel-toggle" type="button"
+            onclick="togglePanel('vidScanBody','vidScanToggle')"
+            aria-expanded="true">
       <span id="vidScanToggle">▲ ẨN</span>
     </button>
   </div>
 
- 
+  <div class="panel-body" id="vidScanBody">
+    <div class="vid-scan-control">
+      <div class="vid-scan-number">
+        <label>SỐ ĐANG DÒ</label>
+        <input id="vidCurrent" value="1" readonly>
+      </div>
 
-  <div class="vid-scan-control">
-    <div class="vid-scan-number">
-      <label>SỐ ĐANG DÒ</label>
-      <input id="vidCurrent" value="1" readonly>
+      <div class="vid-scan-nav">
+        <button id="vidScanBtn" onclick="startVidScan()">🔎 DÒ TỚI</button>
+        <button class="secondary" onclick="scanBackward()">◀️ DÒ LÙI</button>
+      </div>
+
+      <div class="vid-scan-actions">
+        <button class="secondary" onclick="resetVidScan()">↺ DÒ LẠI TỪ ĐẦU</button>
+      </div>
     </div>
 
-    <div class="vid-scan-nav">
-      <button id="vidScanBtn" onclick="startVidScan()">🔎 DÒ TỚI</button>
-      <button class="secondary" onclick="scanBackward()">◀️ DÒ LÙI</button>
-          </div>
-
-    <div class="vid-scan-actions">
-      <button class="secondary" onclick="resetVidScan()">↺ DÒ LẠI TỪ ĐẦU</button>
+    <div id="vidScanStatus" class="counter">
+      ⚪ Sẵn sàng
     </div>
-  </div>
-
-  <div id="vidScanStatus" class="counter">
-    ⚪ Sẵn sàng
-  </div>
   </div>
 </div>
 
@@ -683,7 +684,6 @@ const linkCounter = document.getElementById("linkCounter");
 const qualityText = document.getElementById("qualityText");
 
 const vidCurrent = document.getElementById("vidCurrent");
-const vidFound = document.getElementById("vidFound");
 const vidScanStatus = document.getElementById("vidScanStatus");
 const vidScanBtn = document.getElementById("vidScanBtn");
 
@@ -718,6 +718,10 @@ templateSelect.value = "0";
 
 let manualChannelCode = "";
 
+function isManualChannelActive() {
+  return manualChannelCode.trim() !== "";
+}
+
 function getActiveChannelCode() {
   return manualChannelCode.trim() || channelSelect.value;
 }
@@ -749,6 +753,11 @@ function useManualChannel() {
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
+
+  setStatus(
+    "🟢 Đã dùng kênh thủ công: " + manualChannelCode + " — có thể DÒ TỰ ĐỘNG",
+    "ok"
+  );
 }
 
 function clearManualChannel() {
@@ -935,8 +944,17 @@ function togglePanel(bodyId, toggleId) {
 
   if(!body || !toggle) return;
 
-  const hidden = body.classList.toggle("is-hidden");
-  toggle.textContent = hidden ? "▼ HIỆN" : "▲ ẨN";
+  const hidden = body.classList.contains("is-hidden");
+
+  if(hidden) {
+    body.classList.remove("is-hidden");
+    toggle.textContent = "▲ ẨN";
+    toggle.setAttribute("aria-expanded", "true");
+  } else {
+    body.classList.add("is-hidden");
+    toggle.textContent = "▼ HIỆN";
+    toggle.setAttribute("aria-expanded", "false");
+  }
 }
 
 /* =========================================================
@@ -1148,7 +1166,11 @@ function tryAutoScanLink(index, token) {
     updateUrl();
 
     setStatus(
-      "🔎 Đang dò Link " + (index + 1) + "/" + templates.length + "..."
+      "🔎 Đang dò " +
+      (isManualChannelActive()
+        ? "kênh thủ công " + getActiveChannelCode() + " — "
+        : "") +
+      "Link " + (index + 1) + "/" + templates.length + "..."
     );
 
     setupHlsPlayback(url, {
@@ -1275,7 +1297,7 @@ function setVidScanButton(scanning) {
   vidScanBtn.disabled = scanning;
   vidScanBtn.textContent = scanning
     ? "⏳ ĐANG DÒ SỐ..."
-    : "⚡ DÒ SỐ TỰ ĐỘNG";
+    : "🔎 DÒ TỚI";
 }
 
 function updateVidScanDisplay(number) {
@@ -1328,9 +1350,6 @@ function startVidScan() {
   // Nếu bắt đầu từ số 1 thì đây là một lượt dò mới.
   if(vidScanNumber === 1) {
     vidFoundNumbers = [];
-    if(vidFound && vidFoundNumbers.length === 0) {
-    vidFound.value = "Đang dò...";
-  }
   }
 
   vidScanning = true;
@@ -1338,8 +1357,6 @@ function startVidScan() {
 
   const token = vidScanToken;
   setVidScanButton(true);
-
-  if(vidFound) vidFound.value = vidFoundNumbers.length ? vidFoundNumbers.join(", ") : "Đang dò...";
 
   function scanNext() {
     if(token !== vidScanToken || !vidScanning) return;
@@ -1371,10 +1388,6 @@ function startVidScan() {
         // Tìm thấy tín hiệu: dừng NGAY tại số này để người dùng xem.
         vidFoundNumbers.push(number);
         updateVidScanDisplay(number);
-
-        if(vidFound) {
-          vidFound.value = vidFoundNumbers.join(", ");
-        }
 
         urlBox.value = getVidUrl(number);
         freem3uPlaying = true;
@@ -1468,8 +1481,6 @@ function resetVidScan() {
 
   setVidScanButton(false);
   updateVidScanDisplay(1);
-
-  if(vidFound) vidFound.value = "Chưa dò";
 
   setVidScanStatus(
     "🔄 Đã reset — lần dò tiếp theo bắt đầu từ kênh số 1."
@@ -1586,9 +1597,6 @@ video.addEventListener(
   function() {
 
     if(freem3uPlaying) {
-      if(vidFound && freem3uPlayingNumber !== null) {
-        vidFound.value = "KÊNH " + freem3uPlayingNumber;
-      }
 
       if(qualityText && freem3uPlayingNumber !== null) {
         qualityText.textContent =
@@ -1682,6 +1690,10 @@ document.addEventListener(
 
   }
 );
+
+/* Khởi tạo panel ẨN/HIỆN */
+document.getElementById("channelToggle")?.setAttribute("aria-expanded", "true");
+document.getElementById("vidScanToggle")?.setAttribute("aria-expanded", "true");
 
 /* Khởi tạo FREEM3U scanner */
 updateVidScanDisplay(1);
