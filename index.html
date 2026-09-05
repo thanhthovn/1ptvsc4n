@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE 3</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 4</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -169,6 +169,27 @@ input:focus{
   flex-wrap:wrap;
   margin-top:10px;
 }
+/* Ô nhập kênh thủ công */
+.manual-channel-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.manual-channel-row input{
+  flex:1 1 360px;
+  min-width:0;
+}
+.manual-channel-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.manual-channel-actions button{
+  white-space:nowrap;
+}
+
 .channel-actions{
   margin-top:8px;
 }
@@ -199,6 +220,30 @@ input:focus{
 }
 
 @media(max-width:600px){
+
+  /* iPhone: ô nhập và nút thao tác giống hàng CHANNEL bên dưới */
+  .manual-channel-row{
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+  }
+  .manual-channel-row input{
+    width:100%;
+    flex:0 0 40px;
+    height:40px;
+    font-size:16px;
+  }
+  .manual-channel-actions{
+    width:100%;
+    gap:8px;
+  }
+  .manual-channel-actions button{
+    flex:1;
+    min-width:0;
+    height:40px;
+    padding:10px 8px;
+  }
+
   .channel-row{
     flex-wrap:wrap;
   }
@@ -463,12 +508,14 @@ button.danger:hover{
 
       <div>
         <label>▸ NHẬP TÊN KÊNH THỦ CÔNG</label>
-        <div class="url-row">
+        <div class="manual-channel-row">
           <input id="manualChannelInput" type="text"
                  placeholder="Ví dụ: vtv1" autocomplete="off"
                  aria-label="Nhập tên kênh thủ công">
-          <button class="secondary" onclick="useManualChannel()" aria-label="Dùng kênh thủ công">DÙNG KÊNH</button>
-          <button class="danger" onclick="clearManualChannel()" aria-label="Xóa kênh thủ công">XÓA KÊNH</button>
+          <div class="manual-channel-actions">
+            <button class="secondary" onclick="useManualChannel()" aria-label="Dùng kênh thủ công">DÙNG KÊNH</button>
+            <button class="danger" onclick="clearManualChannel()" aria-label="Xóa kênh thủ công">XÓA KÊNH</button>
+          </div>
         </div>
 
         <div class="counter">
@@ -483,7 +530,7 @@ button.danger:hover{
           <div class="channel-nav">
             <button class="secondary" onclick="prevChannel()" aria-label="Kênh trước">⬅ KÊNH TRƯỚC</button>
             <button class="secondary" onclick="nextChannel()" aria-label="Kênh sau">KÊNH SAU ➡</button>
-            <button id="autoScanBtn" onclick="autoScanLinks()" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
+            <button id="autoScanBtn" class="danger" onclick="autoScanLinks()" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
             <button class="secondary" onclick="resetAutoScanIndex()" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
           </div>
         </div>
@@ -520,7 +567,7 @@ button.danger:hover{
       </div>
 
       <div class="vid-scan-nav">
-        <button id="vidScanBtn" onclick="startVidScan()" aria-label="Dò tới">🔎 DÒ TỚI</button>
+        <button id="vidScanBtn" class="danger" onclick="startVidScan()" aria-label="Dò tới">🔎 DÒ TỚI</button>
         <button class="secondary" onclick="scanBackward()" aria-label="Dò lùi">◀️ DÒ LÙI</button>
       </div>
 
