@@ -151,6 +151,12 @@ button:hover{
   box-shadow:0 0 8px rgba(32,224,32,.18);
 }
 
+button:disabled{
+  opacity:.65;
+  cursor:wait;
+  box-shadow:none;
+}
+
 button.secondary{
   background:#0b1a0b;
   color:#8cff8c;
@@ -163,24 +169,11 @@ button.secondary:hover{
 }
 
 button.danger{
-  background:#7f1515;
+  background:var(--danger);
 }
 
 button.danger:hover{
-  background:#a51d1d;
-}
-
-button.copy-btn{
-  background:#8b1717;
-  border-color:#ef4444;
-  color:#ffd0d0;
-}
-
-button.copy-btn:hover{
-  background:#b91c1c;
-  border-color:#ff5555;
-  color:#fff;
-  box-shadow:0 0 10px rgba(239,68,68,.25);
+  background:#dc2626;
 }
 
 .counter{
@@ -211,7 +204,7 @@ button.copy-btn:hover{
 <!-- PLAYER -->
 <div class="card">
   <div class="player">
-    <video id="video" controls playsinline webkit-playsinline preload="metadata"></video>
+    <video id="video" controls playsinline></video>
   </div>
 
   <div id="status" class="status">
@@ -221,6 +214,8 @@ button.copy-btn:hover{
   <div class="actions">
     <button onclick="playCurrent()">▶ RUN</button>
     <button class="danger" onclick="stopPlayer()">■ STOP</button>
+    <button id="autoScanBtn" onclick="autoScanLinks()">⚡ DÒ TỰ ĐỘNG</button>
+    <button class="secondary" onclick="resetAutoScan()">↻ DÒ LẠI TỪ ĐẦU</button>
   </div>
 </div>
 
@@ -261,7 +256,7 @@ button.copy-btn:hover{
 
   <div class="url-row">
     <input id="urlBox" readonly>
-    <button class="copy-btn" onclick="copyUrl()">COPY</button>
+    <button onclick="copyUrl()">COPY</button>
   </div>
 </div>
 
@@ -274,8 +269,6 @@ button.copy-btn:hover{
 ========================================================= */
 
 const channels = [
-  
-  "vtv1",
   "antv",
   "anninhtv",
   "ANNINHTV",
@@ -291,7 +284,9 @@ const channels = [
 
 
 /* =========================================================
-   CÁC MẪU LINK {code} sẽ được thay bằng mã kênh.
+   CÁC MẪU LINK
+   Danh sách link thực tế; {code} sẽ được thay bằng mã kênh.
+   {code} sẽ được thay bằng mã kênh.
 ========================================================= */
 
 const templates = [
@@ -317,39 +312,73 @@ const templates = [
   },
 
   {
-    name:"Link 5 — EPZ SD1",
+    name:"Link 5 — EPZ SD1 2.5M",
+    url:"https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 6 — EPZ SD2 2.5M",
+    url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 7 — EPZ SD1",
     url:"https://live.fptplay53.net/epzsd1/{code}_hls.smil/chunklist.m3u8"
   },
 
- {
-    name:"Link 6 — EPZ SD2",
-    url:"https://live.fptplay53.net/epzsd2/{code}_hls.smil/chunklist.m3u8"
+  {
+    name:"Link 8 — EPZ SD2",
+    url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist.m3u8"
   },
-{
-    name:"Link 7 — EPZ HD1-5M",
+
+  {
+    name:"Link 9 — EPZ SD1 5M",
+    url:"https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
+  },
+
+  {
+    name:"Link 10 — EPZ SD2 5M",
+    url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
+  },
+
+  {
+    name:"Link 11 — EPZ HD1",
+    url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist.m3u8"
+  },
+
+  {
+    name:"Link 12 — EPZ HD2",
+    url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist.m3u8"
+  },
+
+  {
+    name:"Link 13 — EPZ HD1 5M",
     url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
+
   {
-    name:"Link 7 — EPZ HD1-5M",
+    name:"Link 14 — EPZ HD2 5M",
     url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 8 — FNX SD1 - 2.5M",
+    name:"Link 15 — FNX SD1 2.5M",
     url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8"
-  },
- {
-    name:"Link 8 — FNX SD2 - 2.5M",
-    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8"
-  },
-  {
-    name:"Link 8 — FNX HD 5M",
-    url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 9 — FNX HD 1",
+    name:"Link 16 — FNX SD2 2.5M",
+    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 17 — FNX HD1",
     url:"https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8"
+  },
+
+  {
+    name:"Link 18 — FNX HD2 5M",
+    url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   }
 
 ];
@@ -361,6 +390,9 @@ const templates = [
 
 let hls = null;
 let currentPlayingLink = 0;
+let autoScanning = false;
+let autoScanToken = 0;
+let autoScanNextIndex = 0;
 
 const video = document.getElementById("video");
 const channelSelect = document.getElementById("channelSelect");
@@ -438,7 +470,14 @@ function updateUrl() {
 
 function nextChannel() {
 
-  let index = channelSelect.selectedIndex + 1;
+  
+  // Đổi kênh -> reset dò về Link 1.
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = 0;
+  setAutoScanButton(false);
+
+let index = channelSelect.selectedIndex + 1;
 
   if(index >= channels.length) {
     index = 0;
@@ -454,7 +493,14 @@ function nextChannel() {
 
 function prevChannel() {
 
-  let index = channelSelect.selectedIndex - 1;
+  
+  // Đổi kênh -> reset dò về Link 1.
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = 0;
+  setAutoScanButton(false);
+
+let index = channelSelect.selectedIndex - 1;
 
   if(index < 0) {
     index = channels.length - 1;
@@ -511,6 +557,12 @@ function prevLink() {
 channelSelect.addEventListener(
   "change",
   function(){
+    // Đổi kênh -> lần dò mới luôn bắt đầu từ Link 1.
+    autoScanToken++;
+    autoScanning = false;
+    autoScanNextIndex = 0;
+    setAutoScanButton(false);
+
     updateUrl();
     playCurrent();
   }
@@ -573,42 +625,11 @@ function playUrl(url,index) {
 
 
   /*
-    Safari / iOS: ưu tiên HLS native.
-    iPhone/iPad có HLS tích hợp sẵn và thường ổn định hơn hls.js.
-  */
-  const isApple = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) ||
-                  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-  if(isApple && video.canPlayType("application/vnd.apple.mpegurl")) {
-
-    video.src = url;
-
-    video.addEventListener(
-      "loadedmetadata",
-      function() {
-        setStatus(
-          "🟢 Đang phát — Link " + (index + 1),
-          "ok"
-        );
-
-        video.play().catch(() => {
-          setStatus(
-            "🟡 Đã tải stream — bấm ▶ trên video để phát",
-            "ok"
-          );
-        });
-      },
-      {once:true}
-    );
-
-  }
-
-  /*
     Chrome / Edge / Firefox
     sử dụng HLS.js
   */
 
-  else if(window.Hls && Hls.isSupported()) {
+  if(window.Hls && Hls.isSupported()) {
 
     hls = new Hls({
       enableWorker:true,
@@ -682,12 +703,7 @@ function playUrl(url,index) {
           "ok"
         );
 
-        video.play().catch(() => {
-          setStatus(
-            "🟡 Stream đã tải — bấm ▶ để phát",
-            "ok"
-          );
-        });
+        video.play().catch(() => {});
 
       },
       {once:true}
@@ -708,6 +724,179 @@ function playUrl(url,index) {
 
 
 /* =========================================================
+   DÒ LINK TỰ ĐỘNG
+   - Luôn dò từ Link 1 → Link cuối
+   - Mỗi link chỉ thử đúng 1 lần
+   - Link nào phát được thì dừng ngay
+   - Dò hết mà không có link nào thì dừng
+========================================================= */
+
+function setAutoScanButton(scanning) {
+  const btn = document.getElementById("autoScanBtn");
+  if(!btn) return;
+
+  btn.disabled = scanning;
+  btn.textContent = scanning
+    ? "⏳ ĐANG DÒ..."
+    : "⚡ DÒ TỰ ĐỘNG";
+}
+
+function waitForNextScanStep() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+function tryAutoScanLink(index, token) {
+  return new Promise((resolve) => {
+    if(token !== autoScanToken) {
+      resolve(false);
+      return;
+    }
+
+    const url = getUrl(index);
+    let finished = false;
+    let timer = null;
+
+    const finish = (success) => {
+      if(finished) return;
+      finished = true;
+
+      clearTimeout(timer);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("error", onVideoError);
+
+      if(hls) {
+        hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+        hls.off(Hls.Events.ERROR, onHlsError);
+      }
+
+      resolve(success);
+    };
+
+    const onPlaying = () => finish(true);
+    const onVideoError = () => finish(false);
+
+    const onManifestParsed = () => {
+      video.play().catch(() => {});
+    };
+
+    const onHlsError = (event, data) => {
+      if(data && data.fatal) finish(false);
+    };
+
+    destroyPlayer();
+
+    currentPlayingLink = index;
+    templateSelect.selectedIndex = index;
+    updateUrl();
+
+    setStatus(
+      "🔎 Đang dò Link " + (index + 1) + "/" + templates.length + "..."
+    );
+
+    video.addEventListener("playing", onPlaying, {once:true});
+    video.addEventListener("error", onVideoError, {once:true});
+
+    if(window.Hls && Hls.isSupported()) {
+      hls = new Hls({
+        enableWorker:true,
+        lowLatencyMode:true,
+        backBufferLength:30
+      });
+
+      hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      hls.on(Hls.Events.ERROR, onHlsError);
+
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    }
+    else if(video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = url;
+      video.play().catch(() => {});
+    }
+    else {
+      finish(false);
+      return;
+    }
+
+    // Một link lỗi không được phép treo quá lâu.
+    timer = setTimeout(() => finish(false), 10000);
+  });
+}
+
+function autoScanLinks() {
+  if(autoScanning) return;
+
+  // Dò tiếp từ vị trí còn lại.
+  // Ví dụ lần trước tìm thấy Link 6 -> lần bấm sau bắt đầu từ Link 7.
+  if(autoScanNextIndex >= templates.length) {
+    setStatus(
+      "⚪ Đã dò hết tất cả " + templates.length + " link — không còn link để dò",
+      "error"
+    );
+    return;
+  }
+
+  autoScanning = true;
+  autoScanToken++;
+
+  const token = autoScanToken;
+  let index = autoScanNextIndex;
+
+  setAutoScanButton(true);
+
+  function scanNext() {
+    if(token !== autoScanToken || !autoScanning) return;
+
+    if(index >= templates.length) {
+      autoScanNextIndex = templates.length;
+      autoScanning = false;
+      destroyPlayer();
+      setAutoScanButton(false);
+
+      setStatus(
+        "🔴 Đã dò hết " + templates.length + " link — không có thêm link nào phát được",
+        "error"
+      );
+      return;
+    }
+
+    const testIndex = index++;
+
+    // Lưu ngay vị trí kế tiếp để lần bấm sau tiếp tục từ đây.
+    autoScanNextIndex = index;
+
+    tryAutoScanLink(testIndex, token).then(function(success) {
+      if(token !== autoScanToken || !autoScanning) return;
+
+      if(success) {
+        autoScanning = false;
+        templateSelect.selectedIndex = testIndex;
+        updateUrl();
+        setAutoScanButton(false);
+
+        setStatus(
+          "🟢 Tìm thấy link phát được — Link " + (testIndex + 1) +
+          " | Lần dò sau sẽ bắt đầu từ Link " + (testIndex + 2 > templates.length ? "cuối" : testIndex + 2),
+          "ok"
+        );
+        return;
+      }
+
+      // Không phát được -> tiếp tục link kế tiếp ở task mới.
+      setTimeout(scanNext, 0);
+    }).catch(function(error) {
+      console.log("Auto scan:", error);
+
+      if(token !== autoScanToken || !autoScanning) return;
+
+      setTimeout(scanNext, 0);
+    });
+  }
+
+  setTimeout(scanNext, 0);
+}
+
+/* =========================================================
    PHÁT LINK ĐANG CHỌN
 ========================================================= */
 
@@ -725,18 +914,38 @@ function playCurrent() {
 }
 
 
+function resetAutoScan() {
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = 0;
+
+  setAutoScanButton(false);
+  destroyPlayer();
+
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+
+  setStatus(
+    "🔄 Đã reset — lần dò tiếp theo sẽ bắt đầu từ Link 1"
+  );
+}
+
+
 /* =========================================================
    DỪNG
 ========================================================= */
 
 function stopPlayer() {
 
+  autoScanToken++;
+  autoScanning = false;
+  setAutoScanButton(false);
+
   destroyPlayer();
 
   setStatus(
     "⚪ Đã dừng"
   );
-
 }
 
 
