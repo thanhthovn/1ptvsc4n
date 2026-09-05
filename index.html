@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>M3U8 STREAM DISCOVERY CONSOLE3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M3U8 STREAM DISCOVERY CONSOLE2</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -20,36 +20,19 @@
   --ok:#20e020;
 }
 
-*,
-*::before,
-*::after{
-  box-sizing:border-box;
-}
-
-html{
-  width:100%;
-  min-height:100%;
-  background:#030603;
-  -webkit-text-size-adjust:100%;
-  text-size-adjust:100%;
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
-  width:100%;
   min-height:100vh;
-  min-height:100dvh;
   background:#030603;
   color:#b7ffb7;
   font-family:Arial,Helvetica,sans-serif;
-  overflow-x:hidden;
-  -webkit-tap-highlight-color:transparent;
 }
 
 .app{
-  width:100%;
-  max-width:1180px;
-  margin:0 auto;
+  width:min(1180px,100%);
+  margin:auto;
   padding:22px;
 }
 
@@ -80,21 +63,17 @@ h1{
 }
 
 .player{
-  position:relative;
-  width:100%;
-  aspect-ratio:16/9;
   background:#000;
   border-radius:11px;
   overflow:hidden;
+  aspect-ratio:16/9;
 }
 
 video{
   display:block;
   width:100%;
   height:100%;
-  max-width:100%;
   background:#000;
-  object-fit:contain;
 }
 
 .status{
@@ -153,15 +132,13 @@ input:focus{
 
 .url-row{
   display:flex;
-  align-items:stretch;
   gap:8px;
-  width:100%;
 }
 
 .url-row input{
   font-family:Consolas,monospace;
-  font-size:16px;
-  flex:1 1 auto;
+  font-size:14px;        /* vẫn giữ 14px nhưng không bị zoom vì đã có 16px chung */
+  flex:1 1 260px;
   min-width:0;
 }
 
@@ -202,47 +179,24 @@ input:focus{
 
 @media(max-width:600px){
   .channel-row{
-    display:block;
+    flex-wrap:wrap;
   }
 
   .channel-row select{
-    display:block;
     width:100%;
-    min-width:0;
-    margin-bottom:8px;
+    flex:0 0 100%;
   }
 
   .channel-nav{
-    display:grid;
-    grid-template-columns:1fr 1fr;
     width:100%;
-    gap:7px;
   }
 
   .channel-nav button{
-    width:100%;
-    min-width:0;
-    min-height:44px;
-    padding:10px 7px;
-    white-space:normal;
-    line-height:1.15;
+    flex:1;
   }
+}
 
-  .url-row{
-    flex-direction:column;
-  }
-
-  .url-row input,
-  .url-row button{
-    width:100%;
-  }
-
-  .url-row button{
-    min-height:44px;
-  }
-
-  .vid-scan-control{
-{
+.vid-scan-control{
   display:flex;
   align-items:flex-end;
   gap:8px;
@@ -294,58 +248,31 @@ input:focus{
 
 @media (max-width:600px){
   .vid-scan-control{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
+    flex-wrap:wrap;
   }
 
   .vid-scan-number{
-    grid-column:1 / -1;
-    width:100%;
-  }
-
-  .vid-scan-number label{
-    text-align:center;
+    flex:0 0 100%;
   }
 
   .vid-scan-number input{
     display:block;
-    width:100px;
-    min-height:44px;
-    margin:0 auto;
+    margin:auto;
   }
 
   .vid-scan-nav{
-    display:grid;
-    grid-template-columns:1fr 1fr;
     width:100%;
-    gap:8px;
-  }
-
-  .vid-scan-nav button{
-    width:100%;
-    min-height:44px;
   }
 
   .vid-scan-control .vid-scan-actions{
-    display:block;
     width:100%;
-    margin:0;
-  }
-
-  .vid-scan-control .vid-scan-actions button{
-    width:100%;
-    min-height:44px;
   }
 }
 
 button{
-  -webkit-appearance:none;
-  appearance:none;
-  touch-action:manipulation;
+  touch-action:manipulation;   /* thêm để hỗ trợ iOS */
   border:1px solid #25d925;
   border-radius:7px;
-  min-height:44px;
   padding:10px 14px;
   background:#0b240b;
   color:#7dff7d;
@@ -446,91 +373,6 @@ button.danger:hover{
 }
 .panel-body.is-hidden{
   display:none;
-}
-
-
-/* ===== iPHONE / iOS SAFARI FINAL LAYOUT ===== */
-@supports (padding: max(0px)){
-  .app{
-    padding-left:max(12px, env(safe-area-inset-left));
-    padding-right:max(12px, env(safe-area-inset-right));
-    padding-bottom:max(20px, env(safe-area-inset-bottom));
-  }
-}
-
-@media (max-width:760px){
-  .app{
-    padding-top:14px;
-    padding-bottom:20px;
-  }
-
-  header{
-    margin-bottom:12px;
-  }
-
-  h1{
-    font-size:19px;
-    line-height:1.25;
-    letter-spacing:.5px;
-    word-break:break-word;
-  }
-
-  .subtitle{
-    font-size:12px;
-    line-height:1.4;
-  }
-
-  .card{
-    padding:11px;
-    margin-bottom:10px;
-    border-radius:9px;
-  }
-
-  label{
-    font-size:12px;
-    line-height:1.25;
-  }
-
-  select,
-  input{
-    width:100%;
-    min-height:44px;
-    font-size:16px !important;
-    line-height:1.2;
-  }
-
-  /* Keep Safari's native select behavior; the previous appearance:none
-     can make the dropdown look broken/confusing on iPhone. */
-  select{
-    -webkit-appearance:auto;
-    appearance:auto;
-  }
-
-  .status,
-  .quality-box{
-    font-size:12px;
-    line-height:1.4;
-  }
-
-  .counter{
-    line-height:1.35;
-  }
-}
-
-@media (max-width:380px){
-  .channel-nav,
-  .vid-scan-nav{
-    grid-template-columns:1fr;
-  }
-
-  h1{
-    font-size:18px;
-  }
-
-  .channel-nav button,
-  .vid-scan-nav button{
-    min-height:42px;
-  }
 }
 
 </style>
