@@ -274,6 +274,8 @@ button.copy-btn:hover{
 ========================================================= */
 
 const channels = [
+  
+  "vtv1",
   "antv",
   "anninhtv",
   "ANNINHTV",
@@ -289,9 +291,7 @@ const channels = [
 
 
 /* =========================================================
-   CÁC MẪU LINK
-   Có 9 link thực tế theo danh sách bạn đã đưa.
-   {code} sẽ được thay bằng mã kênh.
+   CÁC MẪU LINK {code} sẽ được thay bằng mã kênh.
 ========================================================= */
 
 const templates = [
@@ -317,20 +317,31 @@ const templates = [
   },
 
   {
-    name:"Link 5 — EPZ SD",
+    name:"Link 5 — EPZ SD1",
     url:"https://live.fptplay53.net/epzsd1/{code}_hls.smil/chunklist.m3u8"
   },
 
+ {
+    name:"Link 6 — EPZ SD2",
+    url:"https://live.fptplay53.net/epzsd2/{code}_hls.smil/chunklist.m3u8"
+  },
+{
+    name:"Link 7 — EPZ HD1-5M",
+    url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
+  },
   {
-    name:"Link 6 — EPZ HD 5M",
+    name:"Link 7 — EPZ HD1-5M",
     url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 7 — FNX SD 2.5M",
+    name:"Link 8 — FNX SD1 - 2.5M",
     url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8"
   },
-
+ {
+    name:"Link 8 — FNX SD2 - 2.5M",
+    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8"
+  },
   {
     name:"Link 8 — FNX HD 5M",
     url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
