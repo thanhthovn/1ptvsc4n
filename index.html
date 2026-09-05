@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE 4</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 5</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -474,10 +474,7 @@ button.danger:hover{
 
 <header>
   <h1>⌨ M3U8 // STREAM DISCOVERY CONSOLE</h1>
-  <div class="subtitle">
-    [ SYSTEM READY ] Chọn kênh → chọn link → phát M3U8
-  </div>
-</header>
+  </header>
 
 <!-- PLAYER -->
 <div class="card">
@@ -494,9 +491,9 @@ button.danger:hover{
 
 <!-- CHỌN KÊNH / LINK -->
 <div class="card scan-panel" id="channelPanel">
-  <div class="panel-head">
-    <label>▸ CHỌN KÊNH / LINK</label>
-    <button class="secondary panel-toggle" type="button"
+    <div class="panel-head">
+    <label>▸ DÒ KÊNH THỦ CÔNG</label>
+       <button class="secondary panel-toggle" type="button"
             onclick="togglePanel('channelBody','channelToggle')" aria-expanded="true"
             aria-label="Toggle channel panel">
       <span id="channelToggle">▲ ẨN</span>
@@ -505,10 +502,8 @@ button.danger:hover{
 
   <div class="panel-body" id="channelBody">
     <div class="grid">
-
       <div>
-        <label>▸ NHẬP TÊN KÊNH THỦ CÔNG</label>
-        <div class="manual-channel-row">
+                <div class="manual-channel-row">
           <input id="manualChannelInput" type="text"
                  placeholder="Ví dụ: vtv1" autocomplete="off"
                  aria-label="Nhập tên kênh thủ công">
@@ -524,7 +519,7 @@ button.danger:hover{
 
 
 
-        <label style="margin-top:12px">▸ CHANNEL</label>
+        <label style="margin-top:12px">▸ CHỌN LIST KÊNH</label>
         <div class="channel-row">
           <select id="channelSelect" aria-label="Chọn kênh"></select>
           <div class="channel-nav">
