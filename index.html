@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE2</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 3</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -109,13 +109,32 @@ input{
   appearance:none;
   touch-action:manipulation;
   width:100%;
-  padding:11px;
+  height:40px;
+  padding:6px 10px;
   border:1px solid var(--border);
   border-radius:8px;
   outline:none;
   background:#050905;
   color:var(--text);
-  font-size:16px;        /* tăng lên 16px để tránh zoom trên iOS */
+  font-size:16px;        /* giữ 16px để Safari iPhone không tự zoom */
+}
+
+#manualChannelInput{
+  height:40px;
+}
+
+#urlBox{
+  height:40px;
+}
+
+#templateSelect,
+#channelSelect{
+  height:40px;
+}
+
+#vidCurrent{
+  height:40px;
+  padding:6px;
 }
 
 select:focus,
@@ -124,7 +143,9 @@ input:focus{
 }
 
 #vidCurrent{
-  width:100px;
+  width:90px;
+  height:40px;
+  padding:6px;
   text-align:center;
   font-weight:700;
   font-family:Consolas,monospace;
@@ -347,6 +368,31 @@ button.danger:hover{
   .grid{grid-template-columns:1fr}
   .url-row{flex-direction:column}
   h1{font-size:22px}
+
+  /* iPhone/Safari: ô nhập gọn nhưng vẫn giữ font 16px để không auto-zoom */
+  select,
+  input{
+    height:40px;
+    padding:6px 10px;
+    font-size:16px;
+  }
+
+  .url-row input{
+    height:40px;
+    font-size:16px;
+  }
+
+  #manualChannelInput,
+  #channelSelect,
+  #templateSelect,
+  #urlBox{
+    height:40px;
+  }
+
+  #vidCurrent{
+    width:90px;
+    height:40px;
+  }
 }
 
 .scan-panel{
