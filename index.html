@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE 11</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 12</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -213,6 +213,8 @@ input:focus{
 }
 
 .channel-nav{
+  position:relative;
+  z-index:30;
   display:flex;
   align-items:center;
   gap:8px;
@@ -222,6 +224,9 @@ input:focus{
 }
 
 .channel-nav button{
+  position:relative;
+  z-index:31;
+  pointer-events:auto;
   white-space:nowrap;
 }
 
@@ -415,7 +420,12 @@ input:focus{
 }
 
 button{
-  touch-action:manipulation;   /* thêm để hỗ trợ iOS */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  position: relative;
+  z-index: 20;
   border:1px solid #25d925;
   border-radius:7px;
   padding:10px 14px;
@@ -662,7 +672,7 @@ button{
 <div class="app">
 
 <header>
-  <h1>⌨ M3U8 // STREAM DISCOVERY CONSOLE</h1>
+  <h1>⌨ M3U8 // STREAM SCANNING</h1>
   </header>
 
 <!-- PLAYER -->
@@ -712,10 +722,10 @@ button{
         <div class="channel-row">
           <select id="channelSelect" aria-label="Chọn kênh"></select>
           <div class="channel-nav">
-            <button class="secondary" onclick="prevChannel()" aria-label="Kênh trước">⬅ KÊNH TRƯỚC</button>
-            <button class="secondary" onclick="nextChannel()" aria-label="Kênh sau">KÊNH SAU ➡</button>
-            <button id="autoScanBtn" class="danger" onclick="autoScanLinks()" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
-            <button class="secondary" onclick="resetAutoScanIndex()" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
+            <button id="prevChannelBtn" class="secondary" type="button" aria-label="Kênh trước">⬅ KÊNH TRƯỚC</button>
+            <button id="nextChannelBtn" class="secondary" type="button" aria-label="Kênh sau">KÊNH SAU ➡</button>
+            <button id="autoScanBtn" class="danger" type="button" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
+            <button id="resetAutoScanBtn" class="secondary" type="button" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
           </div>
         </div>
         <div id="channelCounter" class="counter"></div>
@@ -995,6 +1005,41 @@ const qualityBox = document.getElementById("qualityBox");
 const vidCurrent = document.getElementById("vidCurrent");
 const vidScanStatus = document.getElementById("vidScanStatus");
 const vidScanBtn = document.getElementById("vidScanBtn");
+const prevChannelBtn = document.getElementById("prevChannelBtn");
+const nextChannelBtn = document.getElementById("nextChannelBtn");
+const autoScanBtn = document.getElementById("autoScanBtn");
+const resetAutoScanBtn = document.getElementById("resetAutoScanBtn");
+
+/*
+   iOS/Safari BUTTON HANDLERS
+   Không dùng inline onclick.
+   click là event chuẩn; touchend chỉ fallback cho iOS cũ.
+*/
+function bindIOSButton(button, handler) {
+  if (!button) return;
+
+  let lastTouch = 0;
+
+  button.addEventListener("touchend", function(event) {
+    lastTouch = Date.now();
+    event.preventDefault();
+    event.stopPropagation();
+    handler();
+  }, {passive:false});
+
+  button.addEventListener("click", function(event) {
+    if (Date.now() - lastTouch < 800) return;
+    event.preventDefault();
+    event.stopPropagation();
+    handler();
+  }, false);
+}
+
+bindIOSButton(prevChannelBtn, prevChannel);
+bindIOSButton(nextChannelBtn, nextChannel);
+bindIOSButton(autoScanBtn, autoScanLinks);
+bindIOSButton(resetAutoScanBtn, resetAutoScanIndex);
+
 
 /* =========================================================
    KHỞI TẠO DROPDOWN
@@ -1052,12 +1097,14 @@ function resetAutoScanIndex() {
 
 function cancelActiveProbe() {
   if (activeProbeHls) {
-    activeProbeHls.destroy();
+    const probe = activeProbeHls;
     activeProbeHls = null;
+    try { probe.destroy(); } catch(e) {}
   }
   if (activePlaybackCancel) {
-    activePlaybackCancel();
+    const cancel = activePlaybackCancel;
     activePlaybackCancel = null;
+    try { cancel(); } catch(e) {}
   }
 }
 
@@ -1521,7 +1568,7 @@ function setAutoScanButton(scanning) {
   const btn = document.getElementById("autoScanBtn");
   if(!btn) return;
 
-  btn.disabled = scanning;
+  btn.disabled = !!scanning;
   btn.textContent = scanning
     ? "⏳ ĐANG DÒ..."
     : "⚡ DÒ TỰ ĐỘNG";
@@ -1548,10 +1595,11 @@ function tryAutoScanLink(index, token) {
       if(done) return;
       done = true;
       clearTimeout(timer);
-      if(probeHls) { 
-        probeHls.destroy(); 
+      if(probeHls) {
+        const probe = probeHls;
         probeHls = null;
-        if (activeProbeHls === probeHls) activeProbeHls = null;
+        if (activeProbeHls === probe) activeProbeHls = null;
+        try { probe.destroy(); } catch(e) {}
       }
       if(nativeCleanup) {
         nativeCleanup();
@@ -1717,17 +1765,7 @@ function autoScanLinks() {
    DÒ LẠI TỪ ĐẦU (chỉ reset index, không xóa kênh)
 ========================================================= */
 
-function resetAutoScanIndex() {
-  autoScanToken++;
-  autoScanning = false;
-  autoScanNextIndex = 0;
-  autoScanTimers.forEach(timer => clearTimeout(timer));
-  autoScanTimers = [];
-  setAutoScanButton(false);
-  cancelActiveProbe();
-  // Không xóa manualChannelCode
-  setStatus("🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1", "ok");
-}
+
 
 /* =========================================================
    FREEM3U // DÒ KÊNH THEO SỐ
@@ -1747,7 +1785,7 @@ function setVidScanButton(scanning) {
 
   vidScanBtn.disabled = scanning;
   vidScanBtn.textContent = scanning
-    ? "⏳ ĐANG DÒ SỐ..."
+    ? "⏳ ĐANG DÒ KÊNH..."
     : "🔎 DÒ TỚI";
 }
 
@@ -1863,7 +1901,7 @@ function startVidScan() {
 
         setVidScanStatus(
           "🎯 TÌM THẤY TÍN HIỆU Ở KÊNH #" + number +
-          " — ĐÃ DỪNG. Bấm DÒ SỐ TỰ ĐỘNG để dò tiếp từ #" +
+          " — ĐÃ DỪNG. Bấm ĐANG DÒ KÊNH ... để dò tiếp từ #" +
           vidScanNumber + ".",
           "ok"
         );
@@ -2147,6 +2185,12 @@ document.addEventListener(
     }
   }
 );
+
+
+/* Kiểm tra nút sau khi toàn bộ DOM đã sẵn sàng */
+if (!prevChannelBtn || !nextChannelBtn || !autoScanBtn || !resetAutoScanBtn) {
+  console.error("M3U8 UI: Không tìm thấy đầy đủ các nút điều khiển.");
+}
 
 /* Khởi tạo panel ẨN/HIỆN */
 document.getElementById("channelToggle")?.setAttribute("aria-expanded", "true");
