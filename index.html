@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE 10</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 11</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -599,6 +599,62 @@ button{
   box-sizing:border-box;
 }
 
+
+/* ===== iPHONE SAFARI - STREAM URL GỌN ===== */
+@media (max-width:600px){
+  .card{
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  .card:has(#urlBox){
+    padding:10px;
+  }
+
+  .card:has(#urlBox) .url-row{
+    display:flex;
+    flex-direction:row;
+    align-items:stretch;
+    width:100%;
+    gap:6px;
+  }
+
+  .card:has(#urlBox) #urlBox{
+    flex:1 1 auto;
+    width:0;
+    min-width:0;
+    max-width:100%;
+    height:38px;
+    padding:6px 8px;
+    font-size:12px;
+    line-height:24px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .card:has(#urlBox) .url-row button{
+    flex:0 0 58px;
+    width:58px;
+    min-width:58px;
+    height:38px;
+    padding:6px 4px;
+    font-size:11px;
+  }
+
+  .card:has(#urlBox) .quality-box{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+    margin-top:8px;
+    padding:8px 9px;
+    font-size:12px;
+    overflow:hidden;
+    overflow-wrap:anywhere;
+  }
+}
+
 </style>
 </head>
 
@@ -712,7 +768,7 @@ button{
 
 <!-- URL -->
 <div class="card">
-  <label>▸ STREAM URL</label>
+  <label>▸ STREAM URL RESULT</label>
 
   <div class="url-row">
     <input id="urlBox" readonly aria-label="Stream URL">
