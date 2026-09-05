@@ -223,7 +223,15 @@ button.danger:hover{
   <div class="grid">
 
     <div>
-      <label>▸ CHANNEL</label>
+      <label>▸ NHẬP TÊN KÊNH THỦ CÔNG</label>
+      <div class="url-row">
+        <input id="manualChannelInput" type="text" placeholder="Ví dụ: vtv1" autocomplete="off">
+        <button class="secondary" onclick="useManualChannel()">DÙNG KÊNH</button>
+        <button class="danger" onclick="clearManualChannel()">XÓA KÊNH</button>
+      </div>
+      <div class="counter">Kênh nhập thủ công chỉ dùng trong lần này — không lưu lại sau khi F5.</div>
+
+      <label style="margin-top:12px">▸ CHANNEL</label>
       <select id="channelSelect"></select>
 
       <div class="actions">
@@ -472,14 +480,70 @@ channelSelect.value = "nghean01";
 templateSelect.value = "0";
 
 /* =========================================================
-   TẠO URL
+   KÊNH NHẬP THỦ CÔNG
+   Không dùng localStorage/sessionStorage:
+   - Chỉ có hiệu lực trong lần sử dụng hiện tại.
+   - F5 tải lại trang sẽ mất tên kênh thủ công.
 ========================================================= */
+
+let manualChannelCode = "";
+
+function getActiveChannelCode() {
+  return manualChannelCode.trim() || channelSelect.value;
+}
+
+function useManualChannel() {
+  const input = document.getElementById("manualChannelInput");
+  const code = input.value.trim();
+
+  if(!code) {
+    manualChannelCode = "";
+    updateUrl();
+    setStatus("⚪ Chưa nhập tên kênh thủ công");
+    return;
+  }
+
+  manualChannelCode = code;
+  updateUrl();
+  playCurrent();
+}
+
+function clearManualChannel() {
+  manualChannelCode = "";
+
+  const input = document.getElementById("manualChannelInput");
+  if(input) input.value = "";
+
+  // Quay lại kênh đang được chọn trong danh sách.
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = 0;
+  setAutoScanButton(false);
+
+  updateUrl();
+  playCurrent();
+
+  setStatus(
+    "🟢 Đã xóa kênh nhập tay — đang dùng kênh trong danh sách",
+    "ok"
+  );
+}
+
+document.getElementById("manualChannelInput").addEventListener(
+  "keydown",
+  function(event) {
+    if(event.key === "Enter") {
+      event.preventDefault();
+      useManualChannel();
+    }
+  }
+);
 
 function getUrl(index = Number(templateSelect.value)) {
 
   return templates[index].url.replaceAll(
     "{code}",
-    channelSelect.value
+    getActiveChannelCode()
   );
 
 }
@@ -595,6 +659,11 @@ function prevLink() {
 channelSelect.addEventListener(
   "change",
   function(){
+    // Chọn kênh có sẵn -> thoát chế độ kênh thủ công.
+    manualChannelCode = "";
+    const manualInput = document.getElementById("manualChannelInput");
+    if(manualInput) manualInput.value = "";
+
     // Đổi kênh -> lần dò mới luôn bắt đầu từ Link 1.
     autoScanToken++;
     autoScanning = false;
@@ -646,8 +715,18 @@ function destroyPlayer() {
    PHÁT URL
 ========================================================= */
 
-function playUrl(url,index) {
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
 
+/* =========================================================
+   PHÁT URL
+   iOS/iPadOS: ưu tiên HLS native của Safari.
+   PC/Android: dùng hls.js khi có MSE.
+========================================================= */
+
+function playUrl(url,index) {
   destroyPlayer();
 
   currentPlayingLink = index;
@@ -658,13 +737,32 @@ function playUrl(url,index) {
     "..."
   );
 
-  /*
-    Chrome / Edge / Firefox
-    sử dụng HLS.js
-  */
+  // iPhone/iPad: dùng HLS native trước.
+  if(
+    isIOS() &&
+    video.canPlayType("application/vnd.apple.mpegurl")
+  ) {
+    video.src = url;
 
+    video.addEventListener(
+      "loadedmetadata",
+      function() {
+        setStatus(
+          "🟢 Đang phát — Link " +
+          (index + 1),
+          "ok"
+        );
+        video.play().catch(() => {});
+      },
+      {once:true}
+    );
+
+    return;
+  }
+
+  // Safari/macOS hoặc trình duyệt có HLS native nhưng không phải iOS.
+  // Nếu không phải iOS thì ưu tiên hls.js trên các trình duyệt hỗ trợ MSE.
   if(window.Hls && Hls.isSupported()) {
-
     hls = new Hls({
       enableWorker:true,
       lowLatencyMode:true,
@@ -677,7 +775,6 @@ function playUrl(url,index) {
     hls.on(
       Hls.Events.MANIFEST_PARSED,
       function() {
-
         setStatus(
           "🟢 Đang phát — Link " +
           (index + 1),
@@ -685,18 +782,15 @@ function playUrl(url,index) {
         );
 
         video.play().catch(() => {});
-
       }
     );
 
     hls.on(
       Hls.Events.ERROR,
       function(event,data) {
-
         console.log("HLS:",data);
 
         if(data.fatal) {
-
           setStatus(
             "🔴 Không phát được Link " +
             (index + 1) +
@@ -704,30 +798,20 @@ function playUrl(url,index) {
             data.details,
             "error"
           );
-
         }
-
       }
     );
 
+    return;
   }
 
-  /*
-    Safari có HLS native
-  */
-
-  else if(
-    video.canPlayType(
-      "application/vnd.apple.mpegurl"
-    )
-  ) {
-
+  // Native HLS fallback.
+  if(video.canPlayType("application/vnd.apple.mpegurl")) {
     video.src = url;
 
     video.addEventListener(
       "loadedmetadata",
       function() {
-
         setStatus(
           "🟢 Đang phát — Link " +
           (index + 1),
@@ -735,22 +819,17 @@ function playUrl(url,index) {
         );
 
         video.play().catch(() => {});
-
       },
       {once:true}
     );
 
+    return;
   }
 
-  else {
-
-    setStatus(
-      "❌ Trình duyệt không hỗ trợ HLS",
-      "error"
-    );
-
-  }
-
+  setStatus(
+    "❌ Trình duyệt không hỗ trợ HLS",
+    "error"
+  );
 }
 
 /* =========================================================
@@ -793,8 +872,9 @@ function tryAutoScanLink(index, token) {
       clearTimeout(timer);
       video.removeEventListener("playing", onPlaying);
       video.removeEventListener("error", onVideoError);
+      video.removeEventListener("loadedmetadata", onMetadata);
 
-      if(hls) {
+      if(hls && window.Hls) {
         hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
         hls.off(Hls.Events.ERROR, onHlsError);
       }
@@ -804,6 +884,11 @@ function tryAutoScanLink(index, token) {
 
     const onPlaying = () => finish(true);
     const onVideoError = () => finish(false);
+
+    const onMetadata = () => {
+      // Native HLS trên iOS: metadata đã tải, thử phát và chờ "playing".
+      video.play().catch(() => {});
+    };
 
     const onManifestParsed = () => {
       video.play().catch(() => {});
@@ -826,7 +911,15 @@ function tryAutoScanLink(index, token) {
     video.addEventListener("playing", onPlaying, {once:true});
     video.addEventListener("error", onVideoError, {once:true});
 
-    if(window.Hls && Hls.isSupported()) {
+    // iOS/iPadOS: native HLS trước.
+    if(
+      isIOS() &&
+      video.canPlayType("application/vnd.apple.mpegurl")
+    ) {
+      video.addEventListener("loadedmetadata", onMetadata, {once:true});
+      video.src = url;
+    }
+    else if(window.Hls && Hls.isSupported()) {
       hls = new Hls({
         enableWorker:true,
         lowLatencyMode:true,
@@ -840,15 +933,16 @@ function tryAutoScanLink(index, token) {
       hls.attachMedia(video);
     }
     else if(video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.addEventListener("loadedmetadata", onMetadata, {once:true});
       video.src = url;
-      video.play().catch(() => {});
     }
     else {
       finish(false);
       return;
     }
 
-    // Một link lỗi không được phép treo quá lâu.
+    // iOS đôi khi không phát sinh error khi stream không vào được,
+    // nên vẫn dùng timeout để chuyển sang link tiếp theo.
     timer = setTimeout(() => finish(false), 10000);
   });
 }
