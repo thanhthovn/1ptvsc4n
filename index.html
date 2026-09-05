@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 Test Player</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -282,7 +282,7 @@ button:hover{
 
 button:disabled{
   opacity:.65;
-  cursor:wait;
+  cursor:not-allowed;
   box-shadow:none;
 }
 
@@ -299,10 +299,13 @@ button.secondary:hover{
 
 button.danger{
   background:var(--danger);
+  color:#fff;
+  border-color:#dc2626;
 }
 
 button.danger:hover{
   background:#dc2626;
+  color:#fff;
 }
 
 .counter{
@@ -314,16 +317,22 @@ button.danger:hover{
 .quality-box{
   margin-top:10px;
   padding:10px 12px;
-  border:1px solid #4a1515;
+  border:1px solid #1a3a1a;
   border-radius:8px;
-  background:#120707;
-  color:#ff3b3b;
+  background:#0a150a;
+  color:#86efac;
   font-size:13px;
   font-weight:700;
 }
 
+.quality-box.found{
+  border-color:#25d925;
+  background:#0b200b;
+  color:#86efac;
+}
+
 .quality-box span{
-  color:#ff3b3b;
+  color:#86efac;
 }
 
 @media(max-width:760px){
@@ -366,7 +375,7 @@ button.danger:hover{
 <div class="app">
 
 <header>
-  <h1>⌨ M3U8 // TEST CONSOLE</h1>
+  <h1>⌨ M3U8 // STREAM DISCOVERY CONSOLE</h1>
   <div class="subtitle">
     [ SYSTEM READY ] Chọn kênh → chọn link → phát M3U8
   </div>
@@ -390,7 +399,8 @@ button.danger:hover{
   <div class="panel-head">
     <label>▸ CHỌN KÊNH / LINK</label>
     <button class="secondary panel-toggle" type="button"
-            onclick="togglePanel('channelBody','channelToggle')" aria-expanded="true">
+            onclick="togglePanel('channelBody','channelToggle')" aria-expanded="true"
+            aria-label="Toggle channel panel">
       <span id="channelToggle">▲ ẨN</span>
     </button>
   </div>
@@ -402,9 +412,10 @@ button.danger:hover{
         <label>▸ NHẬP TÊN KÊNH THỦ CÔNG</label>
         <div class="url-row">
           <input id="manualChannelInput" type="text"
-                 placeholder="Ví dụ: vtv1" autocomplete="off">
-          <button class="secondary" onclick="useManualChannel()">DÙNG KÊNH</button>
-          <button class="danger" onclick="clearManualChannel()">XÓA KÊNH</button>
+                 placeholder="Ví dụ: vtv1" autocomplete="off"
+                 aria-label="Nhập tên kênh thủ công">
+          <button class="secondary" onclick="useManualChannel()" aria-label="Dùng kênh thủ công">DÙNG KÊNH</button>
+          <button class="danger" onclick="clearManualChannel()" aria-label="Xóa kênh thủ công">XÓA KÊNH</button>
         </div>
 
         <div class="counter">
@@ -415,12 +426,12 @@ button.danger:hover{
 
         <label style="margin-top:12px">▸ CHANNEL</label>
         <div class="channel-row">
-          <select id="channelSelect"></select>
+          <select id="channelSelect" aria-label="Chọn kênh"></select>
           <div class="channel-nav">
-            <button class="secondary" onclick="prevChannel()">⬅ KÊNH TRƯỚC</button>
-            <button class="secondary" onclick="nextChannel()">KÊNH SAU ➡</button>
-            <button id="autoScanBtn" onclick="autoScanLinks()">⚡ DÒ TỰ ĐỘNG</button>
-            <button class="secondary" onclick="resetAutoScan()">↻ DÒ LẠI TỪ ĐẦU</button>
+            <button class="secondary" onclick="prevChannel()" aria-label="Kênh trước">⬅ KÊNH TRƯỚC</button>
+            <button class="secondary" onclick="nextChannel()" aria-label="Kênh sau">KÊNH SAU ➡</button>
+            <button id="autoScanBtn" onclick="autoScanLinks()" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
+            <button class="secondary" onclick="resetAutoScan()" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
           </div>
         </div>
         <div id="channelCounter" class="counter"></div>
@@ -428,7 +439,7 @@ button.danger:hover{
 
       <div>
         <label>▸ STREAM SOURCE</label>
-        <select id="templateSelect"></select>
+        <select id="templateSelect" aria-label="Chọn link stream"></select>
         <div id="linkCounter" class="counter"></div>
       </div>
 
@@ -442,7 +453,8 @@ button.danger:hover{
     <label>▸ FREEM3U // DÒ KÊNH THEO SỐ</label>
     <button class="secondary panel-toggle" type="button"
             onclick="togglePanel('vidScanBody','vidScanToggle')"
-            aria-expanded="true">
+            aria-expanded="true"
+            aria-label="Toggle FreeM3U panel">
       <span id="vidScanToggle">▲ ẨN</span>
     </button>
   </div>
@@ -451,16 +463,16 @@ button.danger:hover{
     <div class="vid-scan-control">
       <div class="vid-scan-number">
         <label>SỐ ĐANG DÒ</label>
-        <input id="vidCurrent" value="1" readonly>
+        <input id="vidCurrent" value="1" readonly aria-label="Số kênh đang dò">
       </div>
 
       <div class="vid-scan-nav">
-        <button id="vidScanBtn" onclick="startVidScan()">🔎 DÒ TỚI</button>
-        <button class="secondary" onclick="scanBackward()">◀️ DÒ LÙI</button>
+        <button id="vidScanBtn" onclick="startVidScan()" aria-label="Dò tới">🔎 DÒ TỚI</button>
+        <button class="secondary" onclick="scanBackward()" aria-label="Dò lùi">◀️ DÒ LÙI</button>
       </div>
 
       <div class="vid-scan-actions">
-        <button class="secondary" onclick="resetVidScan()">↺ DÒ LẠI TỪ ĐẦU</button>
+        <button class="secondary" onclick="resetVidScan()" aria-label="Dò lại từ đầu FreeM3U">↺ DÒ LẠI TỪ ĐẦU</button>
       </div>
     </div>
 
@@ -475,8 +487,8 @@ button.danger:hover{
   <label>▸ STREAM URL</label>
 
   <div class="url-row">
-    <input id="urlBox" readonly>
-    <button onclick="copyUrl()">COPY</button>
+    <input id="urlBox" readonly aria-label="Stream URL">
+    <button onclick="copyUrl()" aria-label="Copy URL">COPY</button>
   </div>
 
   <div id="qualityBox" class="quality-box">
@@ -670,6 +682,7 @@ let currentPlayingLink = 0;
 let autoScanning = false;
 let autoScanToken = 0;
 let autoScanNextIndex = 0;
+let autoScanTimers = [];
 
 /* FREEM3U numeric scanner */
 let vidScanning = false;
@@ -689,6 +702,7 @@ const statusBox = document.getElementById("status");
 const channelCounter = document.getElementById("channelCounter");
 const linkCounter = document.getElementById("linkCounter");
 const qualityText = document.getElementById("qualityText");
+const qualityBox = document.getElementById("qualityBox");
 
 const vidCurrent = document.getElementById("vidCurrent");
 const vidScanStatus = document.getElementById("vidScanStatus");
@@ -738,6 +752,9 @@ function resetAutoScanState() {
   autoScanning = false;
   autoScanNextIndex = 0;
   setAutoScanButton(false);
+  // Clear all auto scan timers
+  autoScanTimers.forEach(timer => clearTimeout(timer));
+  autoScanTimers = [];
 }
 
 function applyManualChannelFromInput() {
@@ -801,12 +818,14 @@ if(manualInputEl) {
 }
 
 function getUrl(index = Number(templateSelect.value)) {
-
+  // Fix: Check if index is valid
+  if (index === undefined || index === null || !templates[index]) {
+    return "";
+  }
   return templates[index].url.replaceAll(
     "{code}",
     getActiveChannelCode()
   );
-
 }
 
 /* =========================================================
@@ -814,6 +833,11 @@ function getUrl(index = Number(templateSelect.value)) {
 ========================================================= */
 
 function getQualityLabel(index) {
+  // Fix: Handle invalid index
+  if (index === undefined || index === null || !templates[index]) {
+    return "📺 Không xác định";
+  }
+  
   const name = templates[index]?.name || "";
 
   if(/5\.6M/i.test(name)) return "🔥 5.6 Mbps — RẤT CAO";
@@ -829,14 +853,15 @@ function getQualityLabel(index) {
 function showQuality(index, detected=false) {
   if(!qualityText) return;
 
-  // Chỉ hiện chất lượng khi link đã dò/phát thành công.
   if(!detected) {
-    qualityText.textContent = "";
+    qualityText.textContent = "Chưa dò kênh";
+    qualityBox.classList.remove('found');
     return;
   }
 
   const label = getQualityLabel(index);
   qualityText.textContent = label;
+  qualityBox.classList.add('found');
 }
 
 function updateUrl() {
@@ -855,8 +880,6 @@ function updateUrl() {
     "/" +
     templates.length;
 
-
-
   showQuality(templateSelect.selectedIndex, false);
 }
 
@@ -865,12 +888,10 @@ function updateUrl() {
 ========================================================= */
 
 function nextChannel() {
-
-  
   // Đổi kênh -> reset dò về Link 1.
   resetAutoScanState();
 
-let index = channelSelect.selectedIndex + 1;
+  let index = channelSelect.selectedIndex + 1;
 
   if(index >= channels.length) {
     index = 0;
@@ -882,16 +903,13 @@ let index = channelSelect.selectedIndex + 1;
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
-
 }
 
 function prevChannel() {
-
-  
   // Đổi kênh -> reset dò về Link 1.
   resetAutoScanState();
 
-let index = channelSelect.selectedIndex - 1;
+  let index = channelSelect.selectedIndex - 1;
 
   if(index < 0) {
     index = channels.length - 1;
@@ -903,7 +921,6 @@ let index = channelSelect.selectedIndex - 1;
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
-
 }
 
 /* =========================================================
@@ -924,10 +941,7 @@ channelSelect.addEventListener(
     if(manualInput) manualInput.value = "";
 
     // Đổi kênh -> lần dò mới luôn bắt đầu từ Link 1.
-    autoScanToken++;
-    autoScanning = false;
-    autoScanNextIndex = 0;
-    setAutoScanButton(false);
+    resetAutoScanState();
 
     // Chọn kênh khác -> quay về Link 1.
     templateSelect.selectedIndex = 0;
@@ -1018,17 +1032,20 @@ function setupHlsPlayback(url, {
 } = {}) {
   let finished = false;
   let timer = null;
+  let nativeCleanup = null;
 
   const cleanup = () => {
     clearTimeout(timer);
-
+    if (nativeCleanup) {
+      nativeCleanup();
+      nativeCleanup = null;
+    }
     if (onPlaying) {
       video.removeEventListener("playing", onVideoPlaying);
     }
     if (onError) {
       video.removeEventListener("error", onVideoError);
     }
-
     if (hls && window.Hls) {
       hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
       hls.off(Hls.Events.ERROR, onHlsError);
@@ -1052,7 +1069,13 @@ function setupHlsPlayback(url, {
   };
 
   const onHlsError = (event, data) => {
-    if (data && data.fatal) finish(false);
+    if (data && data.fatal) {
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+      finish(false);
+    }
   };
 
   const onVideoPlaying = () => finish(true);
@@ -1070,11 +1093,22 @@ function setupHlsPlayback(url, {
     isIOS() &&
     video.canPlayType("application/vnd.apple.mpegurl")
   ) {
-    video.addEventListener(
-      "loadedmetadata",
-      () => video.play().catch(() => {}),
-      {once:true}
-    );
+    const onMetadata = () => {
+      if (nativeCleanup) nativeCleanup();
+      video.play().catch(() => {});
+    };
+    const onErrorNative = () => {
+      if (nativeCleanup) nativeCleanup();
+      finish(false);
+    };
+    
+    nativeCleanup = () => {
+      video.removeEventListener("loadedmetadata", onMetadata);
+      video.removeEventListener("error", onErrorNative);
+    };
+    
+    video.addEventListener("loadedmetadata", onMetadata, {once:true});
+    video.addEventListener("error", onErrorNative, {once:true});
     video.src = url;
   }
   // PC/Android/macOS: hls.js khi MSE được hỗ trợ.
@@ -1093,11 +1127,22 @@ function setupHlsPlayback(url, {
   }
   // Native HLS fallback.
   else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-    video.addEventListener(
-      "loadedmetadata",
-      () => video.play().catch(() => {}),
-      {once:true}
-    );
+    const onMetadata = () => {
+      if (nativeCleanup) nativeCleanup();
+      video.play().catch(() => {});
+    };
+    const onErrorNative = () => {
+      if (nativeCleanup) nativeCleanup();
+      finish(false);
+    };
+    
+    nativeCleanup = () => {
+      video.removeEventListener("loadedmetadata", onMetadata);
+      video.removeEventListener("error", onErrorNative);
+    };
+    
+    video.addEventListener("loadedmetadata", onMetadata, {once:true});
+    video.addEventListener("error", onErrorNative, {once:true});
     video.src = url;
   }
   else {
@@ -1163,7 +1208,6 @@ function setAutoScanButton(scanning) {
     : "⚡ DÒ TỰ ĐỘNG";
 }
 
-
 function tryAutoScanLink(index, token) {
   return new Promise((resolve) => {
     if(token !== autoScanToken) { resolve(false); return; }
@@ -1178,30 +1222,47 @@ function tryAutoScanLink(index, token) {
     let done = false;
     let timer = null;
     let probeHls = null;
+    let nativeCleanup = null;
 
     const finish = (ok) => {
       if(done) return;
       done = true;
       clearTimeout(timer);
-      if(probeHls) { probeHls.destroy(); probeHls = null; }
+      if(probeHls) { 
+        probeHls.destroy(); 
+        probeHls = null; 
+      }
+      if(nativeCleanup) {
+        nativeCleanup();
+        nativeCleanup = null;
+      }
       resolve(ok);
     };
 
     timer = setTimeout(() => finish(false), 10000);
 
     // Dùng một Hls instance riêng để kiểm tra manifest.
-    // attachMedia TRƯỚC loadSource để tránh trạng thái race khi dò nhiều link.
     if(window.Hls && Hls.isSupported()) {
       try {
         probeHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
         probeHls.once(Hls.Events.MANIFEST_PARSED, () => finish(true));
         probeHls.once(Hls.Events.ERROR, (event, data) => {
-          if(data && data.fatal) finish(false);
+          if(data && data.fatal) {
+            if(probeHls) {
+              probeHls.destroy();
+              probeHls = null;
+            }
+            finish(false);
+          }
         });
         probeHls.attachMedia(video);
         probeHls.loadSource(url);
       } catch(e) {
         console.error("Probe HLS:", e);
+        if(probeHls) {
+          probeHls.destroy();
+          probeHls = null;
+        }
         finish(false);
       }
       return;
@@ -1209,15 +1270,20 @@ function tryAutoScanLink(index, token) {
 
     // Safari/iOS: dùng native HLS.
     if(video.canPlayType("application/vnd.apple.mpegurl")) {
-      const oldSrc = video.src;
-      const onMetadata = () => { cleanupNative(); finish(true); };
-      const onError = () => { cleanupNative(); finish(false); };
-      const cleanupNative = () => {
+      const onMetadata = () => { 
+        if(nativeCleanup) nativeCleanup();
+        finish(true); 
+      };
+      const onError = () => { 
+        if(nativeCleanup) nativeCleanup();
+        finish(false); 
+      };
+      nativeCleanup = () => {
         video.removeEventListener("loadedmetadata", onMetadata);
         video.removeEventListener("error", onError);
       };
-      video.addEventListener("loadedmetadata", onMetadata);
-      video.addEventListener("error", onError);
+      video.addEventListener("loadedmetadata", onMetadata, {once:true});
+      video.addEventListener("error", onError, {once:true});
       video.src = url;
       return;
     }
@@ -1227,7 +1293,10 @@ function tryAutoScanLink(index, token) {
 }
 
 function autoScanLinks() {
-  if(autoScanning) return;
+  if(autoScanning) {
+    setStatus("⏳ Đang dò, vui lòng chờ...", "ok");
+    return;
+  }
 
   const input = document.getElementById("manualChannelInput");
   const typedCode = input ? input.value.trim() : "";
@@ -1248,9 +1317,6 @@ function autoScanLinks() {
     setStatus("⚠️ Chưa có mã kênh để dò", "error");
     return;
   }
-
-  // Nếu vừa nhập mã mới thì chắc chắn bắt đầu từ Link 1.
-  if(typedCode) autoScanNextIndex = Math.max(0, Math.min(autoScanNextIndex, templates.length - 1));
 
   if(autoScanNextIndex >= templates.length) {
     setStatus("⚪ " + code + " đã dò hết " + templates.length + " link — bấm DÒ LẠI TỪ ĐẦU", "error");
@@ -1298,10 +1364,14 @@ function autoScanLinks() {
         return;
       }
 
-      setTimeout(scanNext, 30);
+      const timer = setTimeout(scanNext, 30);
+      autoScanTimers.push(timer);
     }).catch(err => {
       console.error("Auto scan:", err);
-      if(token === autoScanToken && autoScanning) setTimeout(scanNext, 30);
+      if(token === autoScanToken && autoScanning) {
+        const timer = setTimeout(scanNext, 30);
+        autoScanTimers.push(timer);
+      }
     });
   };
 
@@ -1332,10 +1402,15 @@ if(manualInputWatch) {
 ========================================================= */
 
 function resetAutoScan() {
-  window.__lastScannedManualCode = "";
+  manualChannelCode = "";
+  const input = document.getElementById("manualChannelInput");
+  if(input) input.value = "";
+  
   autoScanToken++;
   autoScanning = false;
   autoScanNextIndex = 0;
+  autoScanTimers.forEach(timer => clearTimeout(timer));
+  autoScanTimers = [];
 
   setAutoScanButton(false);
 
@@ -1407,7 +1482,10 @@ function tryVidNumber(number, token) {
 }
 
 function startVidScan() {
-  if(vidScanning) return;
+  if(vidScanning) {
+    setVidScanStatus("⏳ Đang dò, vui lòng chờ...", "ok");
+    return;
+  }
 
   if(vidScanNumber > VID_SCAN_MAX) {
     setVidScanStatus(
@@ -1503,17 +1581,18 @@ function startVidScan() {
   setTimeout(scanNext, 0);
 }
 
-
 function scanBackward() {
-  if(vidScanning) return;
+  if(vidScanning) {
+    setVidScanStatus("⏳ Đang dò, vui lòng chờ...", "ok");
+    return;
+  }
 
   // DÒ LÙI phải căn cứ đúng vào "SỐ ĐANG DÒ" đang hiển thị.
-  // Ví dụ đang ở #50 thì bấm DÒ LÙI sẽ dò #49, #48, #47...
   const current = Number(
     vidCurrent ? vidCurrent.value : vidScanNumber
   );
 
-  if(!Number.isFinite(current)) {
+  if(!Number.isFinite(current) || current < 1) {
     setVidScanStatus("⚪ Không xác định được số hiện tại để dò lùi.", "error");
     return;
   }
@@ -1573,7 +1652,6 @@ function playCurrent() {
     getUrl(index),
     index
   );
-
 }
 
 function nextLink() {
@@ -1582,8 +1660,7 @@ function nextLink() {
   let index = templateSelect.selectedIndex + 1;
   if(index >= templates.length) index = 0;
 
-  autoScanToken++;
-  autoScanning = false;
+  resetAutoScanState();
   autoScanNextIndex = index;
 
   templateSelect.selectedIndex = index;
@@ -1597,8 +1674,7 @@ function prevLink() {
   let index = templateSelect.selectedIndex - 1;
   if(index < 0) index = templates.length - 1;
 
-  autoScanToken++;
-  autoScanning = false;
+  resetAutoScanState();
   autoScanNextIndex = index;
 
   templateSelect.selectedIndex = index;
@@ -1612,13 +1688,8 @@ function prevLink() {
 
 function stopPlayer() {
 
-  autoScanToken++;
-  autoScanning = false;
-  setAutoScanButton(false);
-
-  vidScanToken++;
-  vidScanning = false;
-  setVidScanButton(false);
+  resetAutoScanState();
+  stopVidScan();
 
   destroyPlayer();
 
@@ -1632,32 +1703,26 @@ function stopPlayer() {
 ========================================================= */
 
 async function copyUrl() {
-
   const url = urlBox.value;
+  
+  if (!url) {
+    setStatus("⚠️ Không có URL để copy", "error");
+    return;
+  }
 
   try {
-
     await navigator.clipboard.writeText(url);
-
-    setStatus(
-      "📋 Đã copy link",
-      "ok"
-    );
-
+    setStatus("📋 Đã copy link", "ok");
+  } catch(error) {
+    // Fallback: select and copy
+    try {
+      urlBox.select();
+      document.execCommand("copy");
+      setStatus("📋 Đã copy link (fallback)", "ok");
+    } catch(e) {
+      setStatus("❌ Không thể copy link", "error");
+    }
   }
-
-  catch(error) {
-
-    urlBox.select();
-    document.execCommand("copy");
-
-    setStatus(
-      "📋 Đã copy link",
-      "ok"
-    );
-
-  }
-
 }
 
 /* =========================================================
@@ -1673,6 +1738,7 @@ video.addEventListener(
       if(qualityText && freem3uPlayingNumber !== null) {
         qualityText.textContent =
           "FreeM3U — Kênh số " + freem3uPlayingNumber;
+        qualityBox.classList.add('found');
       }
 
       setVidScanStatus(
@@ -1705,7 +1771,6 @@ video.addEventListener(
     setStatus(
       "⏳ Đang tải dữ liệu..."
     );
-
   }
 );
 
@@ -1717,7 +1782,6 @@ video.addEventListener(
       "🔴 Video không thể phát",
       "error"
     );
-
   }
 );
 
@@ -1741,25 +1805,29 @@ document.addEventListener(
     }
 
     if(event.key === "ArrowRight") {
+      event.preventDefault();
       nextLink();
     }
 
     else if(event.key === "ArrowLeft") {
+      event.preventDefault();
       prevLink();
     }
 
     else if(event.key === "ArrowDown") {
+      event.preventDefault();
       nextChannel();
     }
 
     else if(event.key === "ArrowUp") {
+      event.preventDefault();
       prevChannel();
     }
 
     else if(event.key === "Enter") {
+      event.preventDefault();
       playCurrent();
     }
-
   }
 );
 
