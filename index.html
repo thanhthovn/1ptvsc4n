@@ -163,11 +163,24 @@ button.secondary:hover{
 }
 
 button.danger{
-  background:var(--danger);
+  background:#7f1515;
 }
 
 button.danger:hover{
-  background:#dc2626;
+  background:#a51d1d;
+}
+
+button.copy-btn{
+  background:#8b1717;
+  border-color:#ef4444;
+  color:#ffd0d0;
+}
+
+button.copy-btn:hover{
+  background:#b91c1c;
+  border-color:#ff5555;
+  color:#fff;
+  box-shadow:0 0 10px rgba(239,68,68,.25);
 }
 
 .counter{
@@ -198,7 +211,7 @@ button.danger:hover{
 <!-- PLAYER -->
 <div class="card">
   <div class="player">
-    <video id="video" controls playsinline></video>
+    <video id="video" controls playsinline webkit-playsinline preload="metadata"></video>
   </div>
 
   <div id="status" class="status">
@@ -248,7 +261,7 @@ button.danger:hover{
 
   <div class="url-row">
     <input id="urlBox" readonly>
-    <button onclick="copyUrl()">COPY</button>
+    <button class="copy-btn" onclick="copyUrl()">COPY</button>
   </div>
 </div>
 
@@ -549,11 +562,42 @@ function playUrl(url,index) {
 
 
   /*
+    Safari / iOS: ưu tiên HLS native.
+    iPhone/iPad có HLS tích hợp sẵn và thường ổn định hơn hls.js.
+  */
+  const isApple = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) ||
+                  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  if(isApple && video.canPlayType("application/vnd.apple.mpegurl")) {
+
+    video.src = url;
+
+    video.addEventListener(
+      "loadedmetadata",
+      function() {
+        setStatus(
+          "🟢 Đang phát — Link " + (index + 1),
+          "ok"
+        );
+
+        video.play().catch(() => {
+          setStatus(
+            "🟡 Đã tải stream — bấm ▶ trên video để phát",
+            "ok"
+          );
+        });
+      },
+      {once:true}
+    );
+
+  }
+
+  /*
     Chrome / Edge / Firefox
     sử dụng HLS.js
   */
 
-  if(window.Hls && Hls.isSupported()) {
+  else if(window.Hls && Hls.isSupported()) {
 
     hls = new Hls({
       enableWorker:true,
@@ -627,7 +671,12 @@ function playUrl(url,index) {
           "ok"
         );
 
-        video.play().catch(() => {});
+        video.play().catch(() => {
+          setStatus(
+            "🟡 Stream đã tải — bấm ▶ để phát",
+            "ok"
+          );
+        });
 
       },
       {once:true}
