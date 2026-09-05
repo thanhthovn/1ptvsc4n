@@ -67,6 +67,15 @@ h1{
   border-radius:11px;
   overflow:hidden;
   aspect-ratio:16/9;
+
+  /* PLAYER LUÔN HIỂN THỊ KHI CUỘN TRANG */
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  width:min(420px, calc(100vw - 28px));
+  z-index:9999;
+  box-shadow:0 10px 30px rgba(0,0,0,.65);
+  border:1px solid rgba(255,255,255,.16);
 }
 
 video{
@@ -203,6 +212,16 @@ button.danger:hover{
   .url-row{flex-direction:column}
   h1{font-size:22px}
 }
+
+@media (max-width:600px){
+  .player{
+    right:10px;
+    bottom:10px;
+    width:calc(100vw - 20px);
+    border-radius:10px;
+  }
+}
+
 </style>
 </head>
 
@@ -217,7 +236,7 @@ button.danger:hover{
 </header>
 
 <!-- PLAYER -->
-<div class="card">
+<div class="card player-container">
   <div class="player">
     <video id="video" controls playsinline></video>
   </div>
