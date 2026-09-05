@@ -182,6 +182,21 @@ button.danger:hover{
   font-size:12px;
 }
 
+.quality-box{
+  margin-top:10px;
+  padding:10px 12px;
+  border:1px solid #4a1515;
+  border-radius:8px;
+  background:#120707;
+  color:#ff3b3b;
+  font-size:13px;
+  font-weight:700;
+}
+
+.quality-box span{
+  color:#ff3b3b;
+}
+
 @media(max-width:760px){
   .app{padding:12px}
   .grid{grid-template-columns:1fr}
@@ -212,9 +227,9 @@ button.danger:hover{
   </div>
 
   <div class="actions">
-    <button onclick="playCurrent()">▶ RUN</button>
     <button class="danger" onclick="stopPlayer()">■ STOP</button>
     <button id="autoScanBtn" onclick="autoScanLinks()">⚡ DÒ TỰ ĐỘNG</button>
+    <button class="secondary" onclick="resetAutoScan()">↻ DÒ LẠI TỪ ĐẦU</button>
   </div>
 </div>
 
@@ -246,11 +261,6 @@ button.danger:hover{
       <label>▸ STREAM SOURCE</label>
       <select id="templateSelect"></select>
 
-      <div class="actions">
-        <button class="secondary" onclick="prevLink()">⬅ LINK TRƯỚC</button>
-        <button class="secondary" onclick="nextLink()">LINK SAU ➡</button>
-      </div>
-
       <div id="linkCounter" class="counter"></div>
     </div>
 
@@ -264,6 +274,10 @@ button.danger:hover{
   <div class="url-row">
     <input id="urlBox" readonly>
     <button onclick="copyUrl()">COPY</button>
+  </div>
+
+  <div id="qualityBox" class="quality-box">
+    📺 CHẤT LƯỢNG: <span id="qualityText">Chưa dò kênh</span>
   </div>
 </div>
 
@@ -308,12 +322,17 @@ const templates = [
   },
 
   {
-    name:"Link 3 — Live HLS AVC 4M",
+    name:"Link 3 — Live HLS AVC 5.6M",
+    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8"
+  },
+
+  {
+    name:"Link 4 — Live HLS AVC 4M",
     url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8"
   },
 
   {
-    name:"Link 4 — Live HLS AVC INDEX",
+    name:"Link 6 — Live HLS AVC INDEX",
     url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8"
   },
 
@@ -323,117 +342,117 @@ const templates = [
   },
 
   {
-    name:"Link 6 — EPZ SD2 2.5M",
+    name:"Link 7 — EPZ SD2 2.5M",
     url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 7 — EPZ SD1",
+    name:"Link 8 — EPZ SD1",
     url:"https://live.fptplay53.net/epzsd1/{code}_hls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 8 — EPZ SD2",
+    name:"Link 9 — EPZ SD2",
     url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 9 — EPZ SD1 5M",
+    name:"Link 10 — EPZ SD1 5M",
     url:"https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 10 — EPZ SD2 5M",
+    name:"Link 11 — EPZ SD2 5M",
     url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 11 — EPZ HD1 2.5M",
+    name:"Link 12 — EPZ HD1 2.5M",
     url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 12 — EPZ HD2 2.5M",
+    name:"Link 13 — EPZ HD2 2.5M",
     url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 13 — EPZ HD1",
+    name:"Link 14 — EPZ HD1",
     url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 14 — EPZ HD2",
+    name:"Link 15 — EPZ HD2",
     url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 15 — EPZ HD1 5M",
+    name:"Link 16 — EPZ HD1 5M",
     url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 16 — EPZ HD2 5M",
+    name:"Link 17 — EPZ HD2 5M",
     url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 17 — FNX SD1 2.5M",
+    name:"Link 18 — FNX SD1 2.5M",
     url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 18 — FNX SD2 2.5M",
+    name:"Link 19 — FNX SD2 2.5M",
     url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 19 — FNX SD1",
+    name:"Link 20 — FNX SD1",
     url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 20 — FNX SD2",
+    name:"Link 21 — FNX SD2",
     url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 21 — FNX SD1 5M",
+    name:"Link 22 — FNX SD1 5M",
     url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 22 — FNX SD2 5M",
+    name:"Link 23 — FNX SD2 5M",
     url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 23 — FNX HD1 2.5M",
+    name:"Link 24 — FNX HD1 2.5M",
     url:"https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 24 — FNX HD2 2.5M",
+    name:"Link 25 — FNX HD2 2.5M",
     url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 25 — FNX HD1",
+    name:"Link 26 — FNX HD1",
     url:"https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 26 — FNX HD2",
+    name:"Link 27 — FNX HD2",
     url:"https://live.fptplay53.net/fnxhd2/{code}_hls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 27 — FNX HD1 5M",
+    name:"Link 28 — FNX HD1 5M",
     url:"https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 28 — FNX HD2 5M",
+    name:"Link 29 — FNX HD2 5M",
     url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   }
 
@@ -456,6 +475,7 @@ const urlBox = document.getElementById("urlBox");
 const statusBox = document.getElementById("status");
 const channelCounter = document.getElementById("channelCounter");
 const linkCounter = document.getElementById("linkCounter");
+const qualityText = document.getElementById("qualityText");
 
 /* =========================================================
    KHỞI TẠO DROPDOWN
@@ -504,6 +524,14 @@ function useManualChannel() {
   }
 
   manualChannelCode = code;
+
+  // Nhập kênh mới -> reset dò về Link 1.
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = 0;
+  setAutoScanButton(false);
+
+  templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
 }
@@ -552,6 +580,32 @@ function getUrl(index = Number(templateSelect.value)) {
    CẬP NHẬT GIAO DIỆN
 ========================================================= */
 
+function getQualityLabel(index) {
+  const name = templates[index]?.name || "";
+
+  if(/5\.6M/i.test(name)) return "🔥 5.6 Mbps — RẤT CAO";
+  if(/5M/i.test(name)) return "🔥 5 Mbps — CAO";
+  if(/4M/i.test(name)) return "🟢 4 Mbps — CAO";
+  if(/2\.5M/i.test(name)) return "🟡 2.5 Mbps — KHÁ";
+  if(/HD/i.test(name)) return "📺 HD — KHÁ/CAO";
+  if(/SD/i.test(name)) return "📺 SD — TRUNG BÌNH";
+  if(/INDEX/i.test(name)) return "📡 HLS INDEX — TỰ CHỌN";
+  return "📺 Chưa xác định bitrate";
+}
+
+function showQuality(index, detected=false) {
+  if(!qualityText) return;
+
+  // Chỉ hiện chất lượng khi link đã dò/phát thành công.
+  if(!detected) {
+    qualityText.textContent = "";
+    return;
+  }
+
+  const label = getQualityLabel(index);
+  qualityText.textContent = label;
+}
+
 function updateUrl() {
 
   urlBox.value = getUrl();
@@ -568,6 +622,9 @@ function updateUrl() {
     "/" +
     templates.length;
 
+
+
+  showQuality(templateSelect.selectedIndex, false);
 }
 
 /* =========================================================
@@ -591,6 +648,8 @@ let index = channelSelect.selectedIndex + 1;
 
   channelSelect.selectedIndex = index;
 
+  // Đổi kênh -> luôn quay về Link 1 và reset dò.
+  templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
 
@@ -613,6 +672,8 @@ let index = channelSelect.selectedIndex - 1;
 
   channelSelect.selectedIndex = index;
 
+  // Đổi kênh -> luôn quay về Link 1 và reset dò.
+  templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
 
@@ -621,36 +682,6 @@ let index = channelSelect.selectedIndex - 1;
 /* =========================================================
    CHUYỂN LINK
 ========================================================= */
-
-function nextLink() {
-
-  let index = templateSelect.selectedIndex + 1;
-
-  if(index >= templates.length) {
-    index = 0;
-  }
-
-  templateSelect.selectedIndex = index;
-
-  updateUrl();
-  playCurrent();
-
-}
-
-function prevLink() {
-
-  let index = templateSelect.selectedIndex - 1;
-
-  if(index < 0) {
-    index = templates.length - 1;
-  }
-
-  templateSelect.selectedIndex = index;
-
-  updateUrl();
-  playCurrent();
-
-}
 
 /* =========================================================
    EVENT DROPDOWN
@@ -670,6 +701,8 @@ channelSelect.addEventListener(
     autoScanNextIndex = 0;
     setAutoScanButton(false);
 
+    // Chọn kênh khác -> quay về Link 1.
+    templateSelect.selectedIndex = 0;
     updateUrl();
     playCurrent();
   }
@@ -996,6 +1029,7 @@ function autoScanLinks() {
         autoScanning = false;
         templateSelect.selectedIndex = testIndex;
         updateUrl();
+        showQuality(testIndex, true);
         setAutoScanButton(false);
 
         setStatus(
@@ -1018,6 +1052,29 @@ function autoScanLinks() {
   }
 
   setTimeout(scanNext, 0);
+}
+
+/* =========================================================
+   DÒ LẠI TỪ ĐẦU
+   Reset con trỏ dò về Link 1.
+========================================================= */
+
+function resetAutoScan() {
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = 0;
+
+  setAutoScanButton(false);
+
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+
+  destroyPlayer();
+
+  setStatus(
+    "🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1",
+    "ok"
+  );
 }
 
 /* =========================================================
@@ -1094,6 +1151,9 @@ async function copyUrl() {
 video.addEventListener(
   "playing",
   function() {
+
+    // Link thực sự phát được -> mới hiện chất lượng.
+    showQuality(currentPlayingLink, true);
 
     setStatus(
       "🟢 Đang phát — Link " +
