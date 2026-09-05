@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE 15</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 17</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -122,7 +122,7 @@ input{
   outline:none;
   background:#050905;
   color:var(--text);
-  font-size:16px;        /* giữ 16px để Safari iPhone không tự zoom */
+  font-size:16px;
 }
 
 #manualChannelInput{
@@ -497,14 +497,151 @@ button.danger:hover{
   color:#86efac;
 }
 
-@media(max-width:760px){
-  .app{
-    width:100%;
-    max-width:100%;
-    padding:12px max(12px, env(safe-area-inset-right))
-             12px max(12px, env(safe-area-inset-left));
-  }
+/* ===== BẢNG KẾT QUẢ DÒ ===== */
+.result-table-wrap {
+  margin-top:12px;
+  max-height:400px;
+  overflow-y:auto;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--panel2);
+}
 
+.result-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  min-width:600px;
+}
+
+.result-table thead {
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.result-table th {
+  background:#0d1a0d;
+  color:#86efac;
+  padding:10px 12px;
+  text-align:left;
+  border-bottom:2px solid var(--border);
+  font-weight:700;
+  text-transform:uppercase;
+  font-size:11px;
+  letter-spacing:0.5px;
+}
+
+.result-table td {
+  padding:8px 12px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+  color:var(--text);
+}
+
+.result-table tr.found {
+  background:#0b1a0b;
+}
+
+.result-table tr.found td {
+  color:#86efac;
+}
+
+.result-table .link-cell {
+  max-width:300px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:Consolas,monospace;
+  font-size:12px;
+  color:#b7ffb7;
+  cursor:pointer;
+}
+
+.result-table .link-cell:hover {
+  color:#45ff45;
+}
+
+.result-summary {
+  padding:10px 12px;
+  color:var(--muted);
+  font-size:12px;
+  border-top:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.result-summary .found-count {
+  color:#86efac;
+  font-weight:700;
+}
+
+.no-results {
+  padding:30px 20px;
+  text-align:center;
+  color:var(--muted);
+  font-style:italic;
+}
+
+.copy-btn {
+  padding:4px 10px;
+  font-size:10px;
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--muted);
+  cursor:pointer;
+  border-radius:4px;
+  text-transform:none;
+  font-weight:400;
+  white-space:nowrap;
+}
+
+.copy-btn:hover {
+  background:var(--border);
+  color:var(--text);
+}
+
+.found-badge {
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:4px;
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  background:#20e020;
+  color:#000;
+}
+
+@media(max-width:600px){
+  .result-table-wrap {
+    max-height:300px;
+  }
+  
+  .result-table {
+    font-size:11px;
+    min-width:400px;
+  }
+  
+  .result-table th,
+  .result-table td {
+    padding:6px 8px;
+  }
+  
+  .result-table .link-cell {
+    max-width:120px;
+    font-size:10px;
+  }
+  
+  .copy-btn {
+    padding:3px 6px;
+    font-size:9px;
+  }
+}
+
+@media(max-width:760px){
   .grid{
     grid-template-columns:1fr;
     min-width:0;
@@ -531,7 +668,6 @@ button.danger:hover{
     overflow-wrap:anywhere;
   }
 
-  /* 16px để Safari iPhone không tự zoom khi chạm ô nhập */
   select,
   input{
     width:100%;
@@ -665,6 +801,22 @@ button{
   }
 }
 
+/* Scrollbar style */
+.result-table-wrap::-webkit-scrollbar {
+  width:6px;
+  height:6px;
+}
+.result-table-wrap::-webkit-scrollbar-track {
+  background:var(--panel2);
+}
+.result-table-wrap::-webkit-scrollbar-thumb {
+  background:var(--border);
+  border-radius:3px;
+}
+.result-table-wrap::-webkit-scrollbar-thumb:hover {
+  background:var(--muted);
+}
+
 </style>
 </head>
 
@@ -776,7 +928,7 @@ button{
   </div>
 </div>
 
-<!-- URL -->
+<!-- URL + BẢNG KẾT QUẢ -->
 <div class="card">
   <label>▸ STREAM URL RESULT</label>
 
@@ -787,6 +939,33 @@ button{
 
   <div id="qualityBox" class="quality-box">
     📺 CHẤT LƯỢNG: <span id="qualityText">Chưa dò kênh</span>
+  </div>
+  
+  <!-- BẢNG KẾT QUẢ DÒ - CHỈ HIỆN LINK OK -->
+  <div style="margin-top:16px;">
+    <label style="margin-bottom:8px;">▸ LINK PHÁT ĐƯỢC</label>
+    <div id="resultContainer">
+      <div class="result-table-wrap" id="resultTableWrap">
+        <table class="result-table" id="resultTable">
+          <thead>
+            <tr>
+              <th style="width:50px;">STT</th>
+              <th style="width:140px;">TÊN LINK</th>
+              <th>ĐƯỜNG DẪN</th>
+              <th style="width:90px;">CHẤT LƯỢNG</th>
+              <th style="width:80px;">TRẠNG THÁI</th>
+              <th style="width:70px;">COPY</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody">
+          </tbody>
+        </table>
+      </div>
+      <div class="result-summary" id="resultSummary">
+        <span>🔍 Tổng số link phát được: <span class="found-count" id="foundLinks">0</span></span>
+        <button class="secondary" onclick="clearResults()" style="padding:4px 12px;font-size:11px;">🗑 XÓA KẾT QUẢ</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -989,8 +1168,12 @@ const VID_SCAN_MAX = 999;
 const VID_SCAN_TIMEOUT = 6000;
 
 // Lưu tham chiếu để hủy khi cần
-let activeProbeHls = null;          // HLS instance đang dùng để dò
-let activePlaybackCancel = null;    // Hàm cancel của setupHlsPlayback
+let activeProbeHls = null;
+let activePlaybackCancel = null;
+
+// Lưu kết quả dò - CHỈ LƯU LINK OK
+let foundResults = [];
+let lastFoundIndex = null; // Link OK cuối cùng
 
 const video = document.getElementById("video");
 const channelSelect = document.getElementById("channelSelect");
@@ -1023,8 +1206,6 @@ function isHlsEventsAvailable() {
 
 /*
    iOS/Safari BUTTON HANDLERS
-   Không dùng inline onclick.
-   click là event chuẩn; touchend chỉ fallback cho iOS cũ.
 */
 function bindIOSButton(button, handler) {
   if (!button) return;
@@ -1076,9 +1257,6 @@ templateSelect.value = "0";
 
 /* =========================================================
    KÊNH NHẬP THỦ CÔNG
-   Không dùng localStorage/sessionStorage:
-   - Chỉ có hiệu lực trong lần sử dụng hiện tại.
-   - F5 tải lại trang sẽ mất tên kênh thủ công.
 ========================================================= */
 
 let manualChannelCode = "";
@@ -1091,18 +1269,14 @@ function getActiveChannelCode() {
   return manualChannelCode.trim() || channelSelect.value;
 }
 
-// Hàm reset chỉ con trỏ dò, không động đến kênh thủ công
 function resetAutoScanIndex() {
   autoScanToken++;
   autoScanning = false;
   autoScanNextIndex = 0;
   setAutoScanButton(false);
-  // Clear all auto scan timers
   autoScanTimers.forEach(timer => clearTimeout(timer));
   autoScanTimers = [];
-  // Hủy dò đang chạy
   cancelActiveProbe();
-  // Không xóa manualChannelCode
   setStatus("🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1", "ok");
 }
 
@@ -1119,19 +1293,6 @@ function cancelActiveProbe() {
   }
 }
 
-// Hàm reset đầy đủ (xóa cả kênh thủ công) – dùng cho nút "XÓA KÊNH"
-function fullReset() {
-  manualChannelCode = "";
-  const input = document.getElementById("manualChannelInput");
-  if(input) input.value = "";
-  resetAutoScanIndex();
-  // Đưa về link 1
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-  destroyPlayer();
-  setStatus("🔄 Đã xóa kênh thủ công và reset dò", "ok");
-}
-
 function applyManualChannelFromInput() {
   const input = document.getElementById("manualChannelInput");
   const code = input ? input.value.trim() : "";
@@ -1144,14 +1305,14 @@ function applyManualChannelFromInput() {
 
 function useManualChannel() {
   stopVidScan();
-  cancelActiveProbe(); // hủy dò đang chạy
+  cancelActiveProbe();
 
   if(!applyManualChannelFromInput()) {
     setStatus("⚠️ Hãy nhập mã kênh, ví dụ: vtv1", "error");
     return;
   }
 
-  resetAutoScanIndex(); // reset chỉ số dò
+  resetAutoScanIndex();
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
@@ -1180,8 +1341,6 @@ function clearManualChannel() {
   );
 }
 
-// Xóa sự kiện input cũ – không còn tự động gán kênh khi gõ.
-// Chỉ giữ lại phím Enter để tiện dùng
 const manualInputEl = document.getElementById("manualChannelInput");
 if(manualInputEl) {
   manualInputEl.addEventListener("keydown", function(event) {
@@ -1223,6 +1382,23 @@ function getQualityLabel(index) {
   return "📺 Chưa xác định bitrate";
 }
 
+function getQualityShort(index) {
+  if (index === undefined || index === null || !templates[index]) {
+    return "N/A";
+  }
+  
+  const name = templates[index]?.name || "";
+
+  if(/5\.6M/i.test(name)) return "5.6M";
+  if(/5M/i.test(name)) return "5M";
+  if(/4M/i.test(name)) return "4M";
+  if(/2\.5M/i.test(name)) return "2.5M";
+  if(/HD/i.test(name)) return "HD";
+  if(/SD/i.test(name)) return "SD";
+  if(/INDEX/i.test(name)) return "INDEX";
+  return "N/A";
+}
+
 function showQuality(index, detected=false) {
   if(!qualityText) return;
 
@@ -1257,13 +1433,112 @@ function updateUrl() {
 }
 
 /* =========================================================
+   BẢNG KẾT QUẢ - CHỈ HIỆN LINK OK
+========================================================= */
+
+function updateResultTable() {
+  const tbody = document.getElementById('resultBody');
+  const foundSpan = document.getElementById('foundLinks');
+  
+  if (!tbody) return;
+  
+  // Xóa các hàng cũ
+  tbody.innerHTML = '';
+  
+  if (foundResults.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ TỰ ĐỘNG.</td></tr>`;
+    if (foundSpan) foundSpan.textContent = '0';
+    return;
+  }
+  
+  foundResults.forEach((result, index) => {
+    const tr = document.createElement('tr');
+    tr.className = 'found';
+    
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td style="font-size:11px;">${result.name || 'N/A'}</td>
+      <td class="link-cell" title="${result.url}" onclick="copyToClipboard('${result.url.replace(/'/g, "\\'")}')">${result.url}</td>
+      <td>${result.quality || 'N/A'}</td>
+      <td><span class="found-badge">✅ OK</span></td>
+      <td><button class="copy-btn" onclick="copyToClipboard('${result.url.replace(/'/g, "\\'")}')">📋 COPY</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  if (foundSpan) foundSpan.textContent = foundResults.length;
+}
+
+function addFoundResult(index, url) {
+  const name = templates[index]?.name || `Link ${index + 1}`;
+  const quality = getQualityShort(index);
+  
+  // Kiểm tra xem link đã có trong kết quả chưa
+  const existing = foundResults.find(r => r.url === url);
+  if (existing) {
+    return;
+  }
+  
+  foundResults.push({
+    index: index,
+    name: name,
+    url: url,
+    quality: quality
+  });
+  
+  // Lưu lại index của link OK cuối cùng
+  lastFoundIndex = index;
+  
+  // Sắp xếp theo index
+  foundResults.sort((a, b) => a.index - b.index);
+  
+  updateResultTable();
+}
+
+function clearResults() {
+  foundResults = [];
+  lastFoundIndex = null;
+  updateResultTable();
+  setStatus("🗑 Đã xóa toàn bộ kết quả", "ok");
+}
+
+function copyToClipboard(text) {
+  if (!text) return;
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      setStatus("📋 Đã copy: " + text.substring(0, 50) + (text.length > 50 ? '...' : ''), "ok");
+    }).catch(() => {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    setStatus("📋 Đã copy (fallback): " + text.substring(0, 50) + (text.length > 50 ? '...' : ''), "ok");
+  } catch (e) {
+    setStatus("❌ Không thể copy", "error");
+  }
+  document.body.removeChild(textarea);
+}
+
+/* =========================================================
    CHUYỂN KÊNH
 ========================================================= */
 
 function nextChannel() {
   stopVidScan();
   cancelActiveProbe();
-  // Reset dò
   resetAutoScanIndex();
 
   let index = channelSelect.selectedIndex + 1;
@@ -1272,7 +1547,6 @@ function nextChannel() {
   }
   channelSelect.selectedIndex = index;
 
-  // Xóa kênh thủ công khi chọn dropdown
   manualChannelCode = "";
   const input = document.getElementById("manualChannelInput");
   if(input) input.value = "";
@@ -1311,12 +1585,10 @@ channelSelect.addEventListener(
   function(){
     stopVidScan();
     cancelActiveProbe();
-    // Chọn kênh có sẵn -> thoát chế độ kênh thủ công.
     manualChannelCode = "";
     const manualInput = document.getElementById("manualChannelInput");
     if(manualInput) manualInput.value = "";
 
-    // Đổi kênh -> reset dò và quay về Link 1
     resetAutoScanIndex();
     templateSelect.selectedIndex = 0;
     updateUrl();
@@ -1328,7 +1600,7 @@ templateSelect.addEventListener(
   "change",
   function(){
     stopVidScan();
-    cancelActiveProbe(); // hủy dò đang chạy nếu có
+    cancelActiveProbe();
     updateUrl();
     playCurrent();
   }
@@ -1394,12 +1666,6 @@ function isIOS() {
          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
-/* =========================================================
-   PHÁT URL
-   iOS/iPadOS: ưu tiên HLS native của Safari.
-   PC/Android: dùng hls.js khi có MSE.
-========================================================= */
-
 function setupHlsPlayback(url, {
   onPlaying,
   onError,
@@ -1463,7 +1729,6 @@ function setupHlsPlayback(url, {
     video.addEventListener("error", onVideoError, {once:true});
   }
 
-  // iOS/iPadOS: native HLS trước.
   if (
     isIOS() &&
     video.canPlayType("application/vnd.apple.mpegurl")
@@ -1486,7 +1751,6 @@ function setupHlsPlayback(url, {
     video.addEventListener("error", onErrorNative, {once:true});
     video.src = url;
   }
-  // PC/Android/macOS: hls.js khi MSE được hỗ trợ.
   else if (isHlsSupported()) {
     hls = new Hls({
       enableWorker:true,
@@ -1502,7 +1766,6 @@ function setupHlsPlayback(url, {
     hls.loadSource(url);
     hls.attachMedia(video);
   }
-  // Native HLS fallback.
   else if (video.canPlayType("application/vnd.apple.mpegurl")) {
     const onMetadata = () => {
       if (nativeCleanup) nativeCleanup();
@@ -1535,7 +1798,6 @@ function setupHlsPlayback(url, {
 }
 
 function playUrl(url,index) {
-  // Phát thủ công: bật tiếng bình thường.
   video.muted = false;
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
@@ -1565,16 +1827,11 @@ function playUrl(url,index) {
       );
     }
   });
-  // Lưu để có thể hủy khi cần
   activePlaybackCancel = cancel ? cancel.cancel : null;
 }
 
 /* =========================================================
    DÒ LINK TỰ ĐỘNG
-   - Luôn dò từ Link 1 → Link cuối
-   - Mỗi link chỉ thử đúng 1 lần
-   - Link nào phát được thì dừng ngay
-   - Dò hết mà không có link nào thì dừng
 ========================================================= */
 
 function setAutoScanButton(scanning) {
@@ -1609,7 +1866,6 @@ function tryAutoScanLink(index, token) {
       done = true;
       clearTimeout(timer);
       
-      // Fix: Sửa lỗi tham chiếu probe
       if(probeHls) {
         const probe = probeHls;
         probeHls = null;
@@ -1627,18 +1883,22 @@ function tryAutoScanLink(index, token) {
         cancelFn();
         cancelFn = null;
       }
+      
+      // CHỈ THÊM VÀO BẢNG KHI LINK OK
+      if (ok) {
+        addFoundResult(index, url);
+      }
+      
       resolve(ok);
     };
 
     timer = setTimeout(() => finish(false), 10000);
 
-    // Dùng một Hls instance riêng để kiểm tra manifest.
     if(isHlsSupported()) {
       try {
         probeHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
-        activeProbeHls = probeHls; // lưu để hủy khi cần
+        activeProbeHls = probeHls;
         
-        // Fix: Kiểm tra Hls.Events trước khi sử dụng
         if (isHlsEventsAvailable()) {
           probeHls.once(Hls.Events.MANIFEST_PARSED, () => finish(true));
           probeHls.once(Hls.Events.ERROR, (event, data) => {
@@ -1652,7 +1912,6 @@ function tryAutoScanLink(index, token) {
             }
           });
         } else {
-          // Fallback nếu Hls.Events không có sẵn
           setTimeout(() => finish(false), 5000);
         }
         
@@ -1670,7 +1929,6 @@ function tryAutoScanLink(index, token) {
       return;
     }
 
-    // Safari/iOS: dùng native HLS.
     if(video.canPlayType("application/vnd.apple.mpegurl")) {
       const onMetadata = () => { 
         if(nativeCleanup) nativeCleanup();
@@ -1703,7 +1961,6 @@ function autoScanLinks() {
   const input = document.getElementById("manualChannelInput");
   const typedCode = input ? input.value.trim() : "";
 
-  // Nếu có chữ trong ô nhập tay, LUÔN ưu tiên ô này (nhưng chỉ khi bấm dò)
   if(typedCode) {
     if(typedCode !== manualChannelCode.trim()) {
       manualChannelCode = typedCode;
@@ -1720,19 +1977,22 @@ function autoScanLinks() {
     return;
   }
 
+  // Xóa kết quả cũ trước khi dò mới
+  foundResults = [];
+  lastFoundIndex = null;
+  updateResultTable();
+
   if(autoScanNextIndex >= templates.length) {
     setStatus("⚪ " + code + " đã dò hết " + templates.length + " link — bấm DÒ LẠI TỪ ĐẦU", "error");
     return;
   }
 
-  // Dừng FreeM3U nhưng giữ nguyên manualChannelCode.
   vidScanToken++;
   vidScanning = false;
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
   setVidScanButton(false);
 
-  // Hủy dò đang chạy
   cancelActiveProbe();
 
   autoScanning = true;
@@ -1743,7 +2003,6 @@ function autoScanLinks() {
 
   const scanNext = () => {
     if(token !== autoScanToken || !autoScanning) {
-      // Dọn dẹp timers khi kết thúc
       autoScanTimers = [];
       return;
     }
@@ -1753,7 +2012,22 @@ function autoScanLinks() {
       autoScanning = false;
       setAutoScanButton(false);
       autoScanTimers = [];
-      setStatus("🔴 " + code + " — đã dò hết " + templates.length + " link, không tìm thấy link hợp lệ", "error");
+      
+      const foundCount = foundResults.length;
+      if (foundCount > 0) {
+        // PHÁT LINK OK CUỐI CÙNG
+        if (lastFoundIndex !== null) {
+          templateSelect.selectedIndex = lastFoundIndex;
+          updateUrl();
+          showQuality(lastFoundIndex, true);
+          playUrl(getUrl(lastFoundIndex), lastFoundIndex);
+          setStatus("✅ Dò xong! Tìm thấy " + foundCount + " link. Đang phát link cuối cùng (Link " + (lastFoundIndex + 1) + ")", "ok");
+        } else {
+          setStatus("✅ Dò xong! Tìm thấy " + foundCount + " link phát được cho " + code, "ok");
+        }
+      } else {
+        setStatus("🔴 Đã dò hết " + templates.length + " link, không tìm thấy link nào phát được", "error");
+      }
       return;
     }
 
@@ -1766,16 +2040,9 @@ function autoScanLinks() {
         return;
       }
 
+      // Không phát ngay khi tìm thấy, để tránh gián đoạn quá trình dò
       if(success) {
-        autoScanning = false;
-        setAutoScanButton(false);
-        autoScanTimers = [];
-        templateSelect.selectedIndex = testIndex;
-        updateUrl();
-        showQuality(testIndex, true);
-        playUrl(getUrl(testIndex), testIndex);
-        setStatus("🟢 Tìm thấy " + code + " — Link " + (testIndex + 1) + " hợp lệ và đang phát", "ok");
-        return;
+        setStatus("✅ Tìm thấy link " + (testIndex + 1) + " — tiếp tục dò...", "ok");
       }
 
       const timer = setTimeout(scanNext, 30);
@@ -1799,11 +2066,6 @@ function autoScanLinks() {
 
 /* =========================================================
    FREEM3U // DÒ KÊNH THEO SỐ
-   URL cố định:
-   https://freem3u.xyz/api/live/play.m3u8?vid={number}
-
-   Dò tuần tự 1 -> 999.
-   Số nào phát được thật sự thì dừng và hiện số kênh đó.
 ========================================================= */
 
 function getVidUrl(number) {
@@ -1850,7 +2112,6 @@ function tryVidNumber(number, token) {
       onPlaying: () => resolve(true),
       onError: () => resolve(false)
     });
-    // Lưu cancel function
     if (cancelFn) {
       activePlaybackCancel = cancelFn.cancel;
     } else {
@@ -1875,14 +2136,12 @@ function startVidScan() {
     return;
   }
 
-  // Nếu bắt đầu từ số 1 thì đây là một lượt dò mới.
   if(vidScanNumber === 1) {
     vidFoundNumbers = [];
   }
 
   vidScanning = true;
   vidScanToken++;
-  // Hủy dò cũ
   cancelActiveProbe();
 
   const token = vidScanToken;
@@ -1915,7 +2174,6 @@ function startVidScan() {
       if(token !== vidScanToken || !vidScanning) return;
 
       if(success) {
-        // Tìm thấy tín hiệu: dừng NGAY tại số này để người dùng xem.
         vidFoundNumbers.push(number);
         updateVidScanDisplay(number);
 
@@ -1923,8 +2181,6 @@ function startVidScan() {
         freem3uPlaying = true;
         freem3uPlayingNumber = number;
 
-        // Đã tìm thấy: dừng lượt hiện tại nhưng nhớ số kế tiếp.
-        // Lần bấm DÒ SỐ TỰ ĐỘNG tiếp theo sẽ dò từ số này.
         vidScanNumber = number + 1;
         vidScanning = false;
         if(vidScanBtn) vidScanBtn.disabled = false;
@@ -1944,7 +2200,6 @@ function startVidScan() {
         return;
       }
 
-      // Không có -> tự tăng số và dò tiếp.
       vidScanNumber = number + 1;
       setTimeout(scanNext, 0);
 
@@ -1967,7 +2222,6 @@ function scanBackward() {
     return;
   }
 
-  // DÒ LÙI phải căn cứ đúng vào "SỐ ĐANG DÒ" đang hiển thị.
   const current = Number(
     vidCurrent ? vidCurrent.value : vidScanNumber
   );
@@ -2067,23 +2321,6 @@ function prevLink() {
 }
 
 /* =========================================================
-   DỪNG
-========================================================= */
-
-function stopPlayer() {
-
-  resetAutoScanIndex();
-  stopVidScan();
-  cancelActiveProbe();
-
-  destroyPlayer();
-
-  setStatus(
-    "⚪ Đã dừng"
-  );
-}
-
-/* =========================================================
    COPY URL
 ========================================================= */
 
@@ -2099,7 +2336,6 @@ async function copyUrl() {
     await navigator.clipboard.writeText(url);
     setStatus("📋 Đã copy link", "ok");
   } catch(error) {
-    // Fallback: hiển thị thông báo và chọn text
     try {
       urlBox.select();
       urlBox.setSelectionRange(0, 99999);
@@ -2178,10 +2414,6 @@ document.addEventListener(
   "keydown",
   function(event) {
 
-    /*
-      Không kích hoạt phím tắt khi đang nhập
-    */
-
     if(
       event.target.tagName === "INPUT" ||
       event.target.tagName === "TEXTAREA"
@@ -2231,6 +2463,9 @@ updateVidScanDisplay(1);
 
 /* Khởi tạo URL */
 updateUrl();
+
+/* Khởi tạo bảng kết quả */
+updateResultTable();
 
 </script>
 </body>
