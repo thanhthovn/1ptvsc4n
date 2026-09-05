@@ -1,3412 +1,799 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chat Nhóm</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M3U8 Test Player</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 <style>
+:root{
+  --bg:#07101d;
+  --panel:#101a2c;
+  --panel2:#0a1322;
+  --border:#263751;
+  --text:#f5f7fb;
+  --muted:#91a0b8;
+  --accent:#3b82f6;
+  --accent2:#2563eb;
+  --danger:#ef4444;
+  --ok:#22c55e;
+}
+
 *{box-sizing:border-box}
-:root{--green:#007aff;--green-dark:#0067d9;--green-soft:#e8f2ff;--bg:#f5f5f7;--line:#d2d2d7;--text:#1d1d1f;--muted:#6e6e73}
-html,body{height:100%}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
-button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
 
-/* LOGIN */
-#auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#eef1f5,#f7f7f9 55%,#e9edf2)}
-.login-card{width:min(410px,100%);background:rgba(255,255,255,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:36px 34px 32px;box-shadow:0 18px 55px rgba(0,0,0,.12)}
-.wa-login-icon{width:72px;height:72px;margin:0 auto 18px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(145deg,#0a84ff,#007aff);color:#fff;font-size:32px;box-shadow:0 8px 22px rgba(0,122,255,.25)}
-.login-card h1{text-align:center;margin:0;font-size:25px;font-weight:400}
-.login-subtitle{text-align:center;color:var(--muted);margin:8px 0 28px}
-.field{margin-bottom:18px}.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px}
-.field input{width:100%;border:1px solid #c7c7cc;border-radius:9px;padding:13px 12px;outline:none;color:var(--text);background:rgba(255,255,255,.9)}
-.field input:focus{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
-.primary{width:100%;border:0;border-radius:9px;padding:12px;background:var(--green);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(0,122,255,.18)}
-.primary:hover{background:var(--green-dark)}.primary:disabled{opacity:.6;cursor:not-allowed}
-.msg{min-height:22px;margin-top:13px;text-align:center;font-size:13px;color:#d93025}.msg.ok{color:#188038}
-
-/* APP */
-#app{position:relative;height:100vh;display:flex;background:var(--bg)}
-.side{position:relative;z-index:100;width:390px;min-width:300px;background:rgba(246,246,248,.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:1px solid #c7c7cc;display:flex;flex-direction:column}
-.wa-topbar{height:60px;padding:0 16px;background:rgba(242,242,247,.86);display:flex;align-items:center;justify-content:space-between}
-.brand{font-size:20px;font-weight:600}.top-actions{display:flex;gap:8px}
-.top-actions button,.header-actions button{width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#6e6e73;font-size:20px}
-.top-actions button:hover,.header-actions button:hover{background:#e5e5ea}
-.me{display:flex;align-items:center;gap:11px;padding:10px 14px;background:rgba(242,242,247,.78);border-bottom:1px solid var(--line)}
-.avatar{width:42px;height:42px;flex:none;border-radius:50%;background:linear-gradient(145deg,#dbeeff,#b9ddff);color:#007aff;display:grid;place-items:center;font-weight:600;font-size:18px}
-.meinfo{flex:1;min-width:0}.name{font-size:15px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.role{margin-top:3px;color:var(--muted);font-size:12px}
-.logout{border:0;background:transparent;color:#6e6e73;font-size:22px;width:38px;height:38px;border-radius:50%}
-.logout:hover{background:#e5e5ea}
-.search-box{margin:8px 12px;height:36px;border-radius:9px;background:#e9e9ee;display:flex;align-items:center;padding:0 12px;gap:8px;color:#6e6e73}
-.search-box input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#6e6e73;font-size:13px}
-.chat-list{flex:1;overflow:auto}
-.room{min-height:72px;padding:10px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.76);cursor:pointer}
-.room:hover{background:#e9e9ee}
-.room-avatar{width:50px;height:50px;flex:none;border-radius:14px;background:#dbeeff;color:#007aff;display:grid;place-items:center;font-size:22px}
-.room-info{min-width:0;flex:1}.room-name{font-size:16px;margin-bottom:5px}.room-preview{font-size:13px;color:var(--muted)}
-
-/* HEADER */
-.chat{flex:1;min-width:0;display:flex;flex-direction:column;background:#f5f5f7}
-.head{height:60px;background:rgba(242,242,247,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid #c7c7cc;display:flex;align-items:center;padding:0 16px;gap:11px}
-.header-avatar{width:42px;height:42px;border-radius:12px;background:#dbeeff;color:#007aff;display:grid;place-items:center;font-size:20px}
-.header-info{min-width:0;flex:1}.header-title{font-size:16px;font-weight:500}
-.status{color:var(--muted);font-size:12px;margin-top:3px}.header-actions{display:flex;gap:4px}
-
-/* MESSAGES */
-.messages{flex:1;overflow:auto;padding:20px 6%;background-color:#f5f5f7;background-image:radial-gradient(rgba(60,60,67,.10) .8px,transparent .8px);background-size:18px 18px}
-.row{display:flex;margin-bottom:4px}.mine{justify-content:flex-end}.box{max-width:min(65%,650px)}
-.user{display:none}.bubble{display:inline-block;background:#fff;border-radius:12px;padding:8px 10px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.04);font-size:14px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere}
-.mine .bubble{background:#d9efff}.time{display:inline;margin-left:7px;color:#6e6e73;font-size:10px}
-
-/* COMPOSER */
-.composer{min-height:62px;padding:10px 14px;display:flex;align-items:center;gap:10px;background:rgba(242,242,247,.92);border-top:1px solid #c7c7cc}
-.composer input{flex:1;min-width:0;height:42px;border:1px solid #c7c7cc;border-radius:21px;padding:0 17px;outline:none;background:#fff;color:var(--text)}
-.send{width:42px;height:42px;border:0;border-radius:50%;background:#007aff;color:#fff;font-size:18px;box-shadow:0 3px 9px rgba(0,122,255,.2)}
-.send:hover{background:var(--green-dark)}.send:disabled{opacity:.55}
-
-@media(max-width:800px){.side{width:300px;min-width:300px}.box{max-width:78%}}
-@media(max-width:600px){
-.side{width:72px;min-width:72px}.brand{font-size:0}.brand:after{content:"●";font-size:24px}
-.top-actions,.meinfo,.logout,.search-box,.room-info{display:none}.me{justify-content:center;padding:9px 0}
-.room{justify-content:center;padding:10px 0}.room-avatar{width:48px;height:48px}
-.head{padding:0 9px}.header-actions{display:none}.messages{padding:12px 8px}.box{max-width:88%}.composer{padding:8px}
-}
-@media(max-width:420px){#auth{padding:12px}.login-card{padding:28px 20px}}
-
-/* TASK MENU */
-.tasks-menu{
-    width:calc(100% - 24px);
-    margin:4px 12px 8px;
-    height:44px;
-    border:0;
-    border-radius:8px;
-    background:#fff;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:0 12px;
-    color:#1d1d1f;
-    text-align:left;
-}
-.tasks-menu:hover{background:#f2f2f7}
-.tasks-menu-icon{
-    width:28px;height:28px;border-radius:50%;
-    display:grid;place-items:center;
-    background:#e8f2ff;color:#007aff;font-weight:700;
-}
-.task-count{
-    margin-left:auto;
-    min-width:22px;height:22px;
-    padding:0 6px;border-radius:11px;
-    display:grid;place-items:center;
-    background:#007aff;color:#fff;
-    font-size:11px;
+body{
+  margin:0;
+  min-height:100vh;
+  background:linear-gradient(135deg,#050b14,#101b2e);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
 }
 
-/* TASK MODAL */
-.modal{
-    position:fixed;
-    inset:0;
-    z-index:1000;
-    background:#0007;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    padding:20px;
-}
-.task-panel{
-    width:min(760px,100%);
-    max-height:min(88vh,800px);
-    background:#fff;
-    border-radius:12px;
-    box-shadow:0 8px 40px #0005;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
-}
-.task-panel-head{
-    min-height:72px;
-    padding:16px 18px;
-    background:#f2f2f7;
-    border-bottom:1px solid #c7c7cc;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-}
-.task-panel-title{font-size:20px;font-weight:600}
-.task-panel-subtitle{font-size:12px;color:#6e6e73;margin-top:4px}
-.modal-close{
-    width:38px;height:38px;border:0;border-radius:50%;
-    background:transparent;color:#6e6e73;font-size:28px;
-}
-.modal-close:hover{background:#e5e5ea}
-.task-toolbar{
-    padding:12px 16px;
-    display:flex;
-    gap:10px;
-    border-bottom:1px solid #d2d2d7;
-}
-.new-task-btn{
-    border:0;border-radius:7px;
-    background:#007aff;color:#fff;
-    padding:10px 14px;font-weight:600;
-}
-.new-task-btn:hover{background:#007aff}
-.task-filter{
-    margin-left:auto;
-    border:1px solid #c7c7cc;
-    border-radius:7px;
-    padding:8px 10px;
-    background:#fff;
-    color:#1d1d1f;
-}
-.task-form{
-    padding:14px 16px;
-    background:#f6f6f8;
-    border-bottom:1px solid #d2d2d7;
-}
-.task-form-title{font-weight:600;margin-bottom:10px}
-.task-input{
-    width:100%;
-    border:1px solid #c7c7cc;
-    border-radius:7px;
-    padding:10px 11px;
-    outline:none;
-    background:#fff;
-    color:#1d1d1f;
-    margin-bottom:9px;
-}
-.task-input:focus{border-color:#007aff;box-shadow:0 0 0 1px #007aff}
-.task-textarea{min-height:70px;resize:vertical}
-.task-two{display:grid;grid-template-columns:1fr 180px;gap:9px}
-.task-form-actions{display:flex;justify-content:flex-end;gap:8px}
-.cancel-task{
-    border:1px solid #c7c7cc;
-    border-radius:7px;
-    background:#fff;
-    color:#6e6e73;
-    padding:9px 13px;
-}
-.task-msg{min-height:18px;color:#d93025;font-size:12px;margin-top:7px}
-.tasks-list{overflow:auto;padding:8px 0}
-.tasks-empty{text-align:center;color:#6e6e73;padding:35px 20px}
-.task-item{
-    padding:13px 16px;
-    border-bottom:1px solid #d2d2d7;
-    display:flex;
-    gap:12px;
-    align-items:flex-start;
-}
-.task-main{flex:1;min-width:0}
-.task-title{font-weight:600;font-size:15px;overflow-wrap:anywhere}
-.task-description{font-size:13px;color:#6e6e73;margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere}
-.task-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.task-badge{
-    font-size:11px;padding:4px 7px;border-radius:12px;
-    background:#f2f2f7;color:#6e6e73;
-}
-.task-status{
-    border:1px solid #c7c7cc;border-radius:6px;
-    padding:6px 8px;background:#fff;color:#1d1d1f;
-    font-size:12px;
-}
-.task-delete{
-    border:0;background:transparent;color:#8e8e93;
-    font-size:18px;padding:4px;
-}
-.task-delete:hover{color:#d93025}
-@media(max-width:600px){
-    .tasks-menu{width:52px;margin:4px auto;padding:0;justify-content:center}
-    .tasks-menu span:not(.tasks-menu-icon):not(.task-count){display:none}
-    .task-count{display:none}
-    .task-two{grid-template-columns:1fr}
-    .task-panel{max-height:94vh}
+.app{
+  width:min(1180px,100%);
+  margin:auto;
+  padding:22px;
 }
 
-/* SHARED DRIVE */
-.drive-menu{
-    width:calc(100% - 24px);
-    margin:4px 12px 4px;
-    height:44px;
-    border:0;
-    border-radius:8px;
-    background:#fff;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:0 12px;
-    color:#1d1d1f;
-    text-align:left;
-}
-.drive-menu:hover{background:#f2f2f7}
-.drive-menu-icon{
-    width:28px;height:28px;border-radius:50%;
-    display:grid;place-items:center;
-    background:#e8f2ff;
-}
-.drive-panel{width:min(850px,100%)}
-.drive-toolbar{
-    min-height:58px;
-    padding:10px 16px;
-    border-bottom:1px solid #d2d2d7;
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-.upload-btn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    border:0;
-    border-radius:7px;
-    background:#007aff;
-    color:#fff;
-    padding:10px 14px;
-    font-weight:600;
-    cursor:pointer;
-}
-.upload-btn:hover{background:#007aff}
-.upload-status{font-size:12px;color:#6e6e73}
-.files-list{overflow:auto;max-height:65vh}
-.file-item{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:12px 16px;
-    border-bottom:1px solid #d2d2d7;
-}
-.file-icon{
-    width:44px;height:44px;flex:none;
-    border-radius:8px;
-    background:#f2f2f7;
-    display:grid;place-items:center;
-    font-size:22px;
-}
-.file-main{min-width:0;flex:1}
-.file-name{
-    font-size:14px;
-    font-weight:500;
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
-}
-.file-meta{
-    margin-top:4px;
-    color:#6e6e73;
-    font-size:11px;
-}
-.file-actions{display:flex;gap:6px}
-.file-action{
-    border:1px solid #c7c7cc;
-    border-radius:6px;
-    background:#fff;
-    color:#6e6e73;
-    padding:7px 9px;
-    text-decoration:none;
-    font-size:12px;
-}
-.file-action:hover{background:#f2f2f7}
-.file-delete:hover{color:#d93025;border-color:#d93025}
-
-@media(max-width:600px){
-    .drive-menu{
-        width:52px;margin:4px auto;padding:0;justify-content:center;
-    }
-    .drive-menu span:not(.drive-menu-icon):not(.task-count){display:none}
+header{
+  margin-bottom:18px;
 }
 
-
-/* ================= DANH MỤC CÔNG VIỆC ================= */
-.catalog-menu{
-    width:calc(100% - 24px);
-    margin:4px 12px;
-    height:44px;
-    border:0;
-    border-radius:8px;
-    background:#fff;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:0 12px;
-    color:#1d1d1f;
-    text-align:left;
-}
-.catalog-menu:hover{background:#f2f2f7}
-.catalog-menu-icon{
-    width:28px;height:28px;border-radius:50%;
-    display:grid;place-items:center;
-    background:#e8f2ff;color:#007aff;font-weight:700;
-}
-.catalog-count{
-    margin-left:auto;
-    min-width:22px;height:22px;padding:0 6px;border-radius:11px;
-    display:grid;place-items:center;
-    background:#007aff;color:#fff;font-size:11px;
-}
-.catalog-panel{width:min(920px,100%)}
-.catalog-body{display:flex;min-height:520px;max-height:70vh}
-.catalog-categories{
-    width:290px;min-width:250px;border-right:1px solid #d2d2d7;
-    overflow:auto;background:#f6f6f8;
-}
-.catalog-cat-head{
-    padding:12px 14px;border-bottom:1px solid #d2d2d7;
-    display:flex;align-items:center;justify-content:space-between;
-    font-weight:600;
-}
-.catalog-add-btn{
-    border:0;border-radius:6px;background:#007aff;color:#fff;
-    padding:7px 10px;font-weight:600;
-}
-.catalog-category{
-    padding:12px 14px;border-bottom:1px solid #d2d2d7;
-    cursor:pointer;display:flex;align-items:center;gap:9px;
-}
-.catalog-category:hover{background:#f2f2f7}
-.catalog-category.active{background:#e8f2ff;color:#007aff;font-weight:600}
-.catalog-category-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.catalog-category-actions{display:flex;gap:3px}
-.catalog-mini{
-    border:0;background:transparent;color:#6e6e73;
-    width:28px;height:28px;border-radius:50%;
-}
-.catalog-mini:hover{background:#e5e5ea}
-.catalog-work-area{flex:1;min-width:0;display:flex;flex-direction:column}
-.catalog-work-head{
-    padding:14px 16px;border-bottom:1px solid #d2d2d7;
-    display:flex;align-items:center;gap:10px;
-}
-.catalog-work-title{font-size:18px;font-weight:600;flex:1}
-.catalog-work-list{overflow:auto;flex:1}
-.catalog-work-item{
-    padding:13px 16px;border-bottom:1px solid #d2d2d7;
-    display:flex;align-items:center;gap:12px;
-}
-.catalog-work-main{flex:1;min-width:0}
-.catalog-work-name{font-size:14px;font-weight:600;overflow-wrap:anywhere}
-.catalog-work-desc{font-size:12px;color:#6e6e73;margin-top:4px;white-space:pre-wrap}
-.catalog-work-actions{display:flex;gap:5px}
-.catalog-work-action{
-    border:1px solid #c7c7cc;border-radius:6px;background:#fff;
-    color:#6e6e73;padding:7px 9px;font-size:12px;
-}
-.catalog-work-action:hover{background:#f2f2f7}
-.catalog-work-delete:hover{color:#d93025;border-color:#d93025}
-.catalog-form{
-    padding:14px 16px;background:#f6f6f8;border-bottom:1px solid #d2d2d7;
-}
-.catalog-form-title{font-weight:600;margin-bottom:10px}
-.catalog-input{
-    width:100%;border:1px solid #c7c7cc;border-radius:7px;
-    padding:10px 11px;outline:none;background:#fff;color:#1d1d1f;margin-bottom:9px;
-}
-.catalog-input:focus{border-color:#007aff;box-shadow:0 0 0 1px #007aff}
-.catalog-form-actions{display:flex;justify-content:flex-end;gap:8px}
-.catalog-cancel{
-    border:1px solid #c7c7cc;border-radius:7px;background:#fff;
-    color:#6e6e73;padding:9px 13px;
-}
-.catalog-msg{min-height:18px;color:#d93025;font-size:12px;margin-top:7px}
-.catalog-empty{text-align:center;color:#6e6e73;padding:40px 20px}
-@media(max-width:600px){
-    .catalog-menu{width:52px;margin:4px auto;padding:0;justify-content:center}
-    .catalog-menu span:not(.catalog-menu-icon):not(.catalog-count){display:none}
-    .catalog-count{display:none}
-    .catalog-body{flex-direction:column;max-height:76vh}
-    .catalog-categories{width:100%;min-width:0;max-height:210px;border-right:0;border-bottom:1px solid #d2d2d7}
+h1{
+  margin:0;
+  font-size:26px;
 }
 
-
-/* ================= TIẾN ĐỘ CÔNG VIỆC ================= */
-.progress-panel{width:min(1050px,100%)}
-.progress-toolbar{
-    padding:12px 16px;border-bottom:1px solid #d2d2d7;
-    display:flex;align-items:center;gap:10px;
-}
-.progress-back{
-    border:1px solid #c7c7cc;border-radius:7px;background:#fff;
-    color:#6e6e73;padding:8px 11px;
-}
-.progress-back:hover{background:#f2f2f7}
-.progress-work-title{font-size:17px;font-weight:600;flex:1}
-.progress-add-btn{
-    border:0;border-radius:7px;background:#007aff;color:#fff;
-    padding:9px 13px;font-weight:600;
-}
-.progress-add-btn:hover{background:#007aff}
-.progress-table-wrap{overflow:auto;max-height:65vh}
-.progress-table{
-    width:100%;border-collapse:collapse;min-width:820px;
-}
-.progress-table th{
-    position:sticky;top:0;z-index:1;
-    background:#f2f2f7;border-bottom:1px solid #c7c7cc;
-    padding:10px 12px;text-align:left;font-size:12px;color:#6e6e73;
-}
-.progress-table td{
-    border-bottom:1px solid #d2d2d7;
-    padding:10px 12px;vertical-align:top;font-size:13px;
-}
-.progress-table tr:hover td{background:#fafafa}
-.progress-date{width:125px;white-space:nowrap}
-.progress-content{width:25%;font-weight:600}
-.progress-description{width:35%;white-space:pre-wrap}
-.progress-file{width:25%}
-.progress-actions{width:105px}
-.progress-file-list{display:flex;flex-direction:column;gap:5px}
-.progress-file-link{
-    display:inline-flex;align-items:center;gap:5px;
-    color:#007aff;text-decoration:none;font-size:12px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.progress-file-link:hover{text-decoration:underline}
-.progress-file-remove{
-    border:0;background:transparent;color:#d93025;
-    cursor:pointer;font-size:11px;margin-left:5px;
-}
-.progress-action-btn{
-    border:1px solid #c7c7cc;border-radius:6px;background:#fff;
-    color:#6e6e73;padding:6px 8px;font-size:11px;margin:2px;
-}
-.progress-action-btn:hover{background:#f2f2f7}
-.progress-delete:hover{color:#d93025;border-color:#d93025}
-.progress-form{
-    padding:14px 16px;background:#f6f6f8;
-    border-bottom:1px solid #d2d2d7;
-}
-.progress-form-grid{
-    display:grid;grid-template-columns:150px 1fr;
-    gap:9px;
-}
-.progress-input{
-    width:100%;border:1px solid #c7c7cc;border-radius:7px;
-    padding:10px 11px;outline:none;background:#fff;color:#1d1d1f;
-}
-.progress-input:focus{border-color:#007aff;box-shadow:0 0 0 1px #007aff}
-.progress-textarea{min-height:80px;resize:vertical}
-.progress-file-input{padding:7px}
-.progress-file-note{font-size:11px;color:#6e6e73;margin-top:-4px;margin-bottom:4px}.progress-form-actions{
-    display:flex;justify-content:flex-end;gap:8px;margin-top:10px;
-}
-.progress-cancel{
-    border:1px solid #c7c7cc;border-radius:7px;background:#fff;
-    color:#6e6e73;padding:9px 13px;
-}
-.progress-msg{min-height:18px;color:#d93025;font-size:12px;margin-top:7px}
-.progress-empty{text-align:center;color:#6e6e73;padding:45px 20px}
-.catalog-work-item{cursor:pointer}
-.catalog-work-item:hover{background:#f6f6f8}
-.catalog-work-open{
-    color:#007aff;font-size:12px;margin-top:5px;
-}
-@media(max-width:600px){
-    .progress-form-grid{grid-template-columns:1fr}
-    .progress-panel{max-height:94vh}
+.subtitle{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
 }
 
-
-/* ===== macOS-inspired visual refinement ===== */
-button, input, select, textarea{font-family:inherit}
-button{transition:background .15s ease,color .15s ease,transform .08s ease}
-button:active{transform:scale(.97)}
-.tasks-menu,.drive-menu,.catalog-menu{background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.04)}
-.tasks-menu:hover,.drive-menu:hover,.catalog-menu:hover{background:#e9e9ee}
-.tasks-menu-icon,.drive-menu-icon,.catalog-menu-icon{background:#e8f2ff;color:#007aff}
-.task-count,.catalog-count{background:#007aff}
-.modal{background:rgba(0,0,0,.28);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
-.task-panel{border:1px solid rgba(0,0,0,.10);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.22)}
-.task-panel-head{background:rgba(242,242,247,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.modal-close{font-size:25px}
-.new-task-btn,.upload-btn,.catalog-add-btn,.progress-add-btn{background:#007aff;border-radius:9px}
-.new-task-btn:hover,.upload-btn:hover,.catalog-add-btn:hover,.progress-add-btn:hover{background:#0067d9}
-.task-filter,.task-input,.catalog-input,.progress-input,.cancel-task,.catalog-cancel,.progress-cancel,.progress-back,.progress-action-btn,.file-action{border-color:#c7c7cc;border-radius:9px}
-.task-status{border-color:#c7c7cc;border-radius:8px}
-.catalog-category.active{background:#e8f2ff;color:#007aff}
-.catalog-categories{background:#f6f6f8}
-.file-icon{background:#e9e9ee}
-
-/* ===== macOS-inspired soft dark mode ===== */
-:root{
-    --green:#0a84ff;
-    --green-dark:#409cff;
-    --green-soft:#173a5e;
-    --bg:#1c1c1e;
-    --line:#38383a;
-    --text:#f5f5f7;
-    --muted:#98989d;
-}
-html,body{background:#1c1c1e;color:#f5f5f7}
-body{background:#1c1c1e;color:#f5f5f7}
-#auth{
-    background:radial-gradient(circle at 50% 0%,#343438 0%,#242426 42%,#1c1c1e 100%);
-}
-.login-card{
-    background:rgba(44,44,46,.88);
-    border-color:rgba(255,255,255,.10);
-    box-shadow:0 22px 65px rgba(0,0,0,.45);
-}
-.login-card h1{color:#f5f5f7}
-.field label,.login-subtitle,.role,.status,.room-preview,.time,
-.upload-status,.task-description,.catalog-work-desc,.file-meta,
-.progress-description,.task-panel-subtitle,.catalog-empty,.tasks-empty,
-.progress-empty,.progress-file-note{color:#98989d}
-.field input{
-    border-color:#545458;
-    background:#2c2c2e;
-    color:#f5f5f7;
-}
-.field input:focus{
-    border-color:#0a84ff;
-    box-shadow:0 0 0 1px #0a84ff;
-}
-.primary{background:#0a84ff}
-.primary:hover{background:#409cff}
-
-.side{
-    background:rgba(28,28,30,.94);
-    border-right-color:#38383a;
-}
-.wa-topbar,.me,.head,.composer{
-    background:rgba(44,44,46,.90);
-}
-.wa-topbar,.head{border-bottom-color:#38383a}
-.me{border-bottom-color:#38383a}
-.top-actions button,.header-actions button,.logout,.modal-close{
-    color:#98989d;
-}
-.top-actions button:hover,.header-actions button:hover,
-.logout:hover,.modal-close:hover{background:#3a3a3c}
-.search-box{background:#2c2c2e}
-.search-box input{color:#f5f5f7}
-.room{
-    background:rgba(28,28,30,.72);
-    border-bottom-color:#38383a;
-}
-.room:hover{background:#2c2c2e}
-.room-avatar,.header-avatar{
-    background:#183957;
-    color:#0a84ff;
-}
-.avatar{
-    background:linear-gradient(145deg,#294b68,#173a5e);
-    color:#64b5ff;
-}
-.chat{background:#1c1c1e}
-.messages{
-    background-color:#1c1c1e;
-    background-image:radial-gradient(rgba(255,255,255,.055) .8px,transparent .8px);
-}
-.bubble{
-    background:#2c2c2e;
-    color:#f5f5f7;
-    border-color:rgba(255,255,255,.05);
-    box-shadow:0 1px 3px rgba(0,0,0,.25);
-}
-.mine .bubble{background:#173a5e}
-.composer{border-top-color:#38383a}
-.composer input{
-    background:#2c2c2e;
-    border-color:#545458;
-    color:#f5f5f7;
-}
-.composer input::placeholder{color:#8e8e93}
-.send{background:#0a84ff}
-.send:hover{background:#409cff}
-
-.tasks-menu,.drive-menu,.catalog-menu{
-    background:rgba(44,44,46,.78);
-    color:#f5f5f7;
-    border-color:rgba(255,255,255,.05);
-}
-.tasks-menu:hover,.drive-menu:hover,.catalog-menu:hover{background:#3a3a3c}
-.tasks-menu-icon,.drive-menu-icon,.catalog-menu-icon{
-    background:#183957;color:#64b5ff;
-}
-.task-count,.catalog-count{background:#0a84ff}
-
-.modal{background:rgba(0,0,0,.58)}
-.task-panel{
-    background:#2c2c2e;
-    border-color:rgba(255,255,255,.10);
-    box-shadow:0 24px 70px rgba(0,0,0,.55);
-}
-.task-panel-head{
-    background:rgba(44,44,46,.94);
-    border-bottom-color:#48484a;
-}
-.task-panel-title{color:#f5f5f7}
-.task-toolbar,.drive-toolbar,.catalog-work-head,.progress-toolbar{
-    background:#2c2c2e;
-    border-bottom-color:#38383a;
-}
-.task-form,.catalog-form,.progress-form{
-    background:#242426;
-    border-bottom-color:#38383a;
-}
-.task-input,.catalog-input,.progress-input,.task-filter,
-.cancel-task,.catalog-cancel,.progress-cancel,.progress-back,
-.progress-action-btn,.file-action,.task-status{
-    background:#2c2c2e;
-    color:#f5f5f7;
-    border-color:#545458;
-}
-.task-input::placeholder,.catalog-input::placeholder,
-.progress-input::placeholder{color:#8e8e93}
-.task-input:focus,.catalog-input:focus,.progress-input:focus{
-    border-color:#0a84ff;
-    box-shadow:0 0 0 1px #0a84ff;
-}
-.cancel-task,.catalog-cancel,.progress-cancel,.progress-back,
-.progress-action-btn,.file-action{
-    color:#f5f5f7;
-}
-.cancel-task:hover,.catalog-cancel:hover,.progress-cancel:hover,
-.progress-back:hover,.progress-action-btn:hover,.file-action:hover{
-    background:#3a3a3c;
-}
-.new-task-btn,.upload-btn,.catalog-add-btn,.progress-add-btn{
-    background:#0a84ff;
-}
-.new-task-btn:hover,.upload-btn:hover,.catalog-add-btn:hover,
-.progress-add-btn:hover{background:#409cff}
-
-.tasks-list,.files-list,.catalog-work-list,.progress-table-wrap{
-    background:#2c2c2e;
-}
-.task-item,.file-item,.catalog-category,.catalog-work-item{
-    border-bottom-color:#38383a;
-}
-.task-item:hover,.file-item:hover,.catalog-category:hover,
-.catalog-work-item:hover{background:#3a3a3c}
-.catalog-categories{background:#242426;border-right-color:#38383a}
-.catalog-cat-head{border-bottom-color:#38383a}
-.catalog-category.active{background:#173a5e;color:#64b5ff}
-.catalog-mini{color:#98989d}
-.catalog-mini:hover{background:#3a3a3c}
-.file-icon{background:#3a3a3c}
-.file-action{background:#2c2c2e}
-.progress-table th{
-    background:#3a3a3c;
-    color:#b8b8bd;
-    border-bottom-color:#545458;
-}
-.progress-table td{border-bottom-color:#38383a;color:#f5f5f7}
-.progress-table tr:hover td{background:#3a3a3c}
-.progress-file-link,.catalog-work-open{color:#64b5ff}
-.task-badge{background:#3a3a3c;color:#b8b8bd}
-.task-status{background:#2c2c2e}
-
-
-/* ===== ARMY GREEN DARK THEME ===== */
-:root{
-    --green:#718b55;
-    --green-dark:#5c7344;
-    --green-soft:#33452c;
-    --bg:#171c16;
-    --line:#3b4637;
-    --text:#eef1e8;
-    --muted:#a5ad9c;
-}
-html,body,body{background:#171c16;color:#eef1e8}
-#auth{
-    background:radial-gradient(circle at 50% 0%,#384232 0%,#242b21 45%,#171c16 100%);
-}
-.login-card{
-    background:rgba(39,47,36,.91);
-    border-color:rgba(190,205,175,.12);
-    box-shadow:0 22px 65px rgba(0,0,0,.48);
-}
-.login-card h1{color:#eef1e8}
-.field label,.login-subtitle,.role,.status,.room-preview,.time,
-.upload-status,.task-description,.catalog-work-desc,.file-meta,
-.progress-description,.task-panel-subtitle,.catalog-empty,.tasks-empty,
-.progress-empty,.progress-file-note{color:#a5ad9c}
-.field input{
-    border-color:#566250;background:#252d23;color:#eef1e8;
-}
-.field input:focus{
-    border-color:#829b65;box-shadow:0 0 0 1px #829b65;
-}
-.primary,.send,.task-count,.catalog-count,
-.new-task-btn,.upload-btn,.catalog-add-btn,.progress-add-btn{
-    background:#718b55;color:#fff;
-}
-.primary:hover,.send:hover,.new-task-btn:hover,.upload-btn:hover,
-.catalog-add-btn:hover,.progress-add-btn:hover{background:#839e64}
-
-.side{
-    background:rgba(28,34,26,.96);
-    border-right-color:#3b4637;
-}
-.wa-topbar,.me,.head,.composer{
-    background:rgba(39,47,36,.94);
-}
-.wa-topbar,.head,.me{border-bottom-color:#3b4637}
-.composer{border-top-color:#3b4637}
-.top-actions button,.header-actions button,.logout,.modal-close{color:#b2baa9}
-.top-actions button:hover,.header-actions button:hover,.logout:hover,.modal-close:hover{
-    background:#3a4435;
-}
-.search-box{background:#252d23;color:#a5ad9c}
-.search-box input{color:#eef1e8}
-.room{
-    background:rgba(28,34,26,.82);
-    border-bottom-color:#3b4637;
-}
-.room:hover{background:#30392c}
-.avatar{
-    background:linear-gradient(145deg,#536447,#394833);
-    color:#d8e4c9;
-}
-.room-avatar,.header-avatar{
-    background:#35442f;color:#c9d9b7;
-}
-.chat{background:#171c16}
-.messages{
-    background-color:#171c16;
-    background-image:radial-gradient(rgba(184,201,166,.055) .8px,transparent .8px);
-}
-.bubble{
-    background:#293126;color:#eef1e8;
-    border-color:rgba(210,225,195,.05);
-    box-shadow:0 1px 3px rgba(0,0,0,.28);
-}
-.mine .bubble{background:#35482f}
-.composer input{
-    background:#252d23;border-color:#566250;color:#eef1e8;
-}
-.composer input::placeholder{color:#899181}
-
-.tasks-menu,.drive-menu,.catalog-menu{
-    background:rgba(39,47,36,.82);
-    color:#eef1e8;
-    border-color:rgba(210,225,195,.06);
-}
-.tasks-menu:hover,.drive-menu:hover,.catalog-menu:hover{background:#35402f}
-.tasks-menu-icon,.drive-menu-icon,.catalog-menu-icon{
-    background:#35442f;color:#c9d9b7;
+.card{
+  background:rgba(16,26,44,.97);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 8px 30px rgba(0,0,0,.18);
 }
 
-.modal{background:rgba(5,8,4,.64)}
-.task-panel{
-    background:#272f24;
-    border-color:rgba(210,225,195,.11);
-    box-shadow:0 24px 70px rgba(0,0,0,.58);
-}
-.task-panel-head{
-    background:rgba(39,47,36,.97);
-    border-bottom-color:#485442;
-}
-.task-panel-title{color:#eef1e8}
-.task-toolbar,.drive-toolbar,.catalog-work-head,.progress-toolbar{
-    background:#272f24;border-bottom-color:#3b4637;
-}
-.task-form,.catalog-form,.progress-form{
-    background:#20271e;border-bottom-color:#3b4637;
-}
-.task-input,.catalog-input,.progress-input,.task-filter,
-.cancel-task,.catalog-cancel,.progress-cancel,.progress-back,
-.progress-action-btn,.file-action,.task-status{
-    background:#272f24;color:#eef1e8;border-color:#566250;
-}
-.task-input::placeholder,.catalog-input::placeholder,.progress-input::placeholder{
-    color:#899181;
-}
-.task-input:focus,.catalog-input:focus,.progress-input:focus{
-    border-color:#829b65;box-shadow:0 0 0 1px #829b65;
-}
-.cancel-task,.catalog-cancel,.progress-cancel,.progress-back,
-.progress-action-btn,.file-action{color:#eef1e8}
-.cancel-task:hover,.catalog-cancel:hover,.progress-cancel:hover,
-.progress-back:hover,.progress-action-btn:hover,.file-action:hover{
-    background:#35402f;
-}
-.tasks-list,.files-list,.catalog-work-list,.progress-table-wrap{background:#272f24}
-.task-item,.file-item,.catalog-category,.catalog-work-item{border-bottom-color:#3b4637}
-.task-item:hover,.file-item:hover,.catalog-category:hover,.catalog-work-item:hover{
-    background:#323c2e;
-}
-.catalog-categories{background:#20271e;border-right-color:#3b4637}
-.catalog-cat-head{border-bottom-color:#3b4637}
-.catalog-category.active{background:#35482f;color:#d6e4c7}
-.catalog-mini{color:#a5ad9c}
-.catalog-mini:hover{background:#35402f}
-.file-icon,.task-badge{background:#35402f;color:#c3cbb9}
-.file-action{background:#272f24}
-.progress-table th{
-    background:#35402f;color:#c3cbb9;border-bottom-color:#566250;
-}
-.progress-table td{border-bottom-color:#3b4637;color:#eef1e8}
-.progress-table tr:hover td{background:#323c2e}
-.progress-file-link,.catalog-work-open{color:#a8c489}
-.task-status{background:#272f24}
-
-
-/* ===== MODULES BEHAVE LIKE THE MAIN CHAT PANE ===== */
-#driveModal,#tasksModal,#catalogModal,#progressModal{
-    position:fixed;
-    inset:0;
-    z-index:1000;
-    padding:0;
-    background:transparent;
-    display:flex;
-    align-items:stretch;
-    justify-content:flex-end;
-    pointer-events:auto;
-}
-#driveModal .task-panel,
-#tasksModal .task-panel,
-#catalogModal .task-panel,
-#progressModal .task-panel{
-    width:calc(100% - 390px);
-    max-width:none;
-    max-height:none;
-    height:100vh;
-    margin:0;
-    border-radius:0;
-    border:0;
-    border-left:1px solid #3b4637;
-    box-shadow:none;
-    background:#171b16;
-    overflow:hidden;
-}
-#driveModal .task-panel-head,
-#tasksModal .task-panel-head,
-#catalogModal .task-panel-head,
-#progressModal .task-panel-head{
-    height:60px;
-    min-height:60px;
-    padding:0 16px;
-    border-radius:0;
-    border-bottom:1px solid #3b4637;
-    background:rgba(42,50,38,.96);
-}
-#driveModal .task-panel-title,
-#tasksModal .task-panel-title,
-#catalogModal .task-panel-title,
-#progressModal .task-panel-title{
-    font-size:16px;
-    font-weight:600;
-}
-#driveModal .task-panel-subtitle,
-#tasksModal .task-panel-subtitle,
-#catalogModal .task-panel-subtitle,
-#progressModal .task-panel-subtitle{
-    margin-top:2px;
-}
-#driveModal .modal-close,
-#tasksModal .modal-close,
-#catalogModal .modal-close,
-#progressModal .modal-close{
-    width:36px;
-    height:36px;
-    border-radius:9px;
-    font-size:25px;
-    color:#b5bdac;
-}
-#driveModal .modal-close:hover,
-#tasksModal .modal-close:hover,
-#catalogModal .modal-close:hover,
-#progressModal .modal-close:hover{
-    background:#35402f;
+.player{
+  background:#000;
+  border-radius:11px;
+  overflow:hidden;
+  aspect-ratio:16/9;
 }
 
-/* Make the module toolbars feel like the chat composer/header rather than dialogs */
-#driveModal .drive-toolbar,
-#tasksModal .task-toolbar,
-#catalogModal .catalog-work-head,
-#progressModal .progress-toolbar{
-    min-height:58px;
-    padding:10px 16px;
-    background:#20271e;
-    border-bottom:1px solid #3b4637;
-}
-#driveModal .files-list,
-#tasksModal .tasks-list,
-#catalogModal .catalog-body,
-#progressModal .progress-table-wrap{
-    height:calc(100vh - 118px);
-    max-height:none;
-}
-#catalogModal .catalog-body{
-    min-height:0;
-}
-#catalogModal .catalog-categories{
-    max-height:none;
-}
-#catalogModal .catalog-work-list{
-    min-height:0;
+video{
+  display:block;
+  width:100%;
+  height:100%;
+  background:#000;
 }
 
-/* Close button reads as "back to chat" */
-#driveModal .modal-close::after,
-#tasksModal .modal-close::after,
-#catalogModal .modal-close::after,
-#progressModal .modal-close::after{
-    content:"";
+.status{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:8px;
+  background:var(--panel2);
+  color:var(--muted);
+  font-size:13px;
 }
 
-/* Mobile: module takes the full available screen just like the chat pane */
-@media(max-width:800px){
-    #driveModal .task-panel,
-    #tasksModal .task-panel,
-    #catalogModal .task-panel,
-    #progressModal .task-panel{
-        width:calc(100% - 300px);
-    }
-}
-@media(max-width:600px){
-    #driveModal .task-panel,
-    #tasksModal .task-panel,
-    #catalogModal .task-panel,
-    #progressModal .task-panel{
-        width:calc(100% - 72px);
-    }
-    #driveModal .task-panel-head,
-    #tasksModal .task-panel-head,
-    #catalogModal .task-panel-head,
-    #progressModal .task-panel-head{
-        padding:0 10px;
-    }
+.status.ok{color:#86efac}
+.status.error{color:#fca5a5}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
 }
 
-/* Keep the main chat visible structurally behind the module, exactly like switching conversation panes */
-#driveModal.hidden,#tasksModal.hidden,#catalogModal.hidden,#progressModal.hidden{
-    display:none !important;
+label{
+  display:block;
+  margin-bottom:7px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
 }
 
-
-/* ===== CHAT-LIST PEERS: modules are conversations too ===== */
-.module-room{
-    width:100%;
-    min-height:72px;
-    border:0;
-    border-bottom:1px solid #394136;
-    border-radius:0;
-    margin:0;
-    padding:10px 14px;
-    text-align:left;
-    font:inherit;
-    color:#edf0e8;
-    position:relative;
-}
-.module-room:hover{background:#30382c}
-.module-room .room-avatar{
-    width:50px;
-    height:50px;
-    flex:none;
-    border-radius:14px;
-}
-.module-room .module-avatar{
-    background:#35412f;
-    color:#b4c98f;
-    font-size:22px;
-}
-.module-room .task-count,
-.module-room .catalog-count{
-    margin-left:0;
-    flex:none;
-}
-.module-room:focus-visible{
-    outline:2px solid #718355;
-    outline-offset:-2px;
-}
-.module-room.active{
-    background:#35412f;
-}
-.module-room.active .room-name{
-    color:#c5d4a7;
+select,input{
+  width:100%;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  outline:none;
+  background:var(--panel2);
+  color:var(--text);
+  font-size:14px;
 }
 
-
-/* ===== TRUE CHAT-STYLE MODULES ===== */
-#driveModal,#tasksModal,#catalogModal,#progressModal{
-    position:absolute !important;
-    inset:0 0 0 390px !important;
-    z-index:20 !important;
-    display:block !important;
-    padding:0 !important;
-    background:#171b16 !important;
-    overflow:hidden !important;
-}
-#driveModal.hidden,#tasksModal.hidden,#catalogModal.hidden,#progressModal.hidden{
-    display:none !important;
-}
-#driveModal .task-panel,
-#tasksModal .task-panel,
-#catalogModal .task-panel,
-#progressModal .task-panel{
-    width:100% !important;
-    height:100% !important;
-    max-width:none !important;
-    max-height:none !important;
-    margin:0 !important;
-    border:0 !important;
-    border-radius:0 !important;
-    box-shadow:none !important;
-    background:#171b16 !important;
-    overflow:hidden !important;
+select:focus,input:focus{
+  border-color:var(--accent);
 }
 
-/* Identical 60px header to the normal chat */
-#driveModal .task-panel-head,
-#tasksModal .task-panel-head,
-#catalogModal .task-panel-head,
-#progressModal .task-panel-head{
-    height:60px !important;
-    min-height:60px !important;
-    padding:0 16px !important;
-    background:rgba(42,50,38,.93) !important;
-    border-bottom:1px solid #394136 !important;
-}
-#driveModal .task-panel-title,
-#tasksModal .task-panel-title,
-#catalogModal .task-panel-title,
-#progressModal .task-panel-title{
-    font-size:16px !important;
-    font-weight:600 !important;
-}
-#driveModal .task-panel-subtitle,
-#tasksModal .task-panel-subtitle,
-#catalogModal .task-panel-subtitle,
-#progressModal .task-panel-subtitle{
-    font-size:12px !important;
-    margin-top:2px !important;
+.url-row{
+  display:flex;
+  gap:8px;
 }
 
-/* Hide dialog-looking close button and make it a chat-header back button */
-#driveModal .modal-close,
-#tasksModal .modal-close,
-#catalogModal .modal-close,
-#progressModal .modal-close{
-    order:-1;
-    margin-right:2px;
-    width:34px !important;
-    height:34px !important;
-    border-radius:9px !important;
-    font-size:0 !important;
-    color:#b5bdac !important;
-}
-#driveModal .modal-close:before,
-#tasksModal .modal-close:before,
-#catalogModal .modal-close:before,
-#progressModal .modal-close:before{
-    content:"‹";
-    font-size:28px;
-    line-height:1;
-}
-#driveModal .modal-close:hover,
-#tasksModal .modal-close:hover,
-#catalogModal .modal-close:hover,
-#progressModal .modal-close:hover{
-    background:#35402f !important;
+.url-row input{
+  font-family:Consolas,monospace;
+  font-size:12px;
 }
 
-/* Content fills the entire chat area */
-#driveModal .drive-toolbar,
-#tasksModal .task-toolbar,
-#catalogModal .catalog-work-head,
-#progressModal .progress-toolbar{
-    min-height:58px;
-    background:#20271e;
-    border-bottom:1px solid #394136;
-}
-#driveModal .files-list,
-#tasksModal .tasks-list,
-#catalogModal .catalog-body,
-#progressModal .progress-table-wrap{
-    height:calc(100% - 118px) !important;
-    max-height:none !important;
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
 }
 
-/* Composer-like bottom strip for modules */
-#driveModal .drive-toolbar{
-    justify-content:flex-start;
-}
-#driveModal .upload-btn,
-#tasksModal .new-task-btn,
-#catalogModal .catalog-add-btn,
-#progressModal .progress-add-btn{
-    border-radius:20px;
-}
-#tasksModal .task-toolbar,
-#driveModal .drive-toolbar{
-    padding:10px 16px;
+button{
+  border:0;
+  border-radius:9px;
+  padding:11px 15px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
 }
 
-/* Catalog remains a workspace internally, but is still inside the same chat pane */
-#catalogModal .catalog-body{
-    display:flex;
-}
-#catalogModal .catalog-categories{
-    height:100%;
-}
-#catalogModal .catalog-work-area{
-    height:100%;
+button:hover{
+  background:var(--accent2);
 }
 
-/* Responsive follows the real sidebar width */
-@media(max-width:800px){
-    #driveModal,#tasksModal,#catalogModal,#progressModal{
-        inset:0 0 0 300px !important;
-    }
-}
-@media(max-width:600px){
-    #driveModal,#tasksModal,#catalogModal,#progressModal{
-        inset:0 0 0 72px !important;
-    }
+button.secondary{
+  background:#263751;
 }
 
-
-/* ===== Sidebar navigation: always return to main chat ===== */
-#roomBox{
-    position:relative;
-    z-index:100;
-}
-#roomBox:hover{background:#30382c}
-#roomBox.active{
-    background:#35402f;
-}
-#roomBox.active .room-name{
-    color:#c5d4a7;
+button.secondary:hover{
+  background:#334866;
 }
 
-
-/* ===== Tree children under Danh mục công việc ===== */
-.module-tree{
-    display:none;
-    background:#20261e;
-    border-bottom:1px solid #394136;
-}
-.module-tree.open{display:block}
-.module-tree-item{
-    min-height:46px;
-    padding:7px 14px 7px 42px;
-    display:flex;
-    align-items:center;
-    gap:9px;
-    color:#c6cebd;
-    background:transparent;
-    border:0;
-    width:100%;
-    text-align:left;
-    font:inherit;
-    cursor:pointer;
-    position:relative;
-}
-.module-tree-item:before{
-    content:"";
-    position:absolute;
-    left:27px;
-    top:0;
-    bottom:0;
-    border-left:1px solid #4b5645;
-}
-.module-tree-item:after{
-    content:"";
-    position:absolute;
-    left:27px;
-    top:50%;
-    width:10px;
-    border-top:1px solid #4b5645;
-}
-.module-tree-item:hover{background:#30382c;color:#e5ebdc}
-.module-tree-icon{
-    width:27px;height:27px;border-radius:8px;
-    display:grid;place-items:center;
-    background:#35412f;color:#b4c98f;
-    font-size:14px;flex:none;
-}
-.module-tree-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.module-tree-item.active{background:#35442e;color:#c5d4a7}
-
-/* When expanded, the catalog row acts as the tree parent */
-#catalogMenu.tree-open{background:#30382c}
-#catalogMenu.tree-open .catalog-expand{
-    transform:rotate(90deg);
-}
-.catalog-expand{
-    margin-left:auto;
-    color:#9da791;
-    transition:transform .15s ease;
-    font-size:15px;
+button.danger{
+  background:var(--danger);
 }
 
-
-/* ===== Catalog: specialties live in sidebar tree only ===== */
-#catalogModal .catalog-categories,
-#catalogModal .catalog-cat-head{
-    display:none !important;
-}
-#catalogModal .catalog-body{
-    display:block !important;
-}
-#catalogModal .catalog-work-area{
-    width:100% !important;
-    flex:1 1 auto !important;
-}
-#catalogModal .catalog-work-list{
-    width:100% !important;
+button.danger:hover{
+  background:#dc2626;
 }
 
-
-.progress-agency{min-width:150px}
-.progress-note{min-width:150px}
-#progressModal .progress-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:900px){
-    #progressModal .progress-form-grid{grid-template-columns:1fr}
-    .progress-agency,.progress-note{min-width:120px}
+.counter{
+  margin-top:9px;
+  color:var(--muted);
+  font-size:12px;
 }
 
-
-/* ===== Better date/time input ===== */
-#progressDate{
-    color-scheme:dark;
-    min-height:42px;
-    padding:0 12px;
-    font-family:inherit;
-    font-size:14px;
-    letter-spacing:.1px;
+@media(max-width:760px){
+  .app{padding:12px}
+  .grid{grid-template-columns:1fr}
+  .url-row{flex-direction:column}
+  h1{font-size:22px}
 }
-#progressDate::-webkit-calendar-picker-indicator{
-    filter:invert(72%) sepia(12%) saturate(520%) hue-rotate(45deg);
-    opacity:.9;
-    cursor:pointer;
-    width:18px;
-    height:18px;
-}
-#progressDate:focus{
-    border-color:#82966a !important;
-    box-shadow:0 0 0 2px rgba(130,150,106,.16) !important;
-}
-.progress-date-label{
-    display:flex;
-    align-items:center;
-    gap:7px;
-    margin-bottom:6px;
-    color:#aeb7a4;
-    font-size:12px;
-    font-weight:600;
-}
-.progress-date-label .calendar-icon{
-    color:#b4c98f;
-    font-size:14px;
-}
-.progress-date-field{
-    display:flex;
-    flex-direction:column;
-}
-
 </style>
 </head>
+
 <body>
-<section id="auth">
-<div class="login-card">
-    <div class="wa-login-icon">●</div>
-    <h1>Chat Nhóm</h1>
-    <p class="login-subtitle">Đăng nhập để tiếp tục</p>
-    <form id="form">
-        <div class="field">
-            <label>Tài khoản</label>
-            <input id="username" maxlength="30" required placeholder="Tên tài khoản" autocomplete="username">
-        </div>
-        <div class="field">
-            <label>Mật khẩu</label>
-            <input id="password" type="password" minlength="6" required placeholder="Mật khẩu" autocomplete="current-password">
-        </div>
-        <button id="submit" class="primary" type="submit">Đăng nhập</button>
-        <div id="msg" class="msg"></div>
-    </form>
-</div>
-</section>
+<div class="app">
 
-<section id="app" class="hidden">
-<aside class="side">
-    <div class="wa-topbar">
-        <div class="brand">Chat Nhóm</div>
-        <div class="top-actions">
-            <button title="Tìm kiếm">⌕</button>
-            <button title="Menu">⋯</button>
-        </div>
-    </div>
-    <div class="me">
-        <div id="avatar" class="avatar">?</div>
-        <div class="meinfo">
-            <div id="myName" class="name"></div>
-            <div id="role" class="role">Thành viên</div>
-        </div>
-        <button id="logout" class="logout" title="Đăng xuất">↩</button>
-    </div>
-    <div class="search-box">
-        <span>⌕</span>
-        <input placeholder="Tìm kiếm hoặc bắt đầu cuộc trò chuyện" disabled>
-    </div>
-    <div class="chat-list">
-        <div id="roomBox" class="room">
-            <div class="room-avatar">●</div>
-            <div class="room-info">
-                <div id="roomName" class="room-name">Phòng chung</div>
-                <div class="room-preview">Nhóm chat</div>
-            </div>
-        </div>
+<header>
+  <h1>📺 M3U8 TEST PLAYER</h1>
+  <div class="subtitle">
+    Chọn kênh → chọn link → kiểm tra URL → phát M3U8
+  </div>
+</header>
 
-        <button id="driveMenu" class="room module-room" type="button">
-            <div class="room-avatar module-avatar">▱</div>
-            <div class="room-info">
-                <div class="room-name">Ổ đĩa chung</div>
-                <div class="room-preview">Kho lưu trữ file dùng chung</div>
-            </div>
-            <span id="fileCount" class="task-count">0</span>
-        </button>
+<!-- PLAYER -->
+<div class="card">
+  <div class="player">
+    <video id="video" controls playsinline></video>
+  </div>
 
-        <button id="tasksMenu" class="room module-room" type="button">
-            <div class="room-avatar module-avatar">✓</div>
-            <div class="room-info">
-                <div class="room-name">Công việc</div>
-                <div class="room-preview">Phân công và theo dõi công việc</div>
-            </div>
-            <span id="taskCount" class="task-count">0</span>
-        </button>
+  <div id="status" class="status">
+    ⚪ Chưa phát stream
+  </div>
 
-        <button id="catalogMenu" class="room module-room" type="button">
-            <div class="room-avatar module-avatar">☷</div>
-            <div class="room-info">
-                <div class="room-name">Danh mục công việc</div>
-                <div class="room-preview">Quản lý chuyên môn và công việc</div>
-            </div>
-            <span id="catalogCount" class="catalog-count">0</span><span class="catalog-expand">›</span>
-        </button>
-        <div id="catalogTree" class="module-tree" aria-label="Cây chuyên môn">
-        </div>
-    </div>
-</aside>
-<main class="chat"><div class="head">
-    <div class="header-avatar">●</div>
-    <div class="header-info">
-        <div id="roomTitle" class="header-title">Phòng chung</div>
-        <div id="status" class="status">đang kết nối...</div>
-    </div>
-    <div class="header-actions">
-        <button title="Tìm kiếm">⌕</button>
-        <button title="Menu">⋯</button>
-    </div>
-</div>
-<div id="messages" class="messages"></div>
-<form id="sendForm" class="composer"><input id="message" maxlength="2000" placeholder="Nhập tin nhắn..." autocomplete="off"><button id="send" class="send">↑</button></form></main>
-</section>
-
-
-<!-- ================= Ổ ĐĨA CHUNG ================= -->
-<div id="driveModal" class="modal hidden">
-    <div class="task-panel drive-panel">
-
-        <div class="task-panel-head">
-            <div>
-                <div class="task-panel-title">Ổ đĩa chung</div>
-                <div class="task-panel-subtitle">Kho lưu trữ file dùng chung cho nhóm</div>
-            </div>
-            <button id="closeDrive" class="modal-close" type="button">×</button>
-        </div>
-
-        <div class="drive-toolbar">
-            <label class="upload-btn" for="fileInput">↑ Tải file lên</label>
-            <input id="fileInput" type="file" multiple hidden>
-            <span id="uploadStatus" class="upload-status"></span>
-        </div>
-
-        <div id="filesList" class="files-list">
-            <div class="tasks-empty">Chưa có file nào.</div>
-        </div>
-
-    </div>
+  <div class="actions">
+    <button onclick="playCurrent()">▶ PHÁT</button>
+    <button class="danger" onclick="stopPlayer()">⏹ DỪNG</button>
+  </div>
 </div>
 
-<!-- ================= CÔNG VIỆC ================= -->
-<div id="tasksModal" class="modal hidden">
-    <div class="task-panel">
+<!-- CHỌN KÊNH / LINK -->
+<div class="card">
+  <div class="grid">
 
-        <div class="task-panel-head">
-            <div>
-                <div class="task-panel-title">Công việc nhóm</div>
-                <div class="task-panel-subtitle">Phân công và theo dõi công việc</div>
-            </div>
-            <button id="closeTasks" class="modal-close" type="button">×</button>
-        </div>
+    <div>
+      <label>📺 CHỌN KÊNH</label>
+      <select id="channelSelect"></select>
 
-        <div class="task-toolbar">
-            <button id="newTaskBtn" class="new-task-btn" type="button">
-                ＋ Tạo công việc
-            </button>
+      <div class="actions">
+        <button class="secondary" onclick="prevChannel()">⬅ KÊNH TRƯỚC</button>
+        <button class="secondary" onclick="nextChannel()">KÊNH SAU ➡</button>
+      </div>
 
-            <select id="taskFilter" class="task-filter">
-                <option value="all">Tất cả</option>
-                <option value="todo">Chưa làm</option>
-                <option value="doing">Đang làm</option>
-                <option value="done">Hoàn thành</option>
-            </select>
-        </div>
-
-        <div id="taskForm" class="task-form hidden">
-            <div class="task-form-title">Tạo công việc mới</div>
-
-            <input id="taskTitle" class="task-input" maxlength="150"
-                   placeholder="Tên công việc *">
-
-            <textarea id="taskDescription" class="task-input task-textarea"
-                      maxlength="1000" placeholder="Mô tả công việc"></textarea>
-
-            <div class="task-two">
-                <select id="taskAssignee" class="task-input">
-                    <option value="">Chọn thành viên được phân công</option>
-                </select>
-                <input id="taskDue" class="task-input" type="datetime-local">
-            </div>
-
-            <div class="task-form-actions">
-                <button id="cancelTask" class="cancel-task" type="button">Hủy</button>
-                <button id="saveTask" class="new-task-btn" type="button">Lưu công việc</button>
-            </div>
-
-            <div id="taskMsg" class="task-msg"></div>
-        </div>
-
-        <div id="tasksList" class="tasks-list">
-            <div class="tasks-empty">Chưa có công việc nào.</div>
-        </div>
-
+      <div id="channelCounter" class="counter"></div>
     </div>
+
+    <div>
+      <label>🔗 CHỌN LINK</label>
+      <select id="templateSelect"></select>
+
+      <div class="actions">
+        <button class="secondary" onclick="prevLink()">⬅ LINK TRƯỚC</button>
+        <button class="secondary" onclick="nextLink()">LINK SAU ➡</button>
+      </div>
+
+      <div id="linkCounter" class="counter"></div>
+    </div>
+
+  </div>
 </div>
 
+<!-- URL -->
+<div class="card">
+  <label>🔗 LINK M3U8 HOÀN CHỈNH</label>
 
-<!-- ================= DANH MỤC CÔNG VIỆC ================= -->
-<div id="catalogModal" class="modal hidden">
-    <div class="task-panel catalog-panel">
-        <div class="task-panel-head">
-            <div>
-                <div class="task-panel-title">Danh mục công việc</div>
-                <div class="task-panel-subtitle">Quản lý chuyên môn và các công việc thuộc từng chuyên môn</div>
-            </div>
-            <button id="closeCatalog" class="modal-close" type="button">×</button>
-        </div>
-
-        <div class="catalog-body">
-            <div class="catalog-categories">
-                <div class="catalog-cat-head">
-                    <span>Chuyên môn</span>
-                    <button id="addCategoryBtn" class="catalog-add-btn" type="button">＋ Thêm</button>
-                </div>
-                <div id="categoriesList">
-                    <div class="catalog-empty">Đang tải...</div>
-                </div>
-            </div>
-
-            <div class="catalog-work-area">
-                <div class="catalog-work-head">
-                    <div id="catalogSelectedTitle" class="catalog-work-title">Chọn một chuyên môn</div>
-                    <button id="addCatalogWorkBtn" class="catalog-add-btn hidden" type="button">＋ Công việc</button>
-                </div>
-
-                <div id="catalogForm" class="catalog-form hidden">
-                    <div id="catalogFormTitle" class="catalog-form-title">Thêm công việc</div>
-                    <input id="catalogName" class="catalog-input" maxlength="200" placeholder="Tên chuyên môn / công việc *">
-                    <textarea id="catalogDescription" class="catalog-input" maxlength="1000"
-                              placeholder="Mô tả (không bắt buộc)"></textarea>
-                    <div class="catalog-form-actions">
-                        <button id="cancelCatalog" class="catalog-cancel" type="button">Hủy</button>
-                        <button id="saveCatalog" class="new-task-btn" type="button">Lưu</button>
-                    </div>
-                    <div id="catalogMsg" class="catalog-msg"></div>
-                </div>
-
-                <div id="catalogWorkList" class="catalog-work-list">
-                    <div class="catalog-empty">Chọn chuyên môn để xem công việc.</div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div class="url-row">
+    <input id="urlBox" readonly>
+    <button onclick="copyUrl()">📋 COPY</button>
+  </div>
 </div>
 
-
-<!-- ================= TIẾN ĐỘ CÔNG VIỆC ================= -->
-<div id="progressModal" class="modal hidden">
-    <div class="task-panel progress-panel">
-        <div class="task-panel-head">
-            <div>
-                <div class="task-panel-title">Tiến độ công việc</div>
-                <div id="progressSubtitle" class="task-panel-subtitle"></div>
-            </div>
-            <button id="closeProgress" class="modal-close" type="button">×</button>
-        </div>
-
-        <div class="progress-toolbar">
-            <button id="progressBack" class="progress-back" type="button">← Danh mục</button>
-            <div id="progressWorkTitle" class="progress-work-title">Công việc</div>
-            <button id="addProgressBtn" class="progress-add-btn" type="button">＋ Thêm tiến độ</button>
-        </div>
-
-        <div id="progressForm" class="progress-form hidden">
-            <div id="progressFormTitle" class="catalog-form-title">Thêm bước tiến độ</div>
-
-            <div class="progress-form-grid">
-                <div class="progress-date-field">
-                    <label class="progress-date-label" for="progressDate">
-                        <span class="calendar-icon">▣</span> Ngày & giờ
-                    </label>
-                    <input id="progressDate" class="progress-input" type="datetime-local">
-                </div>
-                <input id="progressContent" class="progress-input" maxlength="300"
-                       placeholder="Nội dung tiến độ *">
-
-                <input id="progressAgency" class="progress-input" maxlength="300"
-                       placeholder="Cơ quan thực hiện">
-
-                <textarea id="progressDescription" class="progress-input progress-textarea"
-                          maxlength="2000" placeholder="Diễn giải"></textarea>
-
-                <textarea id="progressNote" class="progress-input progress-textarea"
-                          maxlength="2000" placeholder="Ghi chú"></textarea>
-
-                <input id="progressFiles" class="progress-input progress-file-input"
-                       type="file" multiple>
-                <div class="progress-file-note">Có thể chọn nhiều file cho cùng một bước tiến độ.</div>
-            </div>
-
-            <div class="progress-form-actions">
-                <button id="cancelProgress" class="progress-cancel" type="button">Hủy</button>
-                <button id="saveProgress" class="progress-add-btn" type="button">Lưu tiến độ</button>
-            </div>
-            <div id="progressMsg" class="progress-msg"></div>
-        </div>
-
-        <div class="progress-table-wrap">
-            <table class="progress-table">
-                <thead>
-                    <tr>
-                        <th class="progress-date">Ngày tháng</th>
-                        <th class="progress-content">Nội dung</th>
-                        <th class="progress-agency">Cơ quan thực hiện</th>
-                        <th class="progress-description">Diễn giải</th>
-                        <th class="progress-file">File đính kèm</th>
-                        <th class="progress-note">Ghi chú</th>
-                        <th class="progress-actions">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody id="progressList"></tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
 <script>
+/* =========================================================
+   DANH SÁCH KÊNH
+   Chỉ cần thêm mã vào đây khi muốn thêm kênh.
+========================================================= */
 
-const getEl=id=>document.getElementById(id);
-/* ===== Equal chat navigation ===== */
-function showModulePane(id){
-    ["driveModal","tasksModal","catalogModal","progressModal"].forEach(mid=>{
-        const el=getEl(mid);
-        if(el) el.classList.add("hidden");
-    });
-    const target=getEl(id);
-    if(target) target.classList.remove("hidden");
+const channels = [
+  "antv",
+  "anninhtv",
+  "ANNINHTV",
+  "film360",
+  "nghean",
+  "nghe-an",
+  "nghean01",
+  "laichau",
+  "laichautv",
+  "laichau01",
+  "bacninh01"
+];
 
-    getEl("messages").style.visibility="hidden";
-    getEl("sendForm").style.visibility="hidden";
-    getEl("roomBox").classList.remove("active");
-    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
-}
 
-function showMainChatPane(){
-    ["driveModal","tasksModal","catalogModal","progressModal"].forEach(mid=>{
-        const el=getEl(mid);
-        if(el) el.classList.add("hidden");
-    });
-    getEl("messages").style.visibility="visible";
-    getEl("sendForm").style.visibility="visible";
-    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
-    getEl("roomBox").classList.add("active");
-    getEl("roomTitle").textContent=getEl("roomName").textContent;
-}
+/* =========================================================
+   CÁC MẪU LINK
+   Có 9 link thực tế theo danh sách bạn đã đưa.
+   {code} sẽ được thay bằng mã kênh.
+========================================================= */
 
-getEl("roomBox").onclick=showMainChatPane;
-getEl("catalogMenu").addEventListener("click",(e)=>{
-    e.preventDefault();
-    const tree=getEl("catalogTree");
-    const open=tree.classList.toggle("open");
-    getEl("catalogMenu").classList.toggle("tree-open",open);
-    getEl("catalogMenu").setAttribute("aria-expanded",String(open));
-    if(open){
-        showModulePane("catalogModal");
-        resetCatalogForm();
-        loadCatalog();
-    } else {
-        showMainChatPane();
-    }
+const templates = [
+
+  {
+    name:"Link 1 — Live247 AVC 4M",
+    url:"https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8"
+  },
+
+  {
+    name:"Link 2 — Live247 AVC 5.6M",
+    url:"https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8"
+  },
+
+  {
+    name:"Link 3 — Live HLS AVC 4M",
+    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8"
+  },
+
+  {
+    name:"Link 4 — Live HLS AVC INDEX",
+    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8"
+  },
+
+  {
+    name:"Link 5 — EPZ SD",
+    url:"https://live.fptplay53.net/epzsd1/{code}_hls.smil/chunklist.m3u8"
+  },
+
+  {
+    name:"Link 6 — EPZ HD 5M",
+    url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
+  },
+
+  {
+    name:"Link 7 — FNX SD 2.5M",
+    url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 8 — FNX HD 5M",
+    url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
+  },
+
+  {
+    name:"Link 9 — FNX HD 1",
+    url:"https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8"
+  }
+
+];
+
+
+/* =========================================================
+   BIẾN
+========================================================= */
+
+let hls = null;
+let currentPlayingLink = 0;
+
+const video = document.getElementById("video");
+const channelSelect = document.getElementById("channelSelect");
+const templateSelect = document.getElementById("templateSelect");
+const urlBox = document.getElementById("urlBox");
+const statusBox = document.getElementById("status");
+const channelCounter = document.getElementById("channelCounter");
+const linkCounter = document.getElementById("linkCounter");
+
+
+/* =========================================================
+   KHỞI TẠO DROPDOWN
+========================================================= */
+
+channels.forEach(code => {
+  const option = document.createElement("option");
+  option.value = code;
+  option.textContent = code;
+  channelSelect.appendChild(option);
 });
 
-async function renderCatalogTree(){
-    const tree=getEl("catalogTree");
-    if(!tree) return;
-    tree.querySelectorAll(".module-tree-item").forEach(x=>x.remove());
-
-    if(typeof catalogWorks!=="undefined" && Array.isArray(catalogWorks)){
-        const categories = Array.isArray(catalogCategories) ? catalogCategories : [];
-        categories.forEach(cat=>{
-            const btn=document.createElement("button");
-            btn.type="button";
-            btn.className="module-tree-item";
-            btn.dataset.specialty=cat.id;
-            btn.innerHTML='<span class="module-tree-icon">⌘</span><span class="module-tree-name"></span>';
-            btn.querySelector(".module-tree-name").textContent=cat.name || "Chuyên môn";
-            btn.onclick=(ev)=>{
-                ev.stopPropagation();
-                document.querySelectorAll(".module-tree-item").forEach(x=>x.classList.remove("active"));
-                btn.classList.add("active");
-                showModulePane("catalogModal");
-                if(typeof selectedCatalogCategoryId!=="undefined"){
-                    selectedCatalogCategoryId=cat.id;
-                }
-                if(typeof renderCatalogWorks==="function") renderCatalogWorks();
-            };
-            tree.appendChild(btn);
-        });
-    }
-}
-
-
-/* ================= TIẾN ĐỘ CÔNG VIỆC ================= */
-
-const PROGRESS_BUCKET = "shared-files";
-let selectedProgressWork = null;
-let progressRows = [];
-let progressEditingId = null;
-
-function openProgressModal(work){
-    selectedProgressWork = work;
-    progressEditingId = null;
-
-    getEl("progressModal").classList.remove("hidden");
-    getEl("progressWorkTitle").textContent = work.name;
-    getEl("progressSubtitle").textContent =
-        "Theo dõi từng bước thực hiện của công việc thuộc chuyên môn";
-
-    resetProgressForm();
-    loadProgress();
-}
-
-getEl("closeProgress").onclick = () => {
-    getEl("progressModal").classList.add("hidden");
-    selectedProgressWork = null;
-};
-
-getEl("progressBack").onclick = () => {
-    getEl("progressModal").classList.add("hidden");
-    selectedProgressWork = null;
-};
-
-getEl("progressModal").addEventListener("click", event => {
-    if(event.target === getEl("progressModal")){
-        getEl("progressModal").classList.add("hidden");
-        selectedProgressWork = null;
-    }
+templates.forEach((template,index) => {
+  const option = document.createElement("option");
+  option.value = index;
+  option.textContent = template.name;
+  templateSelect.appendChild(option);
 });
 
-getEl("addProgressBtn").onclick = () => {
-    progressEditingId = null;
-    getEl("progressFormTitle").textContent = "Thêm bước tiến độ";
-    getEl("progressDate").value = toDateTimeLocal(new Date());
-    getEl("progressContent").value = "";
-    getEl("progressAgency").value = "";
-    getEl("progressDescription").value = "";
-    getEl("progressNote").value = "";
-    getEl("progressFiles").value = "";
-    getEl("progressMsg").textContent = "";
-    getEl("progressForm").classList.remove("hidden");
-    getEl("progressContent").focus();
-};
 
-getEl("cancelProgress").onclick = () => resetProgressForm();
+/* Mặc định */
+channelSelect.value = "nghean01";
+templateSelect.value = "0";
 
-function resetProgressForm(){
-    progressEditingId = null;
-    getEl("progressDate").value = "";
-    getEl("progressContent").value = "";
-    getEl("progressDescription").value = "";
-    getEl("progressFiles").value = "";
-    getEl("progressMsg").textContent = "";
-    getEl("progressForm").classList.add("hidden");
+
+/* =========================================================
+   TẠO URL
+========================================================= */
+
+function getUrl(index = Number(templateSelect.value)) {
+
+  return templates[index].url.replaceAll(
+    "{code}",
+    channelSelect.value
+  );
+
 }
 
-function toDateTimeLocal(date){
-    const pad = n => String(n).padStart(2,"0");
-    return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())+
-        "T"+pad(date.getHours())+":"+pad(date.getMinutes());
+
+/* =========================================================
+   CẬP NHẬT GIAO DIỆN
+========================================================= */
+
+function updateUrl() {
+
+  urlBox.value = getUrl();
+
+  channelCounter.textContent =
+    "Kênh " +
+    (channelSelect.selectedIndex + 1) +
+    "/" +
+    channels.length;
+
+  linkCounter.textContent =
+    "Link " +
+    (templateSelect.selectedIndex + 1) +
+    "/" +
+    templates.length;
+
 }
 
-async function loadProgress(){
-    if(!selectedProgressWork)return;
 
-    const result = await db.from("work_progress")
-        .select("id,work_id,progress_date,content,agency,description,note,created_by,created_at")
-        .eq("work_id",selectedProgressWork.id)
-        .order("progress_date",{ascending:true})
-        .order("created_at",{ascending:true});
+/* =========================================================
+   CHUYỂN KÊNH
+========================================================= */
 
-    if(result.error){
-        console.error(result.error);
-        getEl("progressList").innerHTML =
-            '<tr><td colspan="7" class="progress-empty">Không tải được tiến độ.</td></tr>';
-        return;
-    }
+function nextChannel() {
 
-    progressRows = result.data || [];
-    await loadProgressFiles(progressRows);
-    renderProgress();
+  let index = channelSelect.selectedIndex + 1;
+
+  if(index >= channels.length) {
+    index = 0;
+  }
+
+  channelSelect.selectedIndex = index;
+
+  updateUrl();
+  playCurrent();
+
 }
 
-async function loadProgressFiles(rows){
-    if(!rows.length){
-        rows.forEach(row => row.__files = []);
-        return;
-    }
 
-    const ids = rows.map(r => r.id);
+function prevChannel() {
 
-    const result = await db.from("work_progress_files")
-        .select("id,progress_id,file_name,file_path,file_size,mime_type,uploaded_by,created_at")
-        .in("progress_id",ids)
-        .order("created_at",{ascending:true});
+  let index = channelSelect.selectedIndex - 1;
 
-    if(result.error){
-        console.error(result.error);
-        rows.forEach(row => row.__files = []);
-        return;
-    }
+  if(index < 0) {
+    index = channels.length - 1;
+  }
 
-    rows.forEach(row => {
-        row.__files = (result.data || []).filter(f => f.progress_id === row.id);
-    });
+  channelSelect.selectedIndex = index;
+
+  updateUrl();
+  playCurrent();
+
 }
 
-function renderProgress(){
-    if(!progressRows.length){
-        getEl("progressList").innerHTML =
-            '<tr><td colspan="7" class="progress-empty">Chưa có bước tiến độ nào. Bấm “＋ Thêm tiến độ” để bắt đầu.</td></tr>';
-        return;
-    }
 
-    getEl("progressList").innerHTML = "";
+/* =========================================================
+   CHUYỂN LINK
+========================================================= */
 
-    progressRows.forEach(row => {
-        const tr = document.createElement("tr");
+function nextLink() {
 
-        const date = document.createElement("td");
-        date.className = "progress-date";
-        date.textContent = formatDate(row.progress_date);
+  let index = templateSelect.selectedIndex + 1;
 
-        const content = document.createElement("td");
-        content.className = "progress-content";
-        content.textContent = row.content;
+  if(index >= templates.length) {
+    index = 0;
+  }
 
-        const agency = document.createElement("td");
-        agency.className = "progress-agency";
-        agency.textContent = row.agency || "—";
+  templateSelect.selectedIndex = index;
 
-        const description = document.createElement("td");
-        description.className = "progress-description";
-        description.textContent = row.description || "—";
+  updateUrl();
+  playCurrent();
 
-        const fileCell = document.createElement("td");
-        fileCell.className = "progress-file";
-
-        if(row.__files?.length){
-            const fileList = document.createElement("div");
-            fileList.className = "progress-file-list";
-
-            row.__files.forEach(file => {
-                const line = document.createElement("div");
-
-                const link = document.createElement("a");
-                link.className = "progress-file-link";
-                link.href = "#";
-                link.textContent = "⌇ " + file.file_name;
-                link.title = file.file_name;
-
-                link.onclick = async event => {
-                    event.preventDefault();
-                    await downloadProgressFile(file);
-                };
-
-                const remove = document.createElement("button");
-                remove.className = "progress-file-remove";
-                remove.type = "button";
-                remove.textContent = "×";
-                remove.title = "Xóa file";
-                remove.onclick = () => deleteProgressFile(file);
-
-                line.append(link,remove);
-                fileList.append(line);
-            });
-
-            fileCell.append(fileList);
-        }else{
-            fileCell.textContent = "Không có file";
-        }
-
-        const note = document.createElement("td");
-        note.className = "progress-note";
-        note.textContent = row.note || "—";
-
-        const actions = document.createElement("td");
-        actions.className = "progress-actions";
-
-        const edit = document.createElement("button");
-        edit.className = "progress-action-btn";
-        edit.type = "button";
-        edit.textContent = "✎ Sửa";
-        edit.onclick = () => editProgress(row);
-
-        const del = document.createElement("button");
-        del.className = "progress-action-btn progress-delete";
-        del.type = "button";
-        del.textContent = "⌫ Xóa";
-        del.onclick = () => deleteProgress(row);
-
-        actions.append(edit,del);
-        tr.append(date,content,agency,description,fileCell,note,actions);
-        getEl("progressList").append(tr);
-    });
 }
 
-function editProgress(row){
-    progressEditingId = row.id;
-    getEl("progressFormTitle").textContent = "Chỉnh sửa bước tiến độ";
-    getEl("progressDate").value = toDateTimeLocal(new Date(row.progress_date));
-    getEl("progressContent").value = row.content || "";
-    getEl("progressAgency").value = row.agency || "";
-    getEl("progressDescription").value = row.description || "";
-    getEl("progressNote").value = row.note || "";
-    getEl("progressFiles").value = "";
-    getEl("progressMsg").textContent =
-        "Lưu ý: file cũ vẫn được giữ nguyên; file mới sẽ được thêm vào.";
-    getEl("progressForm").classList.remove("hidden");
-    getEl("progressContent").focus();
+
+function prevLink() {
+
+  let index = templateSelect.selectedIndex - 1;
+
+  if(index < 0) {
+    index = templates.length - 1;
+  }
+
+  templateSelect.selectedIndex = index;
+
+  updateUrl();
+  playCurrent();
+
 }
 
-getEl("saveProgress").onclick = async () => {
-    if(!selectedProgressWork)return;
 
-    const dateValue = getEl("progressDate").value;
-    const content = getEl("progressContent").value.trim();
-    const agency = getEl("progressAgency").value.trim() || null;
-    const description = getEl("progressDescription").value.trim() || null;
-    const note = getEl("progressNote").value.trim() || null;
-    const files = [...(getEl("progressFiles").files || [])];
+/* =========================================================
+   EVENT DROPDOWN
+========================================================= */
 
-    if(!dateValue){
-        getEl("progressMsg").textContent = "Vui lòng chọn ngày tháng.";
-        return;
-    }
+channelSelect.addEventListener(
+  "change",
+  function(){
+    updateUrl();
+    playCurrent();
+  }
+);
 
-    if(!content){
-        getEl("progressMsg").textContent = "Vui lòng nhập nội dung tiến độ.";
-        getEl("progressContent").focus();
-        return;
-    }
+templateSelect.addEventListener(
+  "change",
+  function(){
+    updateUrl();
+    playCurrent();
+  }
+);
 
-    getEl("saveProgress").disabled = true;
-    getEl("progressMsg").textContent = "";
 
-    try{
-        let progressId = progressEditingId;
-        let result;
+/* =========================================================
+   TRẠNG THÁI
+========================================================= */
 
-        if(progressId){
-            result = await db.from("work_progress")
-                .update({
-                    progress_date:new Date(dateValue).toISOString(),
-                    content:content,
-                    agency:agency,
-                    description:description,
-                    note:note
-                })
-                .eq("id",progressId);
-        }else{
-            result = await db.from("work_progress")
-                .insert({
-                    work_id:selectedProgressWork.id,
-                    progress_date:new Date(dateValue).toISOString(),
-                    content:content,
-                    agency:agency,
-                    description:description,
-                    note:note,
-                    created_by:user.id
-                })
-                .select("id")
-                .single();
+function setStatus(text,type="") {
 
-            if(!result.error) progressId = result.data.id;
-        }
+  statusBox.textContent = text;
+  statusBox.className = "status " + type;
 
-        if(result.error)throw result.error;
-
-        if(files.length){
-            await uploadProgressFiles(progressId,files);
-        }
-
-        resetProgressForm();
-        await loadProgress();
-
-    }catch(error){
-        console.error(error);
-        getEl("progressMsg").textContent =
-            error.message || "Không lưu được tiến độ.";
-    }finally{
-        getEl("saveProgress").disabled = false;
-    }
-};
-
-async function uploadProgressFiles(progressId,files){
-    for(const file of files){
-        const safeName = file.name.replace(/[^\w.\- ()\u00C0-\u024F]/g,"_");
-        const path =
-            "progress/" + progressId + "/" +
-            Date.now()+"_"+Math.random().toString(36).slice(2)+"_"+safeName;
-
-        const upload = await db.storage
-            .from(PROGRESS_BUCKET)
-            .upload(path,file,{
-                upsert:false,
-                cacheControl:"3600"
-            });
-
-        if(upload.error)throw upload.error;
-
-        const record = await db.from("work_progress_files").insert({
-            progress_id:progressId,
-            file_name:file.name,
-            file_path:path,
-            file_size:file.size,
-            mime_type:file.type || "application/octet-stream",
-            uploaded_by:user.id
-        });
-
-        if(record.error){
-            await db.storage.from(PROGRESS_BUCKET).remove([path]);
-            throw record.error;
-        }
-    }
 }
 
-async function downloadProgressFile(file){
-    const result = await db.storage
-        .from(PROGRESS_BUCKET)
-        .download(file.file_path);
 
-    if(result.error){
-        alert("Không tải được file:\n"+result.error.message);
-        return;
-    }
+/* =========================================================
+   HỦY PLAYER CŨ
+========================================================= */
 
-    const url = URL.createObjectURL(result.data);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.file_name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
+function destroyPlayer() {
+
+  if(hls) {
+    hls.destroy();
+    hls = null;
+  }
+
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+
 }
 
-async function deleteProgressFile(file){
-    if(!confirm("Xóa file '"+file.file_name+"' khỏi bước tiến độ này?"))return;
 
-    const storage = await db.storage
-        .from(PROGRESS_BUCKET)
-        .remove([file.file_path]);
+/* =========================================================
+   PHÁT URL
+========================================================= */
 
-    if(storage.error){
-        alert("Không xóa được file:\n"+storage.error.message);
-        return;
-    }
+function playUrl(url,index) {
 
-    const result = await db.from("work_progress_files")
-        .delete()
-        .eq("id",file.id);
+  destroyPlayer();
 
-    if(result.error){
-        alert("File đã xóa khỏi kho nhưng chưa xóa được bản ghi:\n"+result.error.message);
-        return;
-    }
+  currentPlayingLink = index;
 
-    await loadProgress();
-}
-
-async function deleteProgress(row){
-    if(!confirm("Xóa bước tiến độ '"+row.content+"'?"))return;
-
-    const result = await db.from("work_progress")
-        .delete()
-        .eq("id",row.id);
-
-    if(result.error){
-        alert("Không xóa được tiến độ:\n"+result.error.message);
-        return;
-    }
-
-    await loadProgress();
-}
-
-const SUPABASE_URL="https://xowmhluzkljftsajjfhz.supabase.co";
-const SUPABASE_KEY="sb_publishable_mZIMNlMuc64aB7ns2SZxmw_4Nugl6PO";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let user=null;
-let roomId=null;
-let channel=null;
+  setStatus(
+    "⏳ Đang kết nối Link " +
+    (index + 1) +
+    "..."
+  );
 
 
+  /*
+    Chrome / Edge / Firefox
+    sử dụng HLS.js
+  */
 
-function showMessage(text,ok=false){
-    getEl("msg").textContent=text;
-    getEl("msg").className="msg"+(ok?" ok":"");
-}
+  if(window.Hls && Hls.isSupported()) {
 
-function internalEmail(username){
-    return username.toLowerCase()+"@chat.local";
-}
-
-getEl("form").onsubmit=async event=>{
-    event.preventDefault();
-
-    const username=getEl("username").value.trim();
-    const password=getEl("password").value;
-
-    if(!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)){
-        showMessage("Tài khoản 3-30 ký tự, chỉ chữ, số, ., _, -.");
-        return;
-    }
-
-    if(password.length<6){
-        showMessage("Mật khẩu tối thiểu 6 ký tự.");
-        return;
-    }
-
-    getEl("submit").disabled=true;
-
-    try{
-        const result=await db.auth.signInWithPassword({
-            email:internalEmail(username),
-            password:password
-        });
-
-        if(result.error)throw result.error;
-
-    }catch(error){
-        console.error(error);
-
-        let text=error.message||"Có lỗi xảy ra.";
-
-        if(text.toLowerCase().includes("invalid login credentials")){
-            text="Tài khoản hoặc mật khẩu không đúng.";
-        }
-
-        showMessage(text);
-
-    }finally{
-        getEl("submit").disabled=false;
-    }
-};
-
-db.auth.onAuthStateChange(async(event,session)=>{
-    if(session?.user){
-        await openChat(session.user);
-    }else if(event==="SIGNED_OUT"){
-        closeChat();
-    }
-});
-
-async function openChat(currentUser){
-    user=currentUser;
-
-    getEl("auth").classList.add("hidden");
-    getEl("app").classList.remove("hidden");
-
-    const username=currentUser.user_metadata?.username||currentUser.email.split("@")[0];
-
-    getEl("myName").textContent=username;
-    getEl("avatar").textContent=username.charAt(0).toUpperCase();
-
-    const account=await db
-        .from("accounts")
-        .select("is_admin")
-        .eq("id",currentUser.id)
-        .maybeSingle();
-
-    getEl("role").textContent=(!account.error&&account.data?.is_admin)
-        ?"Quản trị viên":"Thành viên";
-
-    const rooms=await db
-        .from("rooms")
-        .select("id,name")
-        .order("id")
-        .limit(1);
-
-    if(rooms.error){
-        console.error(rooms.error);
-        getEl("roomName").textContent="Lỗi tải phòng";
-        getEl("roomTitle").textContent="Lỗi tải phòng";
-        return;
-    }
-
-    if(!rooms.data||rooms.data.length===0){
-        getEl("roomName").textContent="Chưa có phòng";
-        getEl("roomTitle").textContent="Chưa có phòng";
-        return;
-    }
-
-    roomId=rooms.data[0].id;
-
-    getEl("roomName").textContent=rooms.data[0].name;
-    getEl("roomTitle").textContent=rooms.data[0].name;
-
-    await loadMessages();
-    startRealtime();
-    startTaskRealtime();
-    startCatalogRealtime();
-}
-
-function closeChat(){
-    user=null;
-    roomId=null;
-
-    if(channel){
-        db.removeChannel(channel);
-        channel=null;
-    }
-
-    if(window.taskChannel){
-        db.removeChannel(window.taskChannel);
-        window.taskChannel=null;
-    }
-
-    getEl("app").classList.add("hidden");
-    getEl("auth").classList.remove("hidden");
-}
-
-getEl("logout").onclick=async()=>{
-    await db.auth.signOut();
-};
-
-async function loadMessages(){
-    if(!roomId)return;
-
-    const result=await db
-        .from("messages")
-        .select("id,room_id,user_id,username,content,created_at")
-        .eq("room_id",roomId)
-        .order("created_at",{ascending:true})
-        .limit(100);
-
-    if(result.error){
-        console.error(result.error);
-        getEl("messages").innerHTML="<p>Không tải được tin nhắn.</p>";
-        return;
-    }
-
-    getEl("messages").innerHTML="";
-    result.data.forEach(addMessage);
-    scrollBottom();
-}
-
-function addMessage(message){
-    if(Number(message.room_id)!==Number(roomId))return;
-
-    if(getEl("messages").querySelector('[data-id="'+message.id+'"]'))return;
-
-    const row=document.createElement("div");
-    row.className="row"+(user&&message.user_id===user.id?" mine":"");
-    row.dataset.id=message.id;
-
-    const box=document.createElement("div");
-    box.className="box";
-
-    const username=document.createElement("div");
-    username.className="user";
-    username.textContent=message.username;
-
-    const bubble=document.createElement("div");
-    bubble.className="bubble";
-    bubble.textContent=message.content;
-
-    const time=document.createElement("div");
-    time.className="time";
-    time.textContent=new Date(message.created_at).toLocaleTimeString("vi-VN",{
-        hour:"2-digit",
-        minute:"2-digit"
+    hls = new Hls({
+      enableWorker:true,
+      lowLatencyMode:true,
+      backBufferLength:30
     });
 
-    box.append(username,bubble,time);
-    row.append(box);
-    getEl("messages").append(row);
-}
 
-function scrollBottom(){
-    getEl("messages").scrollTop=getEl("messages").scrollHeight;
-}
-
-getEl("sendForm").onsubmit=async event=>{
-    event.preventDefault();
-
-    const content=getEl("message").value.trim();
-
-    if(!content)return;
-
-    if(!roomId){
-        alert("Chưa xác định được phòng chat.");
-        return;
-    }
-
-    if(!user){
-        alert("Bạn chưa đăng nhập.");
-        return;
-    }
-
-    getEl("send").disabled=true;
-
-    try{
-        const result=await db
-            .from("messages")
-            .insert({
-                room_id:roomId,
-                user_id:user.id,
-                username:getEl("myName").textContent,
-                content:content
-            })
-            .select()
-            .single();
-
-        if(result.error)throw result.error;
-
-        getEl("message").value="";
-        getEl("message").focus();
-        scrollBottom();
-
-    }catch(error){
-        console.error(error);
-        alert("Không gửi được tin nhắn:\n"+error.message);
-
-    }finally{
-        getEl("send").disabled=false;
-    }
-};
+    hls.loadSource(url);
+    hls.attachMedia(video);
 
 
+    hls.on(
+      Hls.Events.MANIFEST_PARSED,
+      function() {
 
-/* ================= DANH MỤC CÔNG VIỆC ================= */
+        setStatus(
+          "🟢 Đang phát — Link " +
+          (index + 1),
+          "ok"
+        );
 
-let catalogCategories = [];
-let catalogWorks = [];
-let selectedCatalogCategoryId = null;
-let catalogEditingType = null; // "category" | "work"
-let catalogEditingId = null;
+        video.play().catch(() => {});
 
-getEl("catalogMenu").onclick = async () => {
-    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
-    getEl("catalogMenu").classList.add("active");
-    showModulePane("catalogModal");
-    resetCatalogForm();
-    await loadCatalog();
-    if(typeof renderCatalogTree==="function") renderCatalogTree();
-};
+      }
+    );
 
-getEl("closeCatalog").onclick = () => {
-    showMainChatPane();
-    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
-};
 
-getEl("catalogModal").addEventListener("click", event => {
-    if(event.target === getEl("catalogModal")){
-        showMainChatPane();
-    }
-});
+    hls.on(
+      Hls.Events.ERROR,
+      function(event,data) {
 
-getEl("addCategoryBtn").onclick = () => {
-    catalogEditingType = "category";
-    catalogEditingId = null;
-    getEl("catalogFormTitle").textContent = "Thêm chuyên môn";
-    getEl("catalogName").value = "";
-    getEl("catalogDescription").value = "";
-    getEl("catalogMsg").textContent = "";
-    getEl("catalogForm").classList.remove("hidden");
-    getEl("catalogName").placeholder = "Tên chuyên môn *";
-    getEl("catalogName").focus();
-};
+        console.log("HLS:",data);
 
-getEl("addCatalogWorkBtn").onclick = () => {
-    if(!selectedCatalogCategoryId)return;
-    catalogEditingType = "work";
-    catalogEditingId = null;
-    getEl("catalogFormTitle").textContent = "Thêm công việc";
-    getEl("catalogName").value = "";
-    getEl("catalogDescription").value = "";
-    getEl("catalogMsg").textContent = "";
-    getEl("catalogForm").classList.remove("hidden");
-    getEl("catalogName").placeholder = "Tên công việc *";
-    getEl("catalogName").focus();
-};
+        if(data.fatal) {
 
-getEl("cancelCatalog").onclick = () => resetCatalogForm();
+          setStatus(
+            "🔴 Không phát được Link " +
+            (index + 1) +
+            " — " +
+            data.details,
+            "error"
+          );
 
-function resetCatalogForm(){
-    catalogEditingType = null;
-    catalogEditingId = null;
-    getEl("catalogName").value = "";
-    getEl("catalogDescription").value = "";
-    getEl("catalogMsg").textContent = "";
-    getEl("catalogForm").classList.add("hidden");
-}
-
-async function loadCatalog(){
-    const [categoriesResult, worksResult] = await Promise.all([
-        db.from("work_categories")
-            .select("id,name,description,sort_order,created_at")
-            .order("sort_order",{ascending:true})
-            .order("name",{ascending:true}),
-        db.from("work_catalog")
-            .select("id,category_id,name,description,sort_order,created_at")
-            .order("sort_order",{ascending:true})
-            .order("name",{ascending:true})
-    ]);
-
-    if(categoriesResult.error){
-        console.error(categoriesResult.error);
-        getEl("categoriesList").innerHTML =
-            '<div class="catalog-empty">Không tải được chuyên môn. Hãy chạy SQL tạo danh mục công việc.</div>';
-        return;
-    }
-
-    if(worksResult.error){
-        console.error(worksResult.error);
-        getEl("catalogWorkList").innerHTML =
-            '<div class="catalog-empty">Không tải được công việc trong danh mục.</div>';
-        return;
-    }
-
-    catalogCategories = categoriesResult.data || [];
-    catalogWorks = worksResult.data || [];
-    getEl("catalogCount").textContent = catalogCategories.length;
-
-    renderCatalogCategories();
-
-    if(selectedCatalogCategoryId &&
-       !catalogCategories.some(c => c.id === selectedCatalogCategoryId)){
-        selectedCatalogCategoryId = null;
-    }
-
-    if(!selectedCatalogCategoryId && catalogCategories.length){
-        selectedCatalogCategoryId = catalogCategories[0].id;
-    }
-
-    if(selectedCatalogCategoryId){
-        renderCatalogWorks();
-    }else{
-        getEl("catalogSelectedTitle").textContent = "Chưa có chuyên môn";
-        getEl("addCatalogWorkBtn").classList.add("hidden");
-        getEl("catalogWorkList").innerHTML =
-            '<div class="catalog-empty">Chưa có chuyên môn nào. Hãy bấm “＋ Thêm”.</div>';
-    }
-}
-
-function renderCatalogCategories(){
-    if(!catalogCategories.length){
-        getEl("categoriesList").innerHTML =
-            '<div class="catalog-empty">Chưa có chuyên môn nào.</div>';
-        return;
-    }
-
-    getEl("categoriesList").innerHTML = "";
-
-    catalogCategories.forEach(category => {
-        const row = document.createElement("div");
-        row.className = "catalog-category" +
-            (category.id === selectedCatalogCategoryId ? " active" : "");
-
-        const name = document.createElement("div");
-        name.className = "catalog-category-name";
-        name.textContent = category.name;
-
-        const count = document.createElement("span");
-        count.className = "task-badge";
-        count.textContent = catalogWorks.filter(w => w.category_id === category.id).length;
-
-        const actions = document.createElement("div");
-        actions.className = "catalog-category-actions";
-
-        const edit = document.createElement("button");
-        edit.className = "catalog-mini";
-        edit.type = "button";
-        edit.textContent = "✎";
-        edit.title = "Chỉnh sửa chuyên môn";
-        edit.onclick = event => {
-            event.stopPropagation();
-            editCatalogCategory(category);
-        };
-
-        const del = document.createElement("button");
-        del.className = "catalog-mini";
-        del.type = "button";
-        del.textContent = "⌫";
-        del.title = "Xóa chuyên môn";
-        del.onclick = event => {
-            event.stopPropagation();
-            deleteCatalogCategory(category);
-        };
-
-        actions.append(edit,del);
-        row.append(name,count,actions);
-
-        row.onclick = () => {
-            selectedCatalogCategoryId = category.id;
-            resetCatalogForm();
-            renderCatalogCategories();
-            renderCatalogWorks();
-        };
-
-        getEl("categoriesList").append(row);
-    });
-}
-
-function renderCatalogWorks(){
-    const category = catalogCategories.find(c => c.id === selectedCatalogCategoryId);
-
-    if(!category){
-        getEl("catalogSelectedTitle").textContent = "Chọn một chuyên môn";
-        getEl("addCatalogWorkBtn").classList.add("hidden");
-        getEl("catalogWorkList").innerHTML =
-            '<div class="catalog-empty">Chọn chuyên môn để xem công việc.</div>';
-        return;
-    }
-
-    getEl("catalogSelectedTitle").textContent = category.name;
-    getEl("addCatalogWorkBtn").classList.remove("hidden");
-
-    const works = catalogWorks.filter(w => w.category_id === category.id);
-
-    if(!works.length){
-        getEl("catalogWorkList").innerHTML =
-            '<div class="catalog-empty">Chưa có công việc nào thuộc chuyên môn này.</div>';
-        return;
-    }
-
-    getEl("catalogWorkList").innerHTML = "";
-
-    works.forEach(work => {
-        const item = document.createElement("div");
-        item.className = "catalog-work-item";
-
-        const main = document.createElement("div");
-        main.className = "catalog-work-main";
-
-        const title = document.createElement("div");
-        title.className = "catalog-work-name";
-        title.textContent = work.name;
-
-        main.append(title);
-
-        if(work.description){
-            const desc = document.createElement("div");
-            desc.className = "catalog-work-desc";
-            desc.textContent = work.description;
-            main.append(desc);
         }
 
-        const actions = document.createElement("div");
-        actions.className = "catalog-work-actions";
+      }
+    );
 
-        const edit = document.createElement("button");
-        edit.className = "catalog-work-action";
-        edit.type = "button";
-        edit.textContent = "✎ Sửa";
-        edit.onclick = () => editCatalogWork(work);
+  }
 
-        const del = document.createElement("button");
-        del.className = "catalog-work-action catalog-work-delete";
-        del.type = "button";
-        del.textContent = "⌫ Xóa";
-        del.onclick = () => deleteCatalogWork(work);
+  /*
+    Safari có HLS native
+  */
 
-        actions.append(edit,del);
-        const openHint = document.createElement("div");
-        openHint.className = "catalog-work-open";
-        openHint.textContent = "▸ Nhấn để xem tiến độ";
+  else if(
+    video.canPlayType(
+      "application/vnd.apple.mpegurl"
+    )
+  ) {
 
-        main.append(openHint);
-        item.append(main,actions);
+    video.src = url;
 
-        item.onclick = event => {
-            if(event.target.closest("button")) return;
-            openProgressModal(work);
-        };
+    video.addEventListener(
+      "loadedmetadata",
+      function() {
 
-        getEl("catalogWorkList").append(item);
-    });
-}
+        setStatus(
+          "🟢 Đang phát — Link " +
+          (index + 1),
+          "ok"
+        );
 
-function editCatalogCategory(category){
-    catalogEditingType = "category";
-    catalogEditingId = category.id;
-    getEl("catalogFormTitle").textContent = "Chỉnh sửa chuyên môn";
-    getEl("catalogName").value = category.name || "";
-    getEl("catalogDescription").value = category.description || "";
-    getEl("catalogMsg").textContent = "";
-    getEl("catalogName").placeholder = "Tên chuyên môn *";
-    getEl("catalogForm").classList.remove("hidden");
-    getEl("catalogName").focus();
-}
+        video.play().catch(() => {});
 
-function editCatalogWork(work){
-    catalogEditingType = "work";
-    catalogEditingId = work.id;
-    getEl("catalogFormTitle").textContent = "Chỉnh sửa công việc";
-    getEl("catalogName").value = work.name || "";
-    getEl("catalogDescription").value = work.description || "";
-    getEl("catalogMsg").textContent = "";
-    getEl("catalogName").placeholder = "Tên công việc *";
-    getEl("catalogForm").classList.remove("hidden");
-    getEl("catalogName").focus();
-}
+      },
+      {once:true}
+    );
 
-async function deleteCatalogCategory(category){
-    const count = catalogWorks.filter(w => w.category_id === category.id).length;
+  }
 
-    const message = count
-        ? "Chuyên môn này đang có " + count + " công việc. Xóa chuyên môn sẽ xóa luôn các công việc thuộc chuyên môn này. Tiếp tục?"
-        : "Xóa chuyên môn '" + category.name + "'?";
+  else {
 
-    if(!confirm(message))return;
+    setStatus(
+      "❌ Trình duyệt không hỗ trợ HLS",
+      "error"
+    );
 
-    const result = await db.from("work_categories").delete().eq("id",category.id);
+  }
 
-    if(result.error){
-        console.error(result.error);
-        alert("Không xóa được chuyên môn:\n" + result.error.message);
-        return;
-    }
-
-    if(selectedCatalogCategoryId === category.id){
-        selectedCatalogCategoryId = null;
-    }
-
-    await loadCatalog();
-}
-
-async function deleteCatalogWork(work){
-    if(!confirm("Xóa công việc '" + work.name + "' khỏi chuyên môn này?"))return;
-
-    const result = await db.from("work_catalog").delete().eq("id",work.id);
-
-    if(result.error){
-        console.error(result.error);
-        alert("Không xóa được công việc:\n" + result.error.message);
-        return;
-    }
-
-    await loadCatalog();
-}
-
-getEl("saveCatalog").onclick = async () => {
-    const name = getEl("catalogName").value.trim();
-    const description = getEl("catalogDescription").value.trim() || null;
-
-    if(!name){
-        getEl("catalogMsg").textContent =
-            catalogEditingType === "category"
-                ? "Vui lòng nhập tên chuyên môn."
-                : "Vui lòng nhập tên công việc.";
-        getEl("catalogName").focus();
-        return;
-    }
-
-    if(catalogEditingType === "work" && !selectedCatalogCategoryId){
-        getEl("catalogMsg").textContent = "Chưa chọn chuyên môn.";
-        return;
-    }
-
-    getEl("saveCatalog").disabled = true;
-    getEl("catalogMsg").textContent = "";
-
-    try{
-        let result;
-
-        if(catalogEditingType === "category"){
-            if(catalogEditingId){
-                result = await db.from("work_categories")
-                    .update({
-                        name:name,
-                        description:description
-                    })
-                    .eq("id",catalogEditingId);
-            }else{
-                const nextOrder = catalogCategories.length
-                    ? Math.max(...catalogCategories.map(c => Number(c.sort_order)||0)) + 1
-                    : 1;
-
-                result = await db.from("work_categories")
-                    .insert({
-                        name:name,
-                        description:description,
-                        sort_order:nextOrder,
-                        created_by:user.id
-                    });
-            }
-        }else if(catalogEditingType === "work"){
-            if(catalogEditingId){
-                result = await db.from("work_catalog")
-                    .update({
-                        name:name,
-                        description:description
-                    })
-                    .eq("id",catalogEditingId);
-            }else{
-                const currentWorks = catalogWorks.filter(
-                    w => w.category_id === selectedCatalogCategoryId
-                );
-
-                const nextOrder = currentWorks.length
-                    ? Math.max(...currentWorks.map(w => Number(w.sort_order)||0)) + 1
-                    : 1;
-
-                result = await db.from("work_catalog")
-                    .insert({
-                        category_id:selectedCatalogCategoryId,
-                        name:name,
-                        description:description,
-                        sort_order:nextOrder,
-                        created_by:user.id
-                    });
-            }
-        }else{
-            getEl("catalogMsg").textContent = "Vui lòng chọn thao tác cần thực hiện.";
-            return;
-        }
-
-        if(result.error)throw result.error;
-
-        resetCatalogForm();
-        await loadCatalog();
-
-    }catch(error){
-        console.error(error);
-        getEl("catalogMsg").textContent =
-            error.message || "Không lưu được danh mục công việc.";
-    }finally{
-        getEl("saveCatalog").disabled = false;
-    }
-};
-
-/* ================= ĐỒNG BỘ CÔNG VIỆC VỚI CHAT ================= */
-
-function taskStatusLabel(status){
-    if(status==="done") return "✅ ĐÃ HOÀN THÀNH";
-    if(status==="doing") return "🔄 ĐANG THỰC HIỆN";
-    return "⏳ CHƯA HOÀN THÀNH";
-}
-
-function taskStatusText(status){
-    if(status==="done") return "đã hoàn thành";
-    if(status==="doing") return "đang thực hiện";
-    return "chưa hoàn thành";
-}
-
-async function postTaskUpdate(task, type="status"){
-    if(!roomId || !user)return;
-
-    let content="";
-
-    if(type==="deleted"){
-        content =
-            "⌫ CÔNG VIỆC ĐÃ XÓA\n" +
-            "━━━━━━━━━━━━━━\n" +
-            "📝 " + task.title + "\n" +
-            "👤 Phân công: " + (task.assignee_username || "Chưa phân công");
-    }else{
-        content =
-            taskStatusLabel(task.status) + "\n" +
-            "━━━━━━━━━━━━━━\n" +
-            "📝 " + task.title + "\n" +
-            "👤 Phân công: " + (task.assignee_username || "Chưa phân công") + "\n" +
-            "📌 Trạng thái: " + taskStatusText(task.status);
-    }
-
-    const result=await db.from("messages").insert({
-        room_id:roomId,
-        user_id:user.id,
-        username:getEl("myName").textContent,
-        content:content
-    });
-
-    if(result.error){
-        console.error("Không đăng cập nhật công việc vào chat:",result.error);
-    }
-}
-
-async function handleTaskRealtime(payload){
-    if(payload.eventType==="INSERT"){
-        await loadTasks();
-        return;
-    }
-
-    if(payload.eventType==="UPDATE"){
-        await loadTasks();
-        return;
-    }
-
-    if(payload.eventType==="DELETE"){
-        await loadTasks();
-        return;
-    }
-}
-
-function startTaskRealtime(){
-    if(window.taskChannel){
-        db.removeChannel(window.taskChannel);
-    }
-
-    window.taskChannel=db
-        .channel("tasks-realtime")
-        .on("postgres_changes",{
-            event:"*",
-            schema:"public",
-            table:"tasks"
-        },payload=>{
-            handleTaskRealtime(payload);
-        })
-        .subscribe();
-}
-
-function startRealtime(){
-    if(!roomId)return;
-
-    if(channel){
-        db.removeChannel(channel);
-    }
-
-    channel=db
-        .channel("chat-room-"+roomId)
-        .on("postgres_changes",{
-            event:"INSERT",
-            schema:"public",
-            table:"messages",
-            filter:"room_id=eq."+roomId
-        },payload=>{
-            addMessage(payload.new);
-            scrollBottom();
-        })
-        .subscribe(status=>{
-            if(status==="SUBSCRIBED"){
-                getEl("status").textContent="đang hoạt động";
-                getEl("status").style.color="#007aff";
-            }else{
-                getEl("status").textContent="đang kết nối...";
-                getEl("status").style.color="#6e6e73";
-            }
-        });
 }
 
 
+/* =========================================================
+   PHÁT LINK ĐANG CHỌN
+========================================================= */
 
-/* ================= Ổ ĐĨA CHUNG ================= */
+function playCurrent() {
 
-const DRIVE_BUCKET="shared-files";
+  const index = Number(
+    templateSelect.value
+  );
 
-getEl("driveMenu").onclick=async()=>{
-    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
-    getEl("driveMenu").classList.add("active");
-    showModulePane("driveModal");
-    await loadFiles();
-};
+  playUrl(
+    getUrl(index),
+    index
+  );
 
-getEl("closeDrive").onclick=()=>{
-    showMainChatPane();
-};
-
-getEl("driveModal").addEventListener("click",event=>{
-    if(event.target===getEl("driveModal")){
-        showMainChatPane();
-    }
-});
-
-getEl("fileInput").onchange=async event=>{
-    const files=[...(event.target.files||[])];
-    if(!files.length)return;
-
-    getEl("uploadStatus").textContent="Đang tải...";
-    getEl("fileInput").disabled=true;
-
-    try{
-        for(const file of files){
-            const safeName=file.name.replace(/[^\w.\- ()\u00C0-\u024F]/g,"_");
-            const path=Date.now()+"_"+Math.random().toString(36).slice(2)+"_"+safeName;
-
-            const upload=await db.storage
-                .from(DRIVE_BUCKET)
-                .upload(path,file,{
-                    upsert:false,
-                    cacheControl:"3600"
-                });
-
-            if(upload.error)throw upload.error;
-
-            const record=await db.from("shared_files").insert({
-                file_name:file.name,
-                file_path:path,
-                file_size:file.size,
-                mime_type:file.type||"application/octet-stream",
-                uploaded_by:user.id,
-                uploader_username:getEl("myName").textContent
-            });
-
-            if(record.error){
-                await db.storage.from(DRIVE_BUCKET).remove([path]);
-                throw record.error;
-            }
-        }
-
-        getEl("uploadStatus").textContent="Tải lên thành công";
-        getEl("fileInput").value="";
-        await loadFiles();
-
-    }catch(error){
-        console.error(error);
-        getEl("uploadStatus").textContent="Lỗi: "+(error.message||"Không tải được file");
-    }finally{
-        getEl("fileInput").disabled=false;
-    }
-};
-
-async function loadFiles(){
-    const result=await db.from("shared_files")
-        .select("id,file_name,file_path,file_size,mime_type,uploaded_by,uploader_username,created_at")
-        .order("created_at",{ascending:false});
-
-    if(result.error){
-        console.error(result.error);
-        getEl("filesList").innerHTML='<div class="tasks-empty">Không tải được danh sách file. Hãy chạy SQL tạo ổ đĩa trước.</div>';
-        return;
-    }
-
-    const files=result.data||[];
-    getEl("fileCount").textContent=files.length;
-
-    if(!files.length){
-        getEl("filesList").innerHTML='<div class="tasks-empty">Chưa có file nào. Hãy tải file đầu tiên.</div>';
-        return;
-    }
-
-    getEl("filesList").innerHTML="";
-
-    files.forEach(file=>{
-        const item=document.createElement("div");
-        item.className="file-item";
-
-        const icon=document.createElement("div");
-        icon.className="file-icon";
-        icon.textContent=getFileIcon(file.mime_type,file.file_name);
-
-        const main=document.createElement("div");
-        main.className="file-main";
-
-        const name=document.createElement("div");
-        name.className="file-name";
-        name.title=file.file_name;
-        name.textContent=file.file_name;
-
-        const meta=document.createElement("div");
-        meta.className="file-meta";
-        meta.textContent=
-            formatBytes(file.file_size)+
-            " • "+(file.uploader_username||"Không rõ")+
-            " • "+formatDate(file.created_at);
-
-        main.append(name,meta);
-
-        const actions=document.createElement("div");
-        actions.className="file-actions";
-
-        const download=document.createElement("button");
-        download.className="file-action";
-        download.type="button";
-        download.textContent="⬇ Tải";
-        download.onclick=()=>downloadSharedFile(file);
-
-        actions.append(download);
-
-        const del=document.createElement("button");
-        del.className="file-action file-delete";
-        del.type="button";
-        del.textContent="⌫";
-        del.title="Xóa file";
-        del.onclick=()=>deleteSharedFile(file);
-
-        actions.append(del);
-
-        item.append(icon,main,actions);
-        getEl("filesList").append(item);
-    });
-}
-
-function getFileIcon(mime,name){
-    if((mime||"").startsWith("image/"))return"🖼️";
-    if((mime||"").startsWith("video/"))return"🎬";
-    if((mime||"").startsWith("audio/"))return"🎵";
-    if((mime||"").includes("pdf")||name.toLowerCase().endsWith(".pdf"))return"📕";
-    if(/\.(doc|docx)$/i.test(name))return"📘";
-    if(/\.(xls|xlsx|csv)$/i.test(name))return"📊";
-    if(/\.(zip|rar|7z)$/i.test(name))return"🗜️";
-    return"📄";
-}
-
-function formatBytes(bytes){
-    if(!bytes)return"0 B";
-    const units=["B","KB","MB","GB"];
-    const i=Math.floor(Math.log(bytes)/Math.log(1024));
-    return (bytes/Math.pow(1024,i)).toFixed(i?1:0)+" "+units[i];
-}
-
-async function downloadSharedFile(file){
-    const result=await db.storage
-        .from(DRIVE_BUCKET)
-        .download(file.file_path);
-
-    if(result.error){
-        alert("Không tải được file:\n"+result.error.message);
-        return;
-    }
-
-    const url=URL.createObjectURL(result.data);
-    const a=document.createElement("a");
-    a.href=url;
-    a.download=file.file_name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-
-async function deleteSharedFile(file){
-    if(!confirm("Xóa file '"+file.file_name+"' khỏi ổ đĩa chung?"))return;
-
-    const storage=await db.storage
-        .from(DRIVE_BUCKET)
-        .remove([file.file_path]);
-
-    if(storage.error){
-        alert("Không xóa được file:\n"+storage.error.message);
-        return;
-    }
-
-    const record=await db.from("shared_files")
-        .delete()
-        .eq("id",file.id);
-
-    if(record.error){
-        alert("File đã xóa khỏi kho nhưng không xóa được bản ghi:\n"+record.error.message);
-        return;
-    }
-
-    await loadFiles();
 }
 
 
+/* =========================================================
+   DỪNG
+========================================================= */
 
-/* ================= REALTIME DANH MỤC + TIẾN ĐỘ ================= */
-let catalogRealtimeChannel = null;
+function stopPlayer() {
 
-function startCatalogRealtime(){
-    if(catalogRealtimeChannel){
-        db.removeChannel(catalogRealtimeChannel);
-    }
+  destroyPlayer();
 
-    catalogRealtimeChannel = db
-        .channel("work-catalog-progress-realtime")
-        .on("postgres_changes",{
-            event:"*",
-            schema:"public",
-            table:"work_categories"
-        }, async () => {
-            if(!getEl("catalogModal").classList.contains("hidden")){
-                await loadCatalog();
-            }
-        })
-        .on("postgres_changes",{
-            event:"*",
-            schema:"public",
-            table:"work_catalog"
-        }, async () => {
-            if(!getEl("catalogModal").classList.contains("hidden")){
-                await loadCatalog();
-            }
-            if(!getEl("progressModal").classList.contains("hidden")){
-                await loadProgress();
-            }
-        })
-        .on("postgres_changes",{
-            event:"*",
-            schema:"public",
-            table:"work_progress"
-        }, async () => {
-            if(!getEl("progressModal").classList.contains("hidden")){
-                await loadProgress();
-            }
-        })
-        .on("postgres_changes",{
-            event:"*",
-            schema:"public",
-            table:"work_progress_files"
-        }, async () => {
-            if(!getEl("progressModal").classList.contains("hidden")){
-                await loadProgress();
-            }
-        })
-        .subscribe();
-}
+  setStatus(
+    "⚪ Đã dừng"
+  );
 
-/* ================= CÔNG VIỆC ================= */
-
-let tasksLoaded = false;
-
-getEl("tasksMenu").onclick = async () => {
-    document.querySelectorAll(".module-room").forEach(x=>x.classList.remove("active"));
-    getEl("tasksMenu").classList.add("active");
-    showModulePane("tasksModal");
-    getEl("taskForm").classList.add("hidden");
-    await loadMembers();
-    await loadTasks();
-};
-
-getEl("closeTasks").onclick = () => {
-    showMainChatPane();
-};
-
-getEl("tasksModal").addEventListener("click", event => {
-    if(event.target === getEl("tasksModal")){
-        showMainChatPane();
-    }
-});
-
-getEl("newTaskBtn").onclick = () => {
-    getEl("taskForm").classList.remove("hidden");
-    getEl("taskTitle").focus();
-};
-
-getEl("cancelTask").onclick = () => {
-    resetTaskForm();
-};
-
-getEl("taskFilter").onchange = () => {
-    renderTasks(window.__tasks || []);
-};
-
-function resetTaskForm(){
-    getEl("taskTitle").value="";
-    getEl("taskDescription").value="";
-    getEl("taskAssignee").value="";
-    getEl("taskDue").value="";
-    getEl("taskMsg").textContent="";
-    getEl("taskForm").classList.add("hidden");
 }
 
 
-async function loadMembers(){
-    const select=getEl("taskAssignee");
-    select.innerHTML='<option value="">Đang tải thành viên...</option>';
+/* =========================================================
+   COPY URL
+========================================================= */
 
-    const result=await db
-        .from("accounts")
-        .select("id,username")
-        .order("username",{ascending:true});
+async function copyUrl() {
 
-    if(result.error){
-        console.error(result.error);
-        select.innerHTML='<option value="">Không tải được danh sách thành viên</option>';
-        return;
-    }
+  const url = urlBox.value;
 
-    select.innerHTML='<option value="">Chọn thành viên được phân công</option>';
+  try {
 
-    (result.data||[]).forEach(member=>{
-        if(!member.username)return;
+    await navigator.clipboard.writeText(url);
 
-        const option=document.createElement("option");
-        option.value=member.username;
-        option.textContent=member.username;
+    setStatus(
+      "📋 Đã copy link",
+      "ok"
+    );
 
-        if(user && member.id===user.id){
-            option.textContent += " (bạn)";
-        }
+  }
 
-        select.append(option);
-    });
+  catch(error) {
+
+    urlBox.select();
+    document.execCommand("copy");
+
+    setStatus(
+      "📋 Đã copy link",
+      "ok"
+    );
+
+  }
+
 }
 
-async function loadTasks(){
-    const result=await db
-        .from("tasks")
-        .select("id,title,description,assignee_username,assigned_at,due_date,status,created_by,created_at")
-        .order("created_at",{ascending:false});
 
-    if(result.error){
-        console.error(result.error);
-        getEl("tasksList").innerHTML='<div class="tasks-empty">Không tải được công việc. Hãy chạy SQL tạo bảng tasks trước.</div>';
-        return;
+/* =========================================================
+   VIDEO EVENTS
+========================================================= */
+
+video.addEventListener(
+  "playing",
+  function() {
+
+    setStatus(
+      "🟢 Đang phát — Link " +
+      (currentPlayingLink + 1),
+      "ok"
+    );
+
+  }
+);
+
+video.addEventListener(
+  "waiting",
+  function() {
+
+    setStatus(
+      "⏳ Đang tải dữ liệu..."
+    );
+
+  }
+);
+
+video.addEventListener(
+  "error",
+  function() {
+
+    setStatus(
+      "🔴 Video không thể phát",
+      "error"
+    );
+
+  }
+);
+
+
+/* =========================================================
+   PHÍM TẮT
+========================================================= */
+
+document.addEventListener(
+  "keydown",
+  function(event) {
+
+    /*
+      Không kích hoạt phím tắt khi đang nhập
+    */
+
+    if(
+      event.target.tagName === "INPUT" ||
+      event.target.tagName === "TEXTAREA"
+    ) {
+      return;
     }
 
-    window.__tasks=result.data||[];
-    tasksLoaded=true;
-    renderTasks(window.__tasks);
-}
 
-function renderTasks(tasks){
-    const filter=getEl("taskFilter").value;
-    const filtered=filter==="all"
-        ?tasks
-        :tasks.filter(t=>t.status===filter);
-
-    getEl("taskCount").textContent=tasks.filter(t=>t.status!=="done").length;
-
-    if(!filtered.length){
-        getEl("tasksList").innerHTML='<div class="tasks-empty">Chưa có công việc phù hợp.</div>';
-        return;
+    if(event.key === "ArrowRight") {
+      nextLink();
     }
 
-    getEl("tasksList").innerHTML="";
-
-    filtered.forEach(task=>{
-        const item=document.createElement("div");
-        item.className="task-item";
-
-        const main=document.createElement("div");
-        main.className="task-main";
-
-        const title=document.createElement("div");
-        title.className="task-title";
-        title.textContent=task.title;
-
-        const desc=document.createElement("div");
-        desc.className="task-description";
-        desc.textContent=task.description||"";
-
-        const meta=document.createElement("div");
-        meta.className="task-meta";
-
-        if(task.assignee_username){
-            const badge=document.createElement("span");
-            badge.className="task-badge";
-            badge.textContent="👤 "+task.assignee_username;
-            meta.append(badge);
-        }
-
-        if(task.assigned_at){
-            const badge=document.createElement("span");
-            badge.className="task-badge";
-            badge.textContent="🟢 Giao: "+formatDate(task.assigned_at);
-            meta.append(badge);
-        }
-
-        if(task.due_date){
-            const badge=document.createElement("span");
-            badge.className="task-badge";
-            badge.textContent="🏁 Hạn hoàn thành: "+formatDate(task.due_date);
-            meta.append(badge);
-        }
-
-        const stateBadge=document.createElement("span");
-        stateBadge.className="task-badge";
-        stateBadge.textContent=taskStatusLabel(task.status);
-        meta.append(stateBadge);
-
-        const status=document.createElement("select");
-        status.className="task-status";
-        [
-            ["todo","Chưa làm"],
-            ["doing","Đang làm"],
-            ["done","Hoàn thành"]
-        ].forEach(([value,label])=>{
-            const option=document.createElement("option");
-            option.value=value;
-            option.textContent=label;
-            option.selected=task.status===value;
-            status.append(option);
-        });
-
-        status.onchange=async()=>{
-            const r=await db.from("tasks")
-                .update({status:status.value})
-                .eq("id",task.id);
-
-            if(r.error){
-                alert("Không cập nhật được công việc:\n"+r.error.message);
-                await loadTasks();
-                return;
-            }
-
-            task.status=status.value;
-            renderTasks(window.__tasks||[]);
-            await postTaskUpdate(task,"status");
-        };
-
-        let del=null;
-
-        /* Chỉ người giao việc (created_by) mới nhìn thấy nút Xóa */
-        if(user && task.created_by===user.id){
-            del=document.createElement("button");
-            del.className="task-delete";
-            del.type="button";
-            del.textContent="⌫";
-            del.title="Xóa công việc";
-            del.onclick=async()=>{
-                if(!confirm("Xóa công việc này?"))return;
-
-                const r=await db.from("tasks")
-                    .delete()
-                    .eq("id",task.id)
-                    .eq("created_by",user.id);
-
-                if(r.error){
-                    alert("Không xóa được:\n"+r.error.message);
-                    return;
-                }
-
-                await postTaskUpdate(task,"deleted");
-                await loadTasks();
-            };
-        }
-
-        main.append(title);
-        if(task.description)main.append(desc);
-        main.append(meta);
-
-        item.append(main,status);
-        if(del)item.append(del);
-        getEl("tasksList").append(item);
-    });
-}
-
-function formatDate(value){
-    if(!value)return "";
-    const d=new Date(value);
-    if(Number.isNaN(d.getTime()))return value;
-    return d.toLocaleString("vi-VN",{
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit"
-    });
-}
-
-getEl("saveTask").onclick=async()=>{
-    const title=getEl("taskTitle").value.trim();
-    const assignee=getEl("taskAssignee").value;
-    const dueValue=getEl("taskDue").value;
-
-    if(!title){
-        getEl("taskMsg").textContent="Vui lòng nhập tên công việc.";
-        getEl("taskTitle").focus();
-        return;
+    else if(event.key === "ArrowLeft") {
+      prevLink();
     }
 
-    if(!assignee){
-        getEl("taskMsg").textContent="Vui lòng chọn thành viên được phân công.";
-        getEl("taskAssignee").focus();
-        return;
+    else if(event.key === "ArrowDown") {
+      nextChannel();
     }
 
-    if(!dueValue){
-        getEl("taskMsg").textContent="Vui lòng chọn ngày giờ hoàn thành.";
-        getEl("taskDue").focus();
-        return;
+    else if(event.key === "ArrowUp") {
+      prevChannel();
     }
 
-    const assignedAt=new Date();
-    const completionDueAt=new Date(dueValue);
-
-    if(Number.isNaN(completionDueAt.getTime())){
-        getEl("taskMsg").textContent="Ngày giờ hoàn thành không hợp lệ.";
-        getEl("taskDue").focus();
-        return;
+    else if(event.key === "Enter") {
+      playCurrent();
     }
 
-    if(completionDueAt <= assignedAt){
-        getEl("taskMsg").textContent="Ngày giờ hoàn thành phải sau thời điểm giao việc.";
-        getEl("taskDue").focus();
-        return;
-    }
+  }
+);
 
-    getEl("saveTask").disabled=true;
-    getEl("taskMsg").textContent="";
 
-    try{
-        const result=await db.from("tasks").insert({
-            title:title,
-            description:getEl("taskDescription").value.trim()||null,
-            assignee_username:assignee,
-            assigned_at:assignedAt.toISOString(),
-            due_date:completionDueAt.toISOString(),
-            status:"doing",
-            created_by:user.id
-        }).select().single();
+/* Khởi tạo URL */
+updateUrl();
 
-        if(result.error)throw result.error;
-
-        /* Đưa thông báo công việc vào chat nhóm để mọi người cùng thấy */
-        const assigneeLabel = getEl("taskAssignee").selectedOptions[0]?.textContent || assignee;
-        const taskMessage =
-            "🔄 CÔNG VIỆC MỚI - ĐANG THỰC HIỆN\n" +
-            "━━━━━━━━━━━━━━\n" +
-            "📝 " + title + "\n" +
-            ( getEl("taskDescription").value.trim()
-                ? "📌 " + getEl("taskDescription").value.trim() + "\n"
-                : "" ) +
-            "👤 Phân công: " + assigneeLabel.replace(" (bạn)", "") + "\n" +
-            "🟢 Ngày giao: " + formatDate(assignedAt.toISOString()) + "\n" +
-            "🏁 Hạn hoàn thành: " + formatDate(completionDueAt.toISOString()) + "\n" +
-            "📌 Trạng thái: đang thực hiện";
-
-        const chatResult = await db
-            .from("messages")
-            .insert({
-                room_id: roomId,
-                user_id: user.id,
-                username: getEl("myName").textContent,
-                content: taskMessage
-            });
-
-        if(chatResult.error){
-            console.error("Không đăng thông báo công việc vào chat:", chatResult.error);
-        }
-
-        resetTaskForm();
-        await loadTasks();
-
-    }catch(error){
-        console.error(error);
-        getEl("taskMsg").textContent=error.message||"Không tạo được công việc.";
-    }finally{
-        getEl("saveTask").disabled=false;
-    }
-};
-
-(async()=>{
-    const result=await db.auth.getSession();
-
-    if(result.data&&result.data.session){
-        await openChat(result.data.session.user);
-    }
-})();
 </script>
-
-
-
 </body>
 </html>
