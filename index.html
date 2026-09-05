@@ -8,16 +8,16 @@
 
 <style>
 :root{
-  --bg:#07101d;
-  --panel:#101a2c;
-  --panel2:#0a1322;
-  --border:#263751;
-  --text:#f5f7fb;
-  --muted:#91a0b8;
-  --accent:#3b82f6;
-  --accent2:#2563eb;
+  --bg:#050805;
+  --panel:#0a110a;
+  --panel2:#050905;
+  --border:#173817;
+  --text:#b7ffb7;
+  --muted:#5f9b5f;
+  --accent:#20e020;
+  --accent2:#13b913;
   --danger:#ef4444;
-  --ok:#22c55e;
+  --ok:#20e020;
 }
 
 *{box-sizing:border-box}
@@ -25,8 +25,8 @@
 body{
   margin:0;
   min-height:100vh;
-  background:linear-gradient(135deg,#050b14,#101b2e);
-  color:var(--text);
+  background:#030603;
+  color:#b7ffb7;
   font-family:Arial,Helvetica,sans-serif;
 }
 
@@ -42,7 +42,10 @@ header{
 
 h1{
   margin:0;
-  font-size:26px;
+  font-size:23px;
+  color:#45ff45;
+  letter-spacing:1px;
+  text-shadow:0 0 8px rgba(32,224,32,.28);
 }
 
 .subtitle{
@@ -52,12 +55,11 @@ h1{
 }
 
 .card{
-  background:rgba(16,26,44,.97);
+  background:#081008;
   border:1px solid var(--border);
-  border-radius:14px;
-  padding:16px;
-  margin-bottom:16px;
-  box-shadow:0 8px 30px rgba(0,0,0,.18);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:14px;
 }
 
 .player{
@@ -102,11 +104,11 @@ label{
 
 select,input{
   width:100%;
-  padding:12px;
+  padding:11px;
   border:1px solid var(--border);
-  border-radius:9px;
+  border-radius:8px;
   outline:none;
-  background:var(--panel2);
+  background:#050905;
   color:var(--text);
   font-size:14px;
 }
@@ -133,25 +135,31 @@ select:focus,input:focus{
 }
 
 button{
-  border:0;
-  border-radius:9px;
-  padding:11px 15px;
-  background:var(--accent);
-  color:#fff;
+  border:1px solid #25d925;
+  border-radius:7px;
+  padding:10px 14px;
+  background:#0b240b;
+  color:#7dff7d;
   font-weight:700;
   cursor:pointer;
+  text-transform:uppercase;
 }
 
 button:hover{
-  background:var(--accent2);
+  background:#123812;
+  color:#b7ffb7;
+  box-shadow:0 0 8px rgba(32,224,32,.18);
 }
 
 button.secondary{
-  background:#263751;
+  background:#0b1a0b;
+  color:#8cff8c;
+  border:1px solid #1c4d1c;
 }
 
 button.secondary:hover{
-  background:#334866;
+  background:#102410;
+  color:#b7ffb7;
 }
 
 button.danger{
@@ -181,9 +189,9 @@ button.danger:hover{
 <div class="app">
 
 <header>
-  <h1>📺 M3U8 TEST PLAYER</h1>
+  <h1>⌨ M3U8 // TEST CONSOLE</h1>
   <div class="subtitle">
-    Chọn kênh → chọn link → kiểm tra URL → phát M3U8
+    [ SYSTEM READY ] Chọn kênh → chọn link → phát M3U8
   </div>
 </header>
 
@@ -198,8 +206,8 @@ button.danger:hover{
   </div>
 
   <div class="actions">
-    <button onclick="playCurrent()">▶ PHÁT</button>
-    <button class="danger" onclick="stopPlayer()">⏹ DỪNG</button>
+    <button onclick="playCurrent()">▶ RUN</button>
+    <button class="danger" onclick="stopPlayer()">■ STOP</button>
   </div>
 </div>
 
@@ -208,7 +216,7 @@ button.danger:hover{
   <div class="grid">
 
     <div>
-      <label>📺 CHỌN KÊNH</label>
+      <label>▸ CHANNEL</label>
       <select id="channelSelect"></select>
 
       <div class="actions">
@@ -220,7 +228,7 @@ button.danger:hover{
     </div>
 
     <div>
-      <label>🔗 CHỌN LINK</label>
+      <label>▸ STREAM SOURCE</label>
       <select id="templateSelect"></select>
 
       <div class="actions">
@@ -236,11 +244,11 @@ button.danger:hover{
 
 <!-- URL -->
 <div class="card">
-  <label>🔗 LINK M3U8 HOÀN CHỈNH</label>
+  <label>▸ STREAM URL</label>
 
   <div class="url-row">
     <input id="urlBox" readonly>
-    <button onclick="copyUrl()">📋 COPY</button>
+    <button onclick="copyUrl()">COPY</button>
   </div>
 </div>
 
