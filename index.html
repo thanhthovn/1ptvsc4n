@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M3U8 STREAM DISCOVERY CONSOLE 5</title>
+<title>M3U8 STREAM DISCOVERY CONSOLE 10</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -102,7 +102,13 @@ label{
   font-weight:700;
 }
 
-/* ===== SỬA CHO iOS ===== */
+/* ===== RESPONSIVE + iOS SAFARI ===== */
+html, body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
 select,
 input{
   -webkit-appearance:none;
@@ -221,44 +227,90 @@ input:focus{
 
 @media(max-width:600px){
 
-  /* iPhone: ô nhập và nút thao tác giống hàng CHANNEL bên dưới */
+  /* ===== iPHONE / SAFARI: KHÔNG CHO BẤT KỲ HÀNG NÀO TRÀN NGANG ===== */
+  .app{
+    width:100%;
+    max-width:100%;
+    padding:12px max(12px, env(safe-area-inset-right))
+             12px max(12px, env(safe-area-inset-left));
+  }
+
+  .card,
+  .grid,
+  .grid > div,
+  .panel-body,
+  .channel-row,
+  .manual-channel-row,
+  .url-row,
+  .vid-scan-control{
+    min-width:0;
+    max-width:100%;
+  }
+
+  /* Ô nhập kênh */
   .manual-channel-row{
     flex-direction:column;
     align-items:stretch;
     gap:8px;
   }
+
   .manual-channel-row input{
     width:100%;
+    min-width:0;
     flex:0 0 40px;
     height:40px;
     font-size:16px;
   }
+
   .manual-channel-actions{
+    display:flex;
     width:100%;
+    min-width:0;
     gap:8px;
   }
+
   .manual-channel-actions button{
-    flex:1;
+    flex:1 1 0;
     min-width:0;
+    width:0;
     height:40px;
-    padding:10px 8px;
+    padding:8px 5px;
+    font-size:12px;
+    white-space:normal;
   }
 
+  /* Chọn list kênh */
   .channel-row{
-    flex-wrap:wrap;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
   }
 
   .channel-row select{
     width:100%;
-    flex:0 0 100%;
+    min-width:0;
+    flex:0 0 auto;
   }
 
+  /* 4 nút chia thành 2 x 2 để không tràn màn hình iPhone */
   .channel-nav{
+    display:grid;
+    grid-template-columns:1fr 1fr;
     width:100%;
+    min-width:0;
+    gap:8px;
   }
 
   .channel-nav button{
-    flex:1;
+    width:100%;
+    min-width:0;
+    flex:initial;
+    padding:9px 4px;
+    font-size:11px;
+    line-height:1.15;
+    white-space:normal;
+    overflow-wrap:anywhere;
   }
 }
 
@@ -315,10 +367,13 @@ input:focus{
 @media (max-width:600px){
   .vid-scan-control{
     flex-wrap:wrap;
+    width:100%;
+    min-width:0;
   }
 
   .vid-scan-number{
     flex:0 0 100%;
+    width:100%;
   }
 
   .vid-scan-number input{
@@ -327,11 +382,35 @@ input:focus{
   }
 
   .vid-scan-nav{
+    display:grid;
+    grid-template-columns:1fr 1fr;
     width:100%;
+    min-width:0;
+    gap:8px;
+  }
+
+  .vid-scan-nav button{
+    width:100%;
+    min-width:0;
+    padding:9px 4px;
+    font-size:11px;
+    line-height:1.15;
+    white-space:normal;
   }
 
   .vid-scan-control .vid-scan-actions{
     width:100%;
+    min-width:0;
+  }
+
+  .vid-scan-actions{
+    grid-template-columns:1fr;
+  }
+
+  .vid-scan-actions button{
+    min-width:0;
+    white-space:normal;
+    font-size:11px;
   }
 }
 
@@ -409,21 +488,47 @@ button.danger:hover{
 }
 
 @media(max-width:760px){
-  .app{padding:12px}
-  .grid{grid-template-columns:1fr}
-  .url-row{flex-direction:column}
-  h1{font-size:22px}
+  .app{
+    width:100%;
+    max-width:100%;
+    padding:12px max(12px, env(safe-area-inset-right))
+             12px max(12px, env(safe-area-inset-left));
+  }
 
-  /* iPhone/Safari: ô nhập gọn nhưng vẫn giữ font 16px để không auto-zoom */
-  select,
-  input{
-    height:40px;
-    padding:6px 10px;
-    font-size:16px;
+  .grid{
+    grid-template-columns:1fr;
+    min-width:0;
+  }
+
+  .url-row{
+    flex-direction:column;
+    min-width:0;
   }
 
   .url-row input{
+    width:100%;
+    min-width:0;
     height:40px;
+    font-size:16px;
+  }
+
+  .url-row button{
+    width:100%;
+  }
+
+  h1{
+    font-size:22px;
+    overflow-wrap:anywhere;
+  }
+
+  /* 16px để Safari iPhone không tự zoom khi chạm ô nhập */
+  select,
+  input{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    height:40px;
+    padding:6px 10px;
     font-size:16px;
   }
 
@@ -431,12 +536,23 @@ button.danger:hover{
   #channelSelect,
   #templateSelect,
   #urlBox{
+    width:100%;
+    max-width:100%;
+    min-width:0;
     height:40px;
   }
 
   #vidCurrent{
     width:90px;
+    max-width:100%;
     height:40px;
+  }
+
+  .quality-box,
+  .status,
+  .counter{
+    max-width:100%;
+    overflow-wrap:anywhere;
   }
 }
 
@@ -464,6 +580,23 @@ button.danger:hover{
 }
 .panel-body.is-hidden{
   display:none;
+}
+
+
+/* ===== SAFARI FINAL OVERFLOW GUARD ===== */
+.card > *,
+.panel-body > *,
+.grid > *,
+.channel-row > *,
+.url-row > *,
+.vid-scan-control > *{
+  max-width:100%;
+  min-width:0;
+}
+
+button{
+  max-width:100%;
+  box-sizing:border-box;
 }
 
 </style>
