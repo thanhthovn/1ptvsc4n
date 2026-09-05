@@ -215,7 +215,6 @@ button.danger:hover{
     <button onclick="playCurrent()">▶ RUN</button>
     <button class="danger" onclick="stopPlayer()">■ STOP</button>
     <button id="autoScanBtn" onclick="autoScanLinks()">⚡ DÒ TỰ ĐỘNG</button>
-    <button class="secondary" onclick="resetAutoScan()">↻ DÒ LẠI TỪ ĐẦU</button>
   </div>
 </div>
 
@@ -282,7 +281,6 @@ const channels = [
   "bacninh01"
 ];
 
-
 /* =========================================================
    CÁC MẪU LINK
    Danh sách link thực tế; {code} sẽ được thay bằng mã kênh.
@@ -342,47 +340,96 @@ const templates = [
   },
 
   {
-    name:"Link 11 — EPZ HD1",
+    name:"Link 11 — EPZ HD1 2.5M",
+    url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 12 — EPZ HD2 2.5M",
+    url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 13 — EPZ HD1",
     url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 12 — EPZ HD2",
+    name:"Link 14 — EPZ HD2",
     url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 13 — EPZ HD1 5M",
+    name:"Link 15 — EPZ HD1 5M",
     url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 14 — EPZ HD2 5M",
+    name:"Link 16 — EPZ HD2 5M",
     url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   },
 
   {
-    name:"Link 15 — FNX SD1 2.5M",
+    name:"Link 17 — FNX SD1 2.5M",
     url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 16 — FNX SD2 2.5M",
+    name:"Link 18 — FNX SD2 2.5M",
     url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8"
   },
 
   {
-    name:"Link 17 — FNX HD1",
+    name:"Link 19 — FNX SD1",
+    url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist.m3u8"
+  },
+
+  {
+    name:"Link 20 — FNX SD2",
+    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist.m3u8"
+  },
+
+  {
+    name:"Link 21 — FNX SD1 5M",
+    url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b5000000.m3u8"
+  },
+
+  {
+    name:"Link 22 — FNX SD2 5M",
+    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b5000000.m3u8"
+  },
+
+  {
+    name:"Link 23 — FNX HD1 2.5M",
+    url:"https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 24 — FNX HD2 2.5M",
+    url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
+  },
+
+  {
+    name:"Link 25 — FNX HD1",
     url:"https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8"
   },
 
   {
-    name:"Link 18 — FNX HD2 5M",
+    name:"Link 26 — FNX HD2",
+    url:"https://live.fptplay53.net/fnxhd2/{code}_hls.smil/chunklist.m3u8"
+  },
+
+  {
+    name:"Link 27 — FNX HD1 5M",
+    url:"https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
+  },
+
+  {
+    name:"Link 28 — FNX HD2 5M",
     url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
   }
 
 ];
-
 
 /* =========================================================
    BIẾN
@@ -402,7 +449,6 @@ const statusBox = document.getElementById("status");
 const channelCounter = document.getElementById("channelCounter");
 const linkCounter = document.getElementById("linkCounter");
 
-
 /* =========================================================
    KHỞI TẠO DROPDOWN
 ========================================================= */
@@ -421,11 +467,9 @@ templates.forEach((template,index) => {
   templateSelect.appendChild(option);
 });
 
-
 /* Mặc định */
 channelSelect.value = "nghean01";
 templateSelect.value = "0";
-
 
 /* =========================================================
    TẠO URL
@@ -439,7 +483,6 @@ function getUrl(index = Number(templateSelect.value)) {
   );
 
 }
-
 
 /* =========================================================
    CẬP NHẬT GIAO DIỆN
@@ -462,7 +505,6 @@ function updateUrl() {
     templates.length;
 
 }
-
 
 /* =========================================================
    CHUYỂN KÊNH
@@ -490,7 +532,6 @@ let index = channelSelect.selectedIndex + 1;
 
 }
 
-
 function prevChannel() {
 
   
@@ -513,7 +554,6 @@ let index = channelSelect.selectedIndex - 1;
 
 }
 
-
 /* =========================================================
    CHUYỂN LINK
 ========================================================= */
@@ -533,7 +573,6 @@ function nextLink() {
 
 }
 
-
 function prevLink() {
 
   let index = templateSelect.selectedIndex - 1;
@@ -548,7 +587,6 @@ function prevLink() {
   playCurrent();
 
 }
-
 
 /* =========================================================
    EVENT DROPDOWN
@@ -576,7 +614,6 @@ templateSelect.addEventListener(
   }
 );
 
-
 /* =========================================================
    TRẠNG THÁI
 ========================================================= */
@@ -587,7 +624,6 @@ function setStatus(text,type="") {
   statusBox.className = "status " + type;
 
 }
-
 
 /* =========================================================
    HỦY PLAYER CŨ
@@ -606,7 +642,6 @@ function destroyPlayer() {
 
 }
 
-
 /* =========================================================
    PHÁT URL
 ========================================================= */
@@ -623,7 +658,6 @@ function playUrl(url,index) {
     "..."
   );
 
-
   /*
     Chrome / Edge / Firefox
     sử dụng HLS.js
@@ -637,10 +671,8 @@ function playUrl(url,index) {
       backBufferLength:30
     });
 
-
     hls.loadSource(url);
     hls.attachMedia(video);
-
 
     hls.on(
       Hls.Events.MANIFEST_PARSED,
@@ -656,7 +688,6 @@ function playUrl(url,index) {
 
       }
     );
-
 
     hls.on(
       Hls.Events.ERROR,
@@ -721,7 +752,6 @@ function playUrl(url,index) {
   }
 
 }
-
 
 /* =========================================================
    DÒ LINK TỰ ĐỘNG
@@ -913,24 +943,6 @@ function playCurrent() {
 
 }
 
-
-function resetAutoScan() {
-  autoScanToken++;
-  autoScanning = false;
-  autoScanNextIndex = 0;
-
-  setAutoScanButton(false);
-  destroyPlayer();
-
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-
-  setStatus(
-    "🔄 Đã reset — lần dò tiếp theo sẽ bắt đầu từ Link 1"
-  );
-}
-
-
 /* =========================================================
    DỪNG
 ========================================================= */
@@ -947,7 +959,6 @@ function stopPlayer() {
     "⚪ Đã dừng"
   );
 }
-
 
 /* =========================================================
    COPY URL
@@ -981,7 +992,6 @@ async function copyUrl() {
   }
 
 }
-
 
 /* =========================================================
    VIDEO EVENTS
@@ -1023,7 +1033,6 @@ video.addEventListener(
   }
 );
 
-
 /* =========================================================
    PHÍM TẮT
 ========================================================= */
@@ -1042,7 +1051,6 @@ document.addEventListener(
     ) {
       return;
     }
-
 
     if(event.key === "ArrowRight") {
       nextLink();
@@ -1066,7 +1074,6 @@ document.addEventListener(
 
   }
 );
-
 
 /* Khởi tạo URL */
 updateUrl();
