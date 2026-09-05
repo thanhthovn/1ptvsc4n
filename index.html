@@ -267,6 +267,38 @@ button.danger:hover{
   </div>
 </div>
 
+<!-- DÒ KÊNH FREEM3U -->
+<div class="card">
+  <label>▸ FREEM3U // DÒ KÊNH THEO SỐ</label>
+
+  <div class="url-row">
+    <input id="vidScanUrl" value="https://freem3u.xyz/api/live/play.m3u8?vid={number}" readonly>
+  </div>
+
+  <div class="grid" style="margin-top:10px;">
+    <div>
+      <label>SỐ ĐANG DÒ</label>
+      <input id="vidCurrent" value="1" readonly>
+    </div>
+
+    <div>
+      <label>KÊNH TÌM THẤY</label>
+      <input id="vidFound" value="Chưa dò" readonly>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="vidScanBtn" onclick="startVidScan()">🔎 DÒ TỚI</button>
+    <button class="secondary" onclick="scanBackward()">◀️ DÒ LÙI</button>
+    <button class="secondary" onclick="resetVidScan()">↺ DÒ LẠI TỪ ĐẦU</button>
+    <button class="danger" onclick="stopVidScan()">■ DỪNG DÒ</button>
+  </div>
+
+  <div id="vidScanStatus" class="counter">
+    ⚪ Sẵn sàng — DÒ TỚI dò tăng số; DÒ LÙI lấy SỐ ĐANG DÒ làm mốc và lùi xuống; DÒ LẠI TỪ ĐẦU reset về 1.
+  </div>
+</div>
+
 <!-- URL -->
 <div class="card">
   <label>▸ STREAM URL</label>
@@ -468,6 +500,16 @@ let autoScanning = false;
 let autoScanToken = 0;
 let autoScanNextIndex = 0;
 
+/* FREEM3U numeric scanner */
+let vidScanning = false;
+let vidScanToken = 0;
+let vidScanNumber = 1;
+let freem3uPlaying = false;
+let freem3uPlayingNumber = null;
+let vidFoundNumbers = [];
+const VID_SCAN_MAX = 999;
+const VID_SCAN_TIMEOUT = 6000;
+
 const video = document.getElementById("video");
 const channelSelect = document.getElementById("channelSelect");
 const templateSelect = document.getElementById("templateSelect");
@@ -476,6 +518,11 @@ const statusBox = document.getElementById("status");
 const channelCounter = document.getElementById("channelCounter");
 const linkCounter = document.getElementById("linkCounter");
 const qualityText = document.getElementById("qualityText");
+
+const vidCurrent = document.getElementById("vidCurrent");
+const vidFound = document.getElementById("vidFound");
+const vidScanStatus = document.getElementById("vidScanStatus");
+const vidScanBtn = document.getElementById("vidScanBtn");
 
 /* =========================================================
    KHỞI TẠO DROPDOWN
@@ -513,6 +560,7 @@ function getActiveChannelCode() {
 }
 
 function useManualChannel() {
+  stopVidScan();
   const input = document.getElementById("manualChannelInput");
   const code = input.value.trim();
 
@@ -537,6 +585,7 @@ function useManualChannel() {
 }
 
 function clearManualChannel() {
+  stopVidScan();
   manualChannelCode = "";
 
   const input = document.getElementById("manualChannelInput");
@@ -690,6 +739,7 @@ let index = channelSelect.selectedIndex - 1;
 channelSelect.addEventListener(
   "change",
   function(){
+    stopVidScan();
     // Chọn kênh có sẵn -> thoát chế độ kênh thủ công.
     manualChannelCode = "";
     const manualInput = document.getElementById("manualChannelInput");
@@ -711,6 +761,7 @@ channelSelect.addEventListener(
 templateSelect.addEventListener(
   "change",
   function(){
+    stopVidScan();
     updateUrl();
     playCurrent();
   }
@@ -760,6 +811,8 @@ function isIOS() {
 ========================================================= */
 
 function playUrl(url,index) {
+  freem3uPlaying = false;
+  freem3uPlayingNumber = null;
   destroyPlayer();
 
   currentPlayingLink = index;
@@ -1078,6 +1131,312 @@ function resetAutoScan() {
 }
 
 /* =========================================================
+   FREEM3U // DÒ KÊNH THEO SỐ
+   URL cố định:
+   https://freem3u.xyz/api/live/play.m3u8?vid={number}
+
+   Dò tuần tự 1 -> 999.
+   Số nào phát được thật sự thì dừng và hiện số kênh đó.
+========================================================= */
+
+function getVidUrl(number) {
+  return "https://freem3u.xyz/api/live/play.m3u8?vid=" + number;
+}
+
+function setVidScanButton(scanning) {
+  if(!vidScanBtn) return;
+
+  vidScanBtn.disabled = scanning;
+  vidScanBtn.textContent = scanning
+    ? "⏳ ĐANG DÒ SỐ..."
+    : "⚡ DÒ SỐ TỰ ĐỘNG";
+}
+
+function updateVidScanDisplay(number) {
+  vidScanNumber = number;
+  if(vidCurrent) vidCurrent.value = number;
+}
+
+function setVidScanStatus(text, type="") {
+  if(!vidScanStatus) return;
+
+  vidScanStatus.textContent = text;
+  vidScanStatus.style.color =
+    type === "ok" ? "#86efac" :
+    type === "error" ? "#fca5a5" :
+    "";
+}
+
+function tryVidNumber(number, token) {
+  return new Promise((resolve) => {
+    if(token !== vidScanToken || !vidScanning) {
+      resolve(false);
+      return;
+    }
+
+    const url = getVidUrl(number);
+    let finished = false;
+    let timer = null;
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("error", onVideoError);
+      video.removeEventListener("loadedmetadata", onMetadata);
+
+      if(hls && window.Hls) {
+        hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+        hls.off(Hls.Events.ERROR, onHlsError);
+      }
+    };
+
+    const finish = (success) => {
+      if(finished) return;
+      finished = true;
+      cleanup();
+      resolve(success);
+    };
+
+    const onPlaying = () => finish(true);
+    const onVideoError = () => finish(false);
+
+    const onMetadata = () => {
+      video.play().catch(() => {});
+    };
+
+    const onManifestParsed = () => {
+      video.play().catch(() => {});
+    };
+
+    const onHlsError = (event, data) => {
+      if(data && data.fatal) finish(false);
+    };
+
+    destroyPlayer();
+
+    video.addEventListener("playing", onPlaying, {once:true});
+    video.addEventListener("error", onVideoError, {once:true});
+
+    if(
+      isIOS() &&
+      video.canPlayType("application/vnd.apple.mpegurl")
+    ) {
+      video.addEventListener("loadedmetadata", onMetadata, {once:true});
+      video.src = url;
+    }
+    else if(window.Hls && Hls.isSupported()) {
+      hls = new Hls({
+        enableWorker:true,
+        lowLatencyMode:true,
+        backBufferLength:30
+      });
+
+      hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      hls.on(Hls.Events.ERROR, onHlsError);
+
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    }
+    else if(video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.addEventListener("loadedmetadata", onMetadata, {once:true});
+      video.src = url;
+    }
+    else {
+      finish(false);
+      return;
+    }
+
+    // Không để một số lỗi mạng treo việc dò.
+    timer = setTimeout(() => finish(false), VID_SCAN_TIMEOUT);
+  });
+}
+
+function startVidScan() {
+  if(vidScanning) return;
+
+  if(vidScanNumber > VID_SCAN_MAX) {
+    setVidScanStatus(
+      "🟢 Đã dò hết số 1 → " + VID_SCAN_MAX +
+      (vidFoundNumbers.length
+        ? " | Tìm thấy: " + vidFoundNumbers.join(", ")
+        : " | Không tìm thấy kênh.")
+    );
+    return;
+  }
+
+  // Nếu bắt đầu từ số 1 thì đây là một lượt dò mới.
+  if(vidScanNumber === 1) {
+    vidFoundNumbers = [];
+    if(vidFound && vidFoundNumbers.length === 0) {
+    vidFound.value = "Đang dò...";
+  }
+  }
+
+  vidScanning = true;
+  vidScanToken++;
+
+  const token = vidScanToken;
+  setVidScanButton(true);
+
+  if(vidFound) vidFound.value = vidFoundNumbers.length ? vidFoundNumbers.join(", ") : "Đang dò...";
+
+  function scanNext() {
+    if(token !== vidScanToken || !vidScanning) return;
+
+    if(vidScanNumber > VID_SCAN_MAX) {
+      vidScanning = false;
+      setVidScanButton(false);
+      setVidScanStatus(
+        vidFoundNumbers.length
+          ? "🟢 Đã dò hết 1 → " + VID_SCAN_MAX +
+            " | Tìm thấy: " + vidFoundNumbers.join(", ")
+          : "🔴 Đã dò hết số 1 → " + VID_SCAN_MAX + " mà chưa tìm thấy kênh.",
+        vidFoundNumbers.length ? "ok" : "error"
+      );
+      return;
+    }
+
+    const number = vidScanNumber;
+    updateVidScanDisplay(number);
+
+    setVidScanStatus(
+      "🔎 Đang dò kênh số " + number + "/" + VID_SCAN_MAX + "..."
+    );
+
+    tryVidNumber(number, token).then((success) => {
+      if(token !== vidScanToken || !vidScanning) return;
+
+      if(success) {
+        // Tìm thấy tín hiệu: dừng NGAY tại số này để người dùng xem.
+        vidFoundNumbers.push(number);
+        updateVidScanDisplay(number);
+
+        if(vidFound) {
+          vidFound.value = vidFoundNumbers.join(", ");
+        }
+
+        urlBox.value = getVidUrl(number);
+        freem3uPlaying = true;
+        freem3uPlayingNumber = number;
+
+        if(qualityBox) {
+          qualityBox.value = "FREEM3U #" + number;
+        }
+
+        // Đã tìm thấy: dừng lượt hiện tại nhưng nhớ số kế tiếp.
+        // Lần bấm DÒ SỐ TỰ ĐỘNG tiếp theo sẽ dò từ số này.
+        vidScanNumber = number + 1;
+        vidScanning = false;
+        if(vidScanBtn) vidScanBtn.disabled = false;
+
+        setVidScanStatus(
+          "🎯 TÌM THẤY TÍN HIỆU Ở KÊNH #" + number +
+          " — ĐÃ DỪNG. Bấm DÒ SỐ TỰ ĐỘNG để dò tiếp từ #" +
+          vidScanNumber + ".",
+          "ok"
+        );
+
+        setStatus(
+          "🟢 FREEM3U — Tìm thấy kênh " + number +
+          " — đã dừng dò để bạn xem."
+        );
+
+        return;
+      }
+
+      // Không có -> tự tăng số và dò tiếp.
+      vidScanNumber = number + 1;
+      setTimeout(scanNext, 0);
+
+    }).catch((error) => {
+      console.log("FreeM3U scan:", error);
+
+      if(token !== vidScanToken || !vidScanning) return;
+
+      vidScanNumber = number + 1;
+      setTimeout(scanNext, 0);
+    });
+  }
+
+  setTimeout(scanNext, 0);
+}
+
+function continueVidScan() {
+  if(vidScanning) return;
+
+  if(vidScanNumber > VID_SCAN_MAX) {
+    setVidScanStatus(
+      "🟢 Đã dò hết số 1 → " + VID_SCAN_MAX +
+      (vidFoundNumbers.length
+        ? " | Tìm thấy: " + vidFoundNumbers.join(", ")
+        : " | Không tìm thấy kênh.")
+    );
+    return;
+  }
+
+  startVidScan();
+}
+
+function scanBackward() {
+  if(vidScanning) return;
+
+  // DÒ LÙI phải căn cứ đúng vào "SỐ ĐANG DÒ" đang hiển thị.
+  // Ví dụ đang ở #50 thì bấm DÒ LÙI sẽ dò #49, #48, #47...
+  const current = Number(
+    vidCurrent ? vidCurrent.value : vidScanNumber
+  );
+
+  if(!Number.isFinite(current)) {
+    setVidScanStatus("⚪ Không xác định được số hiện tại để dò lùi.", "error");
+    return;
+  }
+
+  const start = current - 1;
+
+  if(start < 1) {
+    setVidScanStatus("⚪ Đang ở số 1 — không còn số nhỏ hơn để dò lùi.");
+    return;
+  }
+
+  vidScanNumber = start;
+  startVidScan();
+}
+
+function stopVidScan() {
+  vidScanToken++;
+  vidScanning = false;
+  freem3uPlaying = false;
+  freem3uPlayingNumber = null;
+  setVidScanButton(false);
+
+  destroyPlayer();
+
+  setVidScanStatus(
+    "⚪ Đã dừng dò tại số " + vidScanNumber + ". Bấm DÒ SỐ TỰ ĐỘNG để tiếp tục."
+  );
+}
+
+function resetVidScan() {
+  vidScanToken++;
+  vidScanning = false;
+  freem3uPlaying = false;
+  freem3uPlayingNumber = null;
+  vidScanNumber = 1;
+  vidFoundNumbers = [];
+  freem3uPlaying = false;
+  freem3uPlayingNumber = null;
+
+  setVidScanButton(false);
+  updateVidScanDisplay(1);
+
+  if(vidFound) vidFound.value = "Chưa dò";
+
+  setVidScanStatus(
+    "🔄 Đã reset — lần dò tiếp theo bắt đầu từ kênh số 1."
+  );
+}
+
+/* =========================================================
    PHÁT LINK ĐANG CHỌN
 ========================================================= */
 
@@ -1103,6 +1462,10 @@ function stopPlayer() {
   autoScanToken++;
   autoScanning = false;
   setAutoScanButton(false);
+
+  vidScanToken++;
+  vidScanning = false;
+  setVidScanButton(false);
 
   destroyPlayer();
 
@@ -1152,7 +1515,29 @@ video.addEventListener(
   "playing",
   function() {
 
-    // Link thực sự phát được -> mới hiện chất lượng.
+    if(freem3uPlaying) {
+      if(vidFound && freem3uPlayingNumber !== null) {
+        vidFound.value = "KÊNH " + freem3uPlayingNumber;
+      }
+
+      if(qualityText && freem3uPlayingNumber !== null) {
+        qualityText.textContent =
+          "FreeM3U — Kênh số " + freem3uPlayingNumber;
+      }
+
+      setVidScanStatus(
+        "🟢 TÌM THẤY KÊNH " + freem3uPlayingNumber + " — đang phát.",
+        "ok"
+      );
+
+      setStatus(
+        "🟢 FREEM3U — Kênh số " + freem3uPlayingNumber + " đang phát",
+        "ok"
+      );
+
+      return;
+    }
+
     showQuality(currentPlayingLink, true);
 
     setStatus(
@@ -1160,7 +1545,6 @@ video.addEventListener(
       (currentPlayingLink + 1),
       "ok"
     );
-
   }
 );
 
@@ -1228,6 +1612,9 @@ document.addEventListener(
 
   }
 );
+
+/* Khởi tạo FREEM3U scanner */
+updateVidScanDisplay(1);
 
 /* Khởi tạo URL */
 updateUrl();
