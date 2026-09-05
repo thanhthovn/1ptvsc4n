@@ -203,6 +203,33 @@ button.danger:hover{
   .url-row{flex-direction:column}
   h1{font-size:22px}
 }
+
+.scan-panel{
+  overflow:hidden;
+}
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:0;
+}
+.panel-head label{
+  margin:0;
+}
+.panel-toggle{
+  padding:7px 11px;
+  font-size:11px;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.panel-body{
+  margin-top:12px;
+}
+.panel-body.is-hidden{
+  display:none;
+}
+
 </style>
 </head>
 
@@ -226,51 +253,72 @@ button.danger:hover{
     ⚪ Chưa phát stream
   </div>
 
-  <div class="actions">
-    <button class="danger" onclick="stopPlayer()">■ STOP</button>
-    <button id="autoScanBtn" onclick="autoScanLinks()">⚡ DÒ TỰ ĐỘNG</button>
-    <button class="secondary" onclick="resetAutoScan()">↻ DÒ LẠI TỪ ĐẦU</button>
-  </div>
+
 </div>
 
 <!-- CHỌN KÊNH / LINK -->
-<div class="card">
-  <div class="grid">
+<div class="card scan-panel" id="channelPanel">
+  <div class="panel-head">
+    <label>▸ CHỌN KÊNH / LINK</label>
+    <button class="secondary panel-toggle" type="button"
+            onclick="togglePanel('channelBody','channelToggle')">
+      <span id="channelToggle">▲ ẨN</span>
+    </button>
+  </div>
 
-    <div>
-      <label>▸ NHẬP TÊN KÊNH THỦ CÔNG</label>
-      <div class="url-row">
-        <input id="manualChannelInput" type="text" placeholder="Ví dụ: vtv1" autocomplete="off">
-        <button class="secondary" onclick="useManualChannel()">DÙNG KÊNH</button>
-        <button class="danger" onclick="clearManualChannel()">XÓA KÊNH</button>
+  <div class="panel-body" id="channelBody">
+    <div class="grid">
+
+      <div>
+        <label>▸ NHẬP TÊN KÊNH THỦ CÔNG</label>
+        <div class="url-row">
+          <input id="manualChannelInput" type="text"
+                 placeholder="Ví dụ: vtv1" autocomplete="off">
+          <button class="secondary" onclick="useManualChannel()">DÙNG KÊNH</button>
+          <button class="danger" onclick="clearManualChannel()">XÓA KÊNH</button>
+        </div>
+
+        <div class="counter">
+          Kênh nhập thủ công chỉ dùng trong lần này — không lưu lại sau khi F5.
+        </div>
+
+        <div class="actions">
+          <button class="danger" onclick="stopPlayer()">■ STOP</button>
+          <button id="autoScanBtn" onclick="autoScanLinks()">⚡ DÒ TỰ ĐỘNG</button>
+          <button class="secondary" onclick="resetAutoScan()">↻ DÒ LẠI TỪ ĐẦU</button>
+        </div>
+
+        <label style="margin-top:12px">▸ CHANNEL</label>
+        <select id="channelSelect"></select>
+
+        <div class="actions">
+          <button class="secondary" onclick="prevChannel()">⬅ KÊNH TRƯỚC</button>
+          <button class="secondary" onclick="nextChannel()">KÊNH SAU ➡</button>
+        </div>
+
+        <div id="channelCounter" class="counter"></div>
       </div>
-      <div class="counter">Kênh nhập thủ công chỉ dùng trong lần này — không lưu lại sau khi F5.</div>
 
-      <label style="margin-top:12px">▸ CHANNEL</label>
-      <select id="channelSelect"></select>
-
-      <div class="actions">
-        <button class="secondary" onclick="prevChannel()">⬅ KÊNH TRƯỚC</button>
-        <button class="secondary" onclick="nextChannel()">KÊNH SAU ➡</button>
+      <div>
+        <label>▸ STREAM SOURCE</label>
+        <select id="templateSelect"></select>
+        <div id="linkCounter" class="counter"></div>
       </div>
 
-      <div id="channelCounter" class="counter"></div>
     </div>
-
-    <div>
-      <label>▸ STREAM SOURCE</label>
-      <select id="templateSelect"></select>
-
-      <div id="linkCounter" class="counter"></div>
-    </div>
-
   </div>
 </div>
 
 <!-- DÒ KÊNH FREEM3U -->
-<div class="card">
-  <label>▸ FREEM3U // DÒ KÊNH THEO SỐ</label>
+<div class="card scan-panel" id="vidScanPanel">
+  <div class="panel-head">
+    <label>▸ FREEM3U // DÒ KÊNH THEO SỐ</label>
+    <button class="secondary panel-toggle" type="button" onclick="togglePanel('vidScanBody','vidScanToggle')">
+      <span id="vidScanToggle">▲ ẨN</span>
+    </button>
+  </div>
 
+  <div class="panel-body" id="vidScanBody">
   <div class="url-row">
     <input id="vidScanUrl" value="https://freem3u.xyz/api/live/play.m3u8?vid={number}" readonly>
   </div>
@@ -296,6 +344,7 @@ button.danger:hover{
 
   <div id="vidScanStatus" class="counter">
     ⚪ Sẵn sàng — DÒ TỚI dò tăng số; DÒ LÙI lấy SỐ ĐANG DÒ làm mốc và lùi xuống; DÒ LẠI TỪ ĐẦU reset về 1.
+  </div>
   </div>
 </div>
 
@@ -766,6 +815,20 @@ templateSelect.addEventListener(
     playCurrent();
   }
 );
+
+/* =========================================================
+   ẨN / HIỆN CÁC BẢNG DÒ
+========================================================= */
+
+function togglePanel(bodyId, toggleId) {
+  const body = document.getElementById(bodyId);
+  const toggle = document.getElementById(toggleId);
+
+  if(!body || !toggle) return;
+
+  const hidden = body.classList.toggle("is-hidden");
+  toggle.textContent = hidden ? "▼ HIỆN" : "▲ ẨN";
+}
 
 /* =========================================================
    TRẠNG THÁI
@@ -1319,10 +1382,6 @@ function startVidScan() {
         freem3uPlaying = true;
         freem3uPlayingNumber = number;
 
-        if(qualityBox) {
-          qualityBox.value = "FREEM3U #" + number;
-        }
-
         // Đã tìm thấy: dừng lượt hiện tại nhưng nhớ số kế tiếp.
         // Lần bấm DÒ SỐ TỰ ĐỘNG tiếp theo sẽ dò từ số này.
         vidScanNumber = number + 1;
@@ -1451,6 +1510,36 @@ function playCurrent() {
     index
   );
 
+}
+
+function nextLink() {
+  stopVidScan();
+
+  let index = templateSelect.selectedIndex + 1;
+  if(index >= templates.length) index = 0;
+
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = index;
+
+  templateSelect.selectedIndex = index;
+  updateUrl();
+  playCurrent();
+}
+
+function prevLink() {
+  stopVidScan();
+
+  let index = templateSelect.selectedIndex - 1;
+  if(index < 0) index = templates.length - 1;
+
+  autoScanToken++;
+  autoScanning = false;
+  autoScanNextIndex = index;
+
+  templateSelect.selectedIndex = index;
+  updateUrl();
+  playCurrent();
 }
 
 /* =========================================================
