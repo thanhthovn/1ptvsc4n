@@ -102,7 +102,12 @@ label{
   font-weight:700;
 }
 
-select,input{
+/* ===== SỬA CHO iOS ===== */
+select,
+input{
+  -webkit-appearance:none;
+  appearance:none;
+  touch-action:manipulation;
   width:100%;
   padding:11px;
   border:1px solid var(--border);
@@ -110,16 +115,19 @@ select,input{
   outline:none;
   background:#050905;
   color:var(--text);
-  font-size:14px;
+  font-size:16px;        /* tăng lên 16px để tránh zoom trên iOS */
 }
+
+select:focus,
+input:focus{
+  border-color:var(--accent);
+}
+
 #vidCurrent{
   width:100px;
   text-align:center;
   font-weight:700;
   font-family:Consolas,monospace;
-}
-select:focus,input:focus{
-  border-color:var(--accent);
 }
 
 .url-row{
@@ -129,7 +137,7 @@ select:focus,input:focus{
 
 .url-row input{
   font-family:Consolas,monospace;
-  font-size:12px;
+  font-size:14px;        /* vẫn giữ 14px nhưng không bị zoom vì đã có 16px chung */
   flex:1 1 260px;
   min-width:0;
 }
@@ -144,7 +152,6 @@ select:focus,input:focus{
   margin-top:8px;
 }
 
-/* CHANNEL + nút KÊNH TRƯỚC / KÊNH SAU cùng một hàng */
 .channel-row{
   display:flex;
   align-items:center;
@@ -189,7 +196,6 @@ select:focus,input:focus{
   }
 }
 
-/* Bố cục riêng cho các nút FREEM3U */
 .vid-scan-control{
   display:flex;
   align-items:flex-end;
@@ -264,6 +270,7 @@ select:focus,input:focus{
 }
 
 button{
+  touch-action:manipulation;   /* thêm để hỗ trợ iOS */
   border:1px solid #25d925;
   border-radius:7px;
   padding:10px 14px;
