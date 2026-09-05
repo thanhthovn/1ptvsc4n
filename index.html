@@ -431,7 +431,7 @@ button.danger:hover{
             <button class="secondary" onclick="prevChannel()" aria-label="Kênh trước">⬅ KÊNH TRƯỚC</button>
             <button class="secondary" onclick="nextChannel()" aria-label="Kênh sau">KÊNH SAU ➡</button>
             <button id="autoScanBtn" onclick="autoScanLinks()" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
-            <button class="secondary" onclick="resetAutoScan()" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
+            <button class="secondary" onclick="resetAutoScanIndex()" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
           </div>
         </div>
         <div id="channelCounter" class="counter"></div>
@@ -694,6 +694,10 @@ let vidFoundNumbers = [];
 const VID_SCAN_MAX = 999;
 const VID_SCAN_TIMEOUT = 6000;
 
+// Lưu tham chiếu để hủy khi cần
+let activeProbeHls = null;          // HLS instance đang dùng để dò
+let activePlaybackCancel = null;    // Hàm cancel của setupHlsPlayback
+
 const video = document.getElementById("video");
 const channelSelect = document.getElementById("channelSelect");
 const templateSelect = document.getElementById("templateSelect");
@@ -747,7 +751,8 @@ function getActiveChannelCode() {
   return manualChannelCode.trim() || channelSelect.value;
 }
 
-function resetAutoScanState() {
+// Hàm reset chỉ con trỏ dò, không động đến kênh thủ công
+function resetAutoScanIndex() {
   autoScanToken++;
   autoScanning = false;
   autoScanNextIndex = 0;
@@ -755,30 +760,56 @@ function resetAutoScanState() {
   // Clear all auto scan timers
   autoScanTimers.forEach(timer => clearTimeout(timer));
   autoScanTimers = [];
+  // Hủy dò đang chạy
+  cancelActiveProbe();
+  // Không xóa manualChannelCode
+  setStatus("🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1", "ok");
+}
+
+function cancelActiveProbe() {
+  if (activeProbeHls) {
+    activeProbeHls.destroy();
+    activeProbeHls = null;
+  }
+  if (activePlaybackCancel) {
+    activePlaybackCancel();
+    activePlaybackCancel = null;
+  }
+}
+
+// Hàm reset đầy đủ (xóa cả kênh thủ công) – dùng cho nút "XÓA KÊNH"
+function fullReset() {
+  manualChannelCode = "";
+  const input = document.getElementById("manualChannelInput");
+  if(input) input.value = "";
+  resetAutoScanIndex();
+  // Đưa về link 1
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+  destroyPlayer();
+  setStatus("🔄 Đã xóa kênh thủ công và reset dò", "ok");
 }
 
 function applyManualChannelFromInput() {
   const input = document.getElementById("manualChannelInput");
   const code = input ? input.value.trim() : "";
-
   if(!code) {
-    manualChannelCode = "";
     return false;
   }
-
   manualChannelCode = code;
   return true;
 }
 
 function useManualChannel() {
   stopVidScan();
+  cancelActiveProbe(); // hủy dò đang chạy
 
   if(!applyManualChannelFromInput()) {
     setStatus("⚠️ Hãy nhập mã kênh, ví dụ: vtv1", "error");
     return;
   }
 
-  resetAutoScanState();
+  resetAutoScanIndex(); // reset chỉ số dò
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
@@ -791,12 +822,12 @@ function useManualChannel() {
 
 function clearManualChannel() {
   stopVidScan();
+  cancelActiveProbe();
   manualChannelCode = "";
-
   const input = document.getElementById("manualChannelInput");
   if(input) input.value = "";
 
-  resetAutoScanState();
+  resetAutoScanIndex();
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
@@ -807,6 +838,8 @@ function clearManualChannel() {
   );
 }
 
+// Xóa sự kiện input cũ – không còn tự động gán kênh khi gõ.
+// Chỉ giữ lại phím Enter để tiện dùng
 const manualInputEl = document.getElementById("manualChannelInput");
 if(manualInputEl) {
   manualInputEl.addEventListener("keydown", function(event) {
@@ -818,7 +851,6 @@ if(manualInputEl) {
 }
 
 function getUrl(index = Number(templateSelect.value)) {
-  // Fix: Check if index is valid
   if (index === undefined || index === null || !templates[index]) {
     return "";
   }
@@ -833,7 +865,6 @@ function getUrl(index = Number(templateSelect.value)) {
 ========================================================= */
 
 function getQualityLabel(index) {
-  // Fix: Handle invalid index
   if (index === undefined || index === null || !templates[index]) {
     return "📺 Không xác định";
   }
@@ -888,44 +919,46 @@ function updateUrl() {
 ========================================================= */
 
 function nextChannel() {
-  // Đổi kênh -> reset dò về Link 1.
-  resetAutoScanState();
+  stopVidScan();
+  cancelActiveProbe();
+  // Reset dò
+  resetAutoScanIndex();
 
   let index = channelSelect.selectedIndex + 1;
-
   if(index >= channels.length) {
     index = 0;
   }
-
   channelSelect.selectedIndex = index;
 
-  // Đổi kênh -> luôn quay về Link 1 và reset dò.
+  // Xóa kênh thủ công khi chọn dropdown
+  manualChannelCode = "";
+  const input = document.getElementById("manualChannelInput");
+  if(input) input.value = "";
+
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
 }
 
 function prevChannel() {
-  // Đổi kênh -> reset dò về Link 1.
-  resetAutoScanState();
+  stopVidScan();
+  cancelActiveProbe();
+  resetAutoScanIndex();
 
   let index = channelSelect.selectedIndex - 1;
-
   if(index < 0) {
     index = channels.length - 1;
   }
-
   channelSelect.selectedIndex = index;
 
-  // Đổi kênh -> luôn quay về Link 1 và reset dò.
+  manualChannelCode = "";
+  const input = document.getElementById("manualChannelInput");
+  if(input) input.value = "";
+
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
 }
-
-/* =========================================================
-   CHUYỂN LINK
-========================================================= */
 
 /* =========================================================
    EVENT DROPDOWN
@@ -935,15 +968,14 @@ channelSelect.addEventListener(
   "change",
   function(){
     stopVidScan();
+    cancelActiveProbe();
     // Chọn kênh có sẵn -> thoát chế độ kênh thủ công.
     manualChannelCode = "";
     const manualInput = document.getElementById("manualChannelInput");
     if(manualInput) manualInput.value = "";
 
-    // Đổi kênh -> lần dò mới luôn bắt đầu từ Link 1.
-    resetAutoScanState();
-
-    // Chọn kênh khác -> quay về Link 1.
+    // Đổi kênh -> reset dò và quay về Link 1
+    resetAutoScanIndex();
     templateSelect.selectedIndex = 0;
     updateUrl();
     playCurrent();
@@ -954,6 +986,7 @@ templateSelect.addEventListener(
   "change",
   function(){
     stopVidScan();
+    cancelActiveProbe(); // hủy dò đang chạy nếu có
     updateUrl();
     playCurrent();
   }
@@ -1172,7 +1205,7 @@ function playUrl(url,index) {
     "..."
   );
 
-  setupHlsPlayback(url, {
+  const cancel = setupHlsPlayback(url, {
     onPlaying: () => {
       setStatus(
         "🟢 Đang phát — Link " +
@@ -1188,6 +1221,8 @@ function playUrl(url,index) {
       );
     }
   });
+  // Lưu để có thể hủy khi cần
+  activePlaybackCancel = cancel ? cancel.cancel : null;
 }
 
 /* =========================================================
@@ -1223,6 +1258,7 @@ function tryAutoScanLink(index, token) {
     let timer = null;
     let probeHls = null;
     let nativeCleanup = null;
+    let cancelFn = null;
 
     const finish = (ok) => {
       if(done) return;
@@ -1230,11 +1266,16 @@ function tryAutoScanLink(index, token) {
       clearTimeout(timer);
       if(probeHls) { 
         probeHls.destroy(); 
-        probeHls = null; 
+        probeHls = null;
+        if (activeProbeHls === probeHls) activeProbeHls = null;
       }
       if(nativeCleanup) {
         nativeCleanup();
         nativeCleanup = null;
+      }
+      if (cancelFn) {
+        cancelFn();
+        cancelFn = null;
       }
       resolve(ok);
     };
@@ -1245,23 +1286,27 @@ function tryAutoScanLink(index, token) {
     if(window.Hls && Hls.isSupported()) {
       try {
         probeHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
+        activeProbeHls = probeHls; // lưu để hủy khi cần
         probeHls.once(Hls.Events.MANIFEST_PARSED, () => finish(true));
         probeHls.once(Hls.Events.ERROR, (event, data) => {
           if(data && data.fatal) {
             if(probeHls) {
               probeHls.destroy();
               probeHls = null;
+              if (activeProbeHls === probeHls) activeProbeHls = null;
             }
             finish(false);
           }
         });
         probeHls.attachMedia(video);
         probeHls.loadSource(url);
+        // Lưu cancel function (không cần thiết vì đã có probeHls.destroy)
       } catch(e) {
         console.error("Probe HLS:", e);
         if(probeHls) {
           probeHls.destroy();
           probeHls = null;
+          if (activeProbeHls === probeHls) activeProbeHls = null;
         }
         finish(false);
       }
@@ -1301,7 +1346,7 @@ function autoScanLinks() {
   const input = document.getElementById("manualChannelInput");
   const typedCode = input ? input.value.trim() : "";
 
-  // Nếu có chữ trong ô nhập tay, LUÔN ưu tiên ô này.
+  // Nếu có chữ trong ô nhập tay, LUÔN ưu tiên ô này (nhưng chỉ khi bấm dò)
   if(typedCode) {
     if(typedCode !== manualChannelCode.trim()) {
       manualChannelCode = typedCode;
@@ -1329,6 +1374,9 @@ function autoScanLinks() {
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
   setVidScanButton(false);
+
+  // Hủy dò đang chạy
+  cancelActiveProbe();
 
   autoScanning = true;
   autoScanToken++;
@@ -1381,48 +1429,20 @@ function autoScanLinks() {
   setTimeout(scanNext, 0);
 }
 
-// Khi người dùng sửa trực tiếp ô nhập kênh, lần dò tiếp theo luôn quay về Link 1.
-const manualInputWatch = document.getElementById("manualChannelInput");
-if(manualInputWatch) {
-  manualInputWatch.addEventListener("input", function() {
-    const value = this.value.trim();
-    if(value !== manualChannelCode.trim()) {
-      autoScanToken++;
-      autoScanning = false;
-      autoScanNextIndex = 0;
-      manualChannelCode = value;
-      setAutoScanButton(false);
-    }
-  });
-}
-
 /* =========================================================
-   DÒ LẠI TỪ ĐẦU
-   Reset con trỏ dò về Link 1.
+   DÒ LẠI TỪ ĐẦU (chỉ reset index, không xóa kênh)
 ========================================================= */
 
-function resetAutoScan() {
-  manualChannelCode = "";
-  const input = document.getElementById("manualChannelInput");
-  if(input) input.value = "";
-  
+function resetAutoScanIndex() {
   autoScanToken++;
   autoScanning = false;
   autoScanNextIndex = 0;
   autoScanTimers.forEach(timer => clearTimeout(timer));
   autoScanTimers = [];
-
   setAutoScanButton(false);
-
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-
-  destroyPlayer();
-
-  setStatus(
-    "🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1",
-    "ok"
-  );
+  cancelActiveProbe();
+  // Không xóa manualChannelCode
+  setStatus("🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1", "ok");
 }
 
 /* =========================================================
@@ -1473,11 +1493,17 @@ function tryVidNumber(number, token) {
 
     destroyPlayer();
 
-    setupHlsPlayback(url, {
+    const cancelFn = setupHlsPlayback(url, {
       timeout: VID_SCAN_TIMEOUT,
       onPlaying: () => resolve(true),
       onError: () => resolve(false)
     });
+    // Lưu cancel function
+    if (cancelFn) {
+      activePlaybackCancel = cancelFn.cancel;
+    } else {
+      activePlaybackCancel = null;
+    }
   });
 }
 
@@ -1504,6 +1530,8 @@ function startVidScan() {
 
   vidScanning = true;
   vidScanToken++;
+  // Hủy dò cũ
+  cancelActiveProbe();
 
   const token = vidScanToken;
   setVidScanButton(true);
@@ -1614,7 +1642,7 @@ function stopVidScan() {
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
   setVidScanButton(false);
-
+  cancelActiveProbe();
   destroyPlayer();
 
   setVidScanStatus(
@@ -1629,6 +1657,8 @@ function resetVidScan() {
   freem3uPlayingNumber = null;
   vidScanNumber = 1;
   vidFoundNumbers = [];
+  cancelActiveProbe();
+  destroyPlayer();
 
   setVidScanButton(false);
   updateVidScanDisplay(1);
@@ -1656,11 +1686,12 @@ function playCurrent() {
 
 function nextLink() {
   stopVidScan();
+  cancelActiveProbe();
 
   let index = templateSelect.selectedIndex + 1;
   if(index >= templates.length) index = 0;
 
-  resetAutoScanState();
+  resetAutoScanIndex();
   autoScanNextIndex = index;
 
   templateSelect.selectedIndex = index;
@@ -1670,11 +1701,12 @@ function nextLink() {
 
 function prevLink() {
   stopVidScan();
+  cancelActiveProbe();
 
   let index = templateSelect.selectedIndex - 1;
   if(index < 0) index = templates.length - 1;
 
-  resetAutoScanState();
+  resetAutoScanIndex();
   autoScanNextIndex = index;
 
   templateSelect.selectedIndex = index;
@@ -1688,8 +1720,9 @@ function prevLink() {
 
 function stopPlayer() {
 
-  resetAutoScanState();
+  resetAutoScanIndex();
   stopVidScan();
+  cancelActiveProbe();
 
   destroyPlayer();
 
