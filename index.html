@@ -885,7 +885,7 @@ const state = {
   autoScanning: false,
   autoScanToken: 0,
   autoScanNextIndex: 0,
-  autoScanTimers: [],
+  autoScanTimer: null,
   
   vidScanning: false,
   vidScanToken: 0,
@@ -1015,6 +1015,21 @@ function cancelActiveProbe() {
   }
 }
 
+function stopRangeVidScan(options = {}) {
+  const { silent = false } = options;
+  state.vidScanToken++;
+  state.vidScanning = false;
+  state.freem3uPlaying = false;
+  state.freem3uPlayingNumber = null;
+  setRangeScanButtons(false);
+  cancelActiveProbe();
+  destroyPlayer();
+  if (!silent) {
+    setVidScanStatus("⏹ Đã dừng dò tại số " + state.vidScanNumber + ".");
+    updateVidResultList();
+  }
+}
+
 function destroyPlayer() {
   if (state.hls) {
     state.hls.destroy();
@@ -1125,9 +1140,11 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
   let finished = false;
   let timer = null;
   let nativeCleanup = null;
+  let localHls = null;
 
   const cleanup = () => {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
+    timer = null;
     if (state.activeNativeTimeout) {
       clearTimeout(state.activeNativeTimeout);
       state.activeNativeTimeout = null;
@@ -1136,11 +1153,9 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
       nativeCleanup();
       nativeCleanup = null;
     }
-    if (onPlaying) video.removeEventListener("playing", onVideoPlaying);
-    if (onError) video.removeEventListener("error", onVideoError);
-    if (state.hls && isHlsEventsAvailable()) {
-      state.hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      state.hls.off(Hls.Events.ERROR, onHlsError);
+    if (localHls && isHlsEventsAvailable()) {
+      localHls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      localHls.off(Hls.Events.ERROR, onHlsError);
     }
   };
 
@@ -1152,15 +1167,9 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
     else onError?.();
   };
 
-  const onManifestParsed = () => { video.play().catch(() => {}); };
+  const onManifestParsed = () => video.play().catch(() => {});
   const onHlsError = (event, data) => {
-    if (data?.fatal) {
-      if (state.hls) {
-        state.hls.destroy();
-        state.hls = null;
-      }
-      finish(false);
-    }
+    if (data?.fatal) finish(false);
   };
   const onVideoPlaying = () => finish(true);
   const onVideoError = () => finish(false);
@@ -1168,16 +1177,10 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
   if (onPlaying) video.addEventListener("playing", onVideoPlaying, { once: true });
   if (onError) video.addEventListener("error", onVideoError, { once: true });
 
-  // Native HLS (iOS/Safari)
-  if (isIOS() && isNativeHLSSupported()) {
-    const onLoadedMetadata = () => {
-      if (nativeCleanup) nativeCleanup();
-      video.play().catch(() => {});
-    };
-    const onErrorNative = () => {
-      if (nativeCleanup) nativeCleanup();
-      finish(false);
-    };
+  // Native HLS (Safari/iOS and other browsers that expose native HLS)
+  if (isNativeHLSSupported()) {
+    const onLoadedMetadata = () => video.play().catch(() => {});
+    const onErrorNative = () => finish(false);
     nativeCleanup = () => {
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
       video.removeEventListener("error", onErrorNative);
@@ -1186,36 +1189,21 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
     video.addEventListener("error", onErrorNative, { once: true });
     video.src = url;
     video.load();
-    state.activeNativeTimeout = setTimeout(() => { if (!finished) finish(false); }, timeout);
-  }
-  // HLS.js
-  else if (isHlsSupported()) {
-    state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
-    if (isHlsEventsAvailable()) {
-      state.hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      state.hls.on(Hls.Events.ERROR, onHlsError);
+  } else if (isHlsSupported()) {
+    try {
+      localHls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
+      state.hls = localHls;
+      if (isHlsEventsAvailable()) {
+        localHls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+        localHls.on(Hls.Events.ERROR, onHlsError);
+      }
+      localHls.loadSource(url);
+      localHls.attachMedia(video);
+    } catch (e) {
+      console.error("HLS playback:", e);
+      finish(false);
+      return { cancel: () => finish(false) };
     }
-    state.hls.loadSource(url);
-    state.hls.attachMedia(video);
-  }
-  // Fallback native
-  else if (isNativeHLSSupported()) {
-    const onLoadedMetadata = () => {
-      if (nativeCleanup) nativeCleanup();
-      video.play().catch(() => {});
-    };
-    const onErrorNative = () => {
-      if (nativeCleanup) nativeCleanup();
-      finish(false);
-    };
-    nativeCleanup = () => {
-      video.removeEventListener("loadedmetadata", onLoadedMetadata);
-      video.removeEventListener("error", onErrorNative);
-    };
-    video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
-    video.addEventListener("error", onErrorNative, { once: true });
-    video.src = url;
-    video.load();
   } else {
     finish(false);
     return { cancel: () => finish(false) };
@@ -1228,22 +1216,53 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
 /* =========================================================
    PLAY FUNCTIONS
 ========================================================= */
-function playUrl(url, index) {
-  stopRangeVidScan();
+function playStream(url, { type = "link", index = 0, number = null, scroll = false } = {}) {
+  stopRangeVidScan({ silent: true });
   cancelActiveProbe();
-  state.freem3uPlaying = false;
-  state.freem3uPlayingNumber = null;
+  if (scroll) scrollToPlayer();
+
+  state.freem3uPlaying = type === "freem3u";
+  state.freem3uPlayingNumber = type === "freem3u" ? number : null;
   video.muted = false;
   destroyPlayer();
-  state.currentPlayingLink = index;
 
-  setStatus("⏳ Đang kết nối Link " + (index + 1) + "...");
+  if (type === "freem3u") {
+    setStatus("⏳ Đang kết nối FreeM3U #" + number + "...");
+  } else {
+    state.currentPlayingLink = index;
+    setStatus("⏳ Đang mở Link " + (index + 1) + "...");
+  }
 
   const cancel = setupHlsPlayback(url, {
-    onPlaying: () => setStatus("🟢 Đang phát — Link " + (index + 1), "ok"),
-    onError: () => setStatus("🔴 Không phát được Link " + (index + 1), "error")
+    onPlaying: () => {
+      if (type === "freem3u") {
+        setStatus("🟢 FREEM3U — Đang phát kênh #" + number, "ok");
+        setVidScanStatus("🟢 Đang phát kênh #" + number, "ok");
+        updateVidResultList();
+      } else {
+        setStatus("🟢 Đang phát — Link " + (index + 1), "ok");
+        if (type === "result") {
+          templateSelect.selectedIndex = index;
+          updateUrl();
+        }
+      }
+    },
+    onError: () => {
+      if (type === "freem3u") {
+        setStatus("🔴 Không phát được FreeM3U #" + number, "error");
+        state.freem3uPlaying = false;
+        state.freem3uPlayingNumber = null;
+        updateVidResultList();
+      } else {
+        setStatus("🔴 Không phát được Link " + (index + 1), "error");
+      }
+    }
   });
   state.activePlaybackCancel = cancel ? cancel.cancel : null;
+}
+
+function playUrl(url, index) {
+  playStream(url, { type: "link", index });
 }
 
 function playCurrent() {
@@ -1252,61 +1271,18 @@ function playCurrent() {
 }
 
 function playStreamUrl(url, index) {
-  stopRangeVidScan();
-  scrollToPlayer();
-  cancelActiveProbe();
-  state.freem3uPlaying = false;
-  state.freem3uPlayingNumber = null;
-  video.muted = false;
-  destroyPlayer();
-  state.currentPlayingLink = index;
-
-  setStatus("⏳ Đang mở link " + (index + 1) + "...");
-
-  const cancel = setupHlsPlayback(url, {
-    onPlaying: () => {
-      setStatus("🟢 Đang phát — Link " + (index + 1), "ok");
-      templateSelect.selectedIndex = index;
-      updateUrl();
-    },
-    onError: () => setStatus("🔴 Không phát được Link " + (index + 1), "error")
-  });
-  state.activePlaybackCancel = cancel ? cancel.cancel : null;
+  playStream(url, { type: "result", index, scroll: true });
 }
 
 function playVidUrl(url, number) {
-  stopRangeVidScan();
-  scrollToPlayer();
-  cancelActiveProbe();
-  state.freem3uPlaying = true;
-  state.freem3uPlayingNumber = number;
-  video.muted = false;
-  destroyPlayer();
-
-  setStatus("⏳ Đang kết nối FreeM3U #" + number + "...");
-
-  const cancel = setupHlsPlayback(url, {
-    onPlaying: () => {
-      setStatus("🟢 FREEM3U — Đang phát kênh #" + number, "ok");
-      setVidScanStatus("🟢 Đang phát kênh #" + number, "ok");
-      updateVidResultList();
-    },
-    onError: () => {
-      setStatus("🔴 Không phát được FreeM3U #" + number, "error");
-      state.freem3uPlaying = false;
-      state.freem3uPlayingNumber = null;
-      updateVidResultList();
-    }
-  });
-  state.activePlaybackCancel = cancel ? cancel.cancel : null;
+  playStream(url, { type: "freem3u", number, scroll: true });
 }
 
 /* =========================================================
    CHANNEL NAVIGATION
 ========================================================= */
 function nextChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   resetAutoScanIndex();
   let index = channelSelect.selectedIndex + 1;
   if (index >= channels.length) index = 0;
@@ -1319,8 +1295,7 @@ function nextChannel() {
 }
 
 function prevChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   resetAutoScanIndex();
   let index = channelSelect.selectedIndex - 1;
   if (index < 0) index = channels.length - 1;
@@ -1333,8 +1308,7 @@ function prevChannel() {
 }
 
 function nextLink() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   let index = templateSelect.selectedIndex + 1;
   if (index >= templates.length) index = 0;
   resetAutoScanIndex();
@@ -1345,8 +1319,7 @@ function nextLink() {
 }
 
 function prevLink() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   let index = templateSelect.selectedIndex - 1;
   if (index < 0) index = templates.length - 1;
   resetAutoScanIndex();
@@ -1360,8 +1333,7 @@ function prevLink() {
    MANUAL CHANNEL
 ========================================================= */
 function useManualChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   const input = document.getElementById("manualChannelInput");
   const code = input ? input.value.trim() : "";
   if (!code) {
@@ -1377,8 +1349,7 @@ function useManualChannel() {
 }
 
 function clearManualChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   state.manualChannelCode = "";
   document.getElementById("manualChannelInput").value = "";
   resetAutoScanIndex();
@@ -1396,8 +1367,7 @@ function resetAutoScanIndex() {
   state.autoScanning = false;
   state.autoScanNextIndex = 0;
   setAutoScanButton(false);
-  state.autoScanTimers.forEach(timer => clearTimeout(timer));
-  state.autoScanTimers = [];
+  if (state.autoScanTimer) { clearTimeout(state.autoScanTimer); state.autoScanTimer = null; }
   cancelActiveProbe();
   setStatus("🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1", "ok");
 }
@@ -1463,9 +1433,10 @@ function tryAutoScanLink(index, token) {
           probeHls.once(Hls.Events.ERROR, (event, data) => {
             if (data?.fatal) {
               if (probeHls) {
-                probeHls.destroy();
+                const probe = probeHls;
                 probeHls = null;
-                if (state.activeProbeHls === probeHls) state.activeProbeHls = null;
+                if (state.activeProbeHls === probe) state.activeProbeHls = null;
+                try { probe.destroy(); } catch(e) {}
               }
               finish(false);
             }
@@ -1478,9 +1449,10 @@ function tryAutoScanLink(index, token) {
       } catch(e) {
         console.error("Probe HLS:", e);
         if (probeHls) {
-          probeHls.destroy();
+          const probe = probeHls;
           probeHls = null;
-          if (state.activeProbeHls === probeHls) state.activeProbeHls = null;
+          if (state.activeProbeHls === probe) state.activeProbeHls = null;
+          try { probe.destroy(); } catch(e) {}
         }
         finish(false);
       }
@@ -1535,7 +1507,7 @@ function autoScanLinks() {
 
   const scanNext = () => {
     if (token !== state.autoScanToken || !state.autoScanning) {
-      state.autoScanTimers = [];
+      state.autoScanTimer = null;
       return;
     }
 
@@ -1543,7 +1515,7 @@ function autoScanLinks() {
       state.autoScanNextIndex = templates.length;
       state.autoScanning = false;
       setAutoScanButton(false);
-      state.autoScanTimers = [];
+      state.autoScanTimer = null;
       
       const foundCount = state.foundResults.length;
       if (foundCount > 0 && state.lastFoundIndex !== null) {
@@ -1564,19 +1536,19 @@ function autoScanLinks() {
 
     tryAutoScanLink(testIndex, token).then(success => {
       if (token !== state.autoScanToken || !state.autoScanning) {
-        state.autoScanTimers = [];
+        state.autoScanTimer = null;
         return;
       }
       if (success) setStatus("✅ Tìm thấy link " + (testIndex + 1) + " — tiếp tục dò...", "ok");
       const timer = setTimeout(scanNext, isIOS() ? 100 : 30);
-      state.autoScanTimers.push(timer);
+      state.autoScanTimer = timer;
     }).catch(err => {
       console.error("Auto scan:", err);
       if (token === state.autoScanToken && state.autoScanning) {
         const timer = setTimeout(scanNext, isIOS() ? 200 : 100);
-        state.autoScanTimers.push(timer);
+        state.autoScanTimer = timer;
       } else {
-        state.autoScanTimers = [];
+        state.autoScanTimer = null;
       }
     });
   };
@@ -1835,18 +1807,6 @@ function startRangeVidScanInternal(from, to) {
   setTimeout(scanNextRange, isIOS() ? 100 : 0);
 }
 
-function stopRangeVidScan() {
-  state.vidScanToken++;
-  state.vidScanning = false;
-  state.freem3uPlaying = false;
-  state.freem3uPlayingNumber = null;
-  setRangeScanButtons(false);
-  cancelActiveProbe();
-  destroyPlayer();
-  setVidScanStatus("⏹ Đã dừng dò tại số " + state.vidScanNumber + ".");
-  updateVidResultList();
-}
-
 function resetVidScan() {
   state.vidScanToken++;
   state.vidScanning = false;
@@ -1896,8 +1856,7 @@ video.addEventListener("error", function() {
    DROPDOWN EVENTS
 ========================================================= */
 channelSelect.addEventListener("change", function() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   state.manualChannelCode = "";
   document.getElementById("manualChannelInput").value = "";
   resetAutoScanIndex();
@@ -1907,8 +1866,7 @@ channelSelect.addEventListener("change", function() {
 });
 
 templateSelect.addEventListener("change", function() {
-  stopRangeVidScan();
-  cancelActiveProbe();
+  stopRangeVidScan({ silent: true });
   updateUrl();
   playCurrent();
 });
