@@ -1540,7 +1540,48 @@ function clearVidResults() {
 
 /* =========================================================
    BẢNG KẾT QUẢ CHUNG - CHỈ HIỆN LINK OK
+   ĐÃ SỬA: click vào link => phát stream
 ========================================================= */
+
+/* HÀM MỚI: Phát stream từ bảng STREAM URL RESULT */
+function playStreamUrl(url, index) {
+  // Dừng mọi tiến trình đang chạy
+  stopVidScan();
+  cancelActiveProbe();
+  
+  // Đánh dấu không phải FreeM3U
+  freem3uPlaying = false;
+  freem3uPlayingNumber = null;
+  
+  // Phát link
+  video.muted = false;
+  destroyPlayer();
+  
+  currentPlayingLink = index;
+  
+  setStatus(
+    "⏳ Đang mở link " + (index + 1) + "..."
+  );
+  
+  const cancel = setupHlsPlayback(url, {
+    onPlaying: () => {
+      setStatus(
+        "🟢 Đang phát — Link " + (index + 1),
+        "ok"
+      );
+      // Cập nhật dropdown để khớp với link đang phát
+      templateSelect.selectedIndex = index;
+      updateUrl();
+    },
+    onError: () => {
+      setStatus(
+        "🔴 Không phát được Link " + (index + 1),
+        "error"
+      );
+    }
+  });
+  activePlaybackCancel = cancel ? cancel.cancel : null;
+}
 
 function updateResultTable() {
   const tbody = document.getElementById('resultBody');
@@ -1565,7 +1606,7 @@ function updateResultTable() {
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td style="font-size:11px;">${result.name || 'N/A'}</td>
-      <td class="link-cell" title="${result.url}" onclick="copyToClipboard('${escapedUrl}')">${result.url}</td>
+      <td class="link-cell" title="${result.url}" onclick="playStreamUrl('${escapedUrl}', ${result.index})">${result.url}</td>
       <td>${result.quality || 'N/A'}</td>
       <td><button class="copy-btn" onclick="copyToClipboard('${escapedUrl}')">📋 COPY</button></td>
     `;
