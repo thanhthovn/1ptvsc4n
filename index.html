@@ -815,42 +815,34 @@ button.stop-btn:hover {
 /* =========================================================
    CONFIGURATION
 ========================================================= */
-const channels = [
-  "angiang", "angiang01", "angiang02", "angiang03", "angiangtv",
-  "bacninh", "bacninh01", "bacninh02", "bacninh03", "bacninhtv",
-  "camau", "camau01", "camau02", "camau03", "camautv",
-  "caobang", "caobang01", "caobang02", "caobang03", "caobangtv",
-  "daklak", "daklak01", "daklak02", "daklak03", "daklaktv",
-  "dienbien", "dienbien01", "dienbien02", "dienbien03", "dienbientv",
-  "dongnai", "dongnai01", "dongnai02", "dongnai03", "dongnaitv",
-  "dongthap", "dongthap01", "dongthap02", "dongthap03", "dongthaptv",
-  "gialai", "gialai01", "gialai02", "gialai03", "gialaitv",
-  "hatinh", "hatinh01", "hatinh02", "hatinh03", "hatinhtv",
-  "hungyen", "hungyen01", "hungyen02", "hungyen03", "hungenytv",
-  "khanhhoa", "khanhhoa01", "khanhhoa02", "khanhhoa03", "khanhhoatv",
-  "laichau", "laichau01", "laichau02", "laichau03", "laichautv",
-  "langson", "langson01", "langson02", "langson03", "langsontv",
-  "laocai", "laocai01", "laocai02", "laocai03", "laocaitv",
-  "lamdong", "lamdong01", "lamdong02", "lamdong03", "lamdongtv",
-  "nghean", "nghean01", "nghean02", "nghean03", "ngheantv",
-  "ninhbinh", "ninhbinh01", "ninhbinh02", "ninhbinh03", "ninhbinhtv",
-  "phutho", "phutho01", "phutho02", "phutho03", "phuthotv",
-  "quangngai", "quangngai01", "quangngai02", "quangngai03", "quangngaitv",
-  "quangninh", "quangninh01", "quangninh02", "quangninh03", "quangninhtv",
-  "quangtri", "quangtri01", "quangtri02", "quangtri03", "quangtritv",
-  "sonla", "sonla01", "sonla02", "sonla03", "sonlatv",
-  "tayninh", "tayninh01", "tayninh02", "tayninh03", "tayninhtv",
-  "thainguyen", "thainguyen01", "thainguyen02", "thainguyen03", "thainguyentv",
-  "thanhhoa", "thanhhoa01", "thanhhoa02", "thanhhoa03", "thanhhoatv",
-  "cantho", "cantho01", "cantho02", "cantho03", "canthotv",
-  "danang", "danang01", "danang02", "danang03", "danangtv",
-  "hanoi", "hanoi01", "hanoi02", "hanoi03", "hanoitv",
-  "haiphong", "haiphong01", "haiphong02", "haiphong03", "haiphongtv",
-  "hochiminh", "hochiminh01", "hochiminh02", "hochiminh03", "hochiminhtv",
-  "hue", "hue01", "hue02", "hue03", "huetv",
-  "tuyenquang", "tuyenquang01", "tuyenquang02", "tuyenquang03", "tuyenquangtv",
-  "vinhlong", "vinhlong01", "vinhlong02", "vinhlong03", "vinhlong04", "vinhlong05", "vinhlongtv"
-];
+let channels = [];
+
+// Danh sach kenh duoc nap tu file channel.txt
+async function loadChannels() {
+  try {
+    const response = await fetch("channel.txt", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const text = await response.text();
+    channels = [...new Set(
+      text
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean)
+    )];
+
+    if (!channels.length) {
+      throw new Error("channel.txt khong co ma kenh hop le");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("❌ Khong the tai channel.txt:", error);
+    alert("Không thể tải channel.txt. Hãy đặt channel.txt cùng thư mục với index.html và chạy bằng web server (không mở trực tiếp bằng file://).");
+    return false;
+  }
+}
+
 
 const templates = [
   { name: "Link 1 — Live247 AVC 4M", url: "https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8" },
@@ -1948,7 +1940,11 @@ document.getElementById("manualChannelInput")?.addEventListener("keydown", funct
 /* =========================================================
    INITIALIZATION
 ========================================================= */
-function init() {
+async function init() {
+  // Load channel list from channel.txt
+  const channelsLoaded = await loadChannels();
+  if (!channelsLoaded) return;
+
   // Populate dropdowns
   channels.forEach(code => {
     const option = document.createElement("option");
