@@ -735,6 +735,12 @@ button{
   border-bottom:1px solid var(--border);
   gap:10px;
   flex-wrap:wrap;
+  cursor:pointer;
+  transition:background 0.2s;
+}
+
+.vid-result-item:hover {
+  background:var(--border);
 }
 
 .vid-result-item:last-child {
@@ -1441,6 +1447,47 @@ function updateUrl() {
    BẢNG KẾT QUẢ FREEM3U NGAY TRONG PANEL
 ========================================================= */
 
+function playVidUrl(url, number) {
+  stopVidScan();
+  cancelActiveProbe();
+  
+  // Đánh dấu đang phát FreeM3U
+  freem3uPlaying = true;
+  freem3uPlayingNumber = number;
+  
+  // Phát link
+  video.muted = false;
+  destroyPlayer();
+  
+  setStatus(
+    "⏳ Đang kết nối FreeM3U #" + number + "..."
+  );
+  
+  const cancel = setupHlsPlayback(url, {
+    onPlaying: () => {
+      setStatus(
+        "🟢 FREEM3U — Đang phát kênh #" + number,
+        "ok"
+      );
+      setVidScanStatus(
+        "🟢 Đang phát kênh #" + number,
+        "ok"
+      );
+      updateVidResultList();
+    },
+    onError: () => {
+      setStatus(
+        "🔴 Không phát được FreeM3U #" + number,
+        "error"
+      );
+      freem3uPlaying = false;
+      freem3uPlayingNumber = null;
+      updateVidResultList();
+    }
+  });
+  activePlaybackCancel = cancel ? cancel.cancel : null;
+}
+
 function updateVidResultList() {
   const container = document.getElementById('vidResultList');
   const countSpan = document.getElementById('vidFoundLinks');
@@ -1456,12 +1503,13 @@ function updateVidResultList() {
   let html = '';
   vidFoundResults.forEach((result, idx) => {
     const escapedUrl = result.url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const isPlaying = freem3uPlaying && freem3uPlayingNumber === result.number;
     
     html += `
-      <div class="vid-result-item">
-        <span class="vid-number">#${result.number}</span>
-        <span class="vid-link" onclick="copyToClipboard('${escapedUrl}')" title="${result.url}">${result.url}</span>
-        <button class="vid-copy-btn" onclick="copyToClipboard('${escapedUrl}')">📋 COPY</button>
+      <div class="vid-result-item" style="${isPlaying ? 'border-left:3px solid #ffaa00;' : ''}">
+        <span class="vid-number">#${result.number}${isPlaying ? ' ▶' : ''}</span>
+        <span class="vid-link" onclick="playVidUrl('${escapedUrl}', ${result.number})" title="${result.url}">${result.url}</span>
+        <button class="vid-copy-btn" onclick="event.stopPropagation();copyToClipboard('${escapedUrl}')">📋 COPY</button>
       </div>
     `;
   });
@@ -2414,7 +2462,7 @@ function prevLink() {
 video.addEventListener("playing", function() {
   if(freem3uPlaying) {
     setVidScanStatus(
-      "🟢 TÌM THẤY KÊNH " + freem3uPlayingNumber + " — đang phát.",
+      "🟢 Đang phát kênh #" + freem3uPlayingNumber,
       "ok"
     );
 
