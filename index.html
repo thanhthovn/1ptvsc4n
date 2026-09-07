@@ -1045,7 +1045,6 @@ button{
       <button class="stop-btn range-btn" id="vidRangeStopBtn" onclick="stopRangeVidScan()" 
               aria-label="Dừng dò" style="display:none;">⏹ DỪNG</button>
       <button class="secondary" onclick="resetVidScan()" aria-label="Reset FreeM3U" style="flex:0 0 auto; height:40px; padding:8px 12px; font-size:12px;">↺ RESET</button>
-      <button class="secondary" onclick="clearVidResults()" aria-label="Xóa kết quả FreeM3U" style="flex:0 0 auto; height:40px; padding:8px 12px; font-size:12px;">🗑 XÓA KQ</button>
     </div>
 
     <div id="vidScanStatus" class="counter">
@@ -1579,14 +1578,6 @@ function addVidFoundResult(number, url) {
   updateVidResultList();
 }
 
-function clearVidResults() {
-  vidFoundResults = [];
-  vidFoundNumbers = [];
-  freem3uPlaying = false;
-  freem3uPlayingNumber = null;
-  updateVidResultList();
-  setVidScanStatus("🗑 Đã xóa toàn bộ kết quả FreeM3U");
-}
 
 /* =========================================================
    BẢNG KẾT QUẢ CHUNG
