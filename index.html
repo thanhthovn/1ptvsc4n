@@ -434,14 +434,27 @@ button.stop-btn:hover {
 }
 
 /* === VID RESULT ITEMS === */
-.vid-result-item {
-  display: flex;
+.vid-result-head {
+  display: grid;
+  grid-template-columns: 60px minmax(220px, 1fr) minmax(220px, 1fr) 150px;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(32, 224, 32, 0.08);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.vid-result-item {
+  display: grid;
+  grid-template-columns: 60px minmax(220px, 1fr) minmax(220px, 1fr) 150px;
+  align-items: center;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   gap: 10px;
-  flex-wrap: wrap;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -452,24 +465,45 @@ button.stop-btn:hover {
 .vid-result-item .vid-number {
   font-weight: 700;
   color: var(--accent);
-  min-width: 50px;
   font-size: 13px;
 }
 
-.vid-result-item .vid-link {
-  flex: 1;
+.vid-result-item .vid-link,
+.vid-result-item .vid-dest {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 11px;
   font-family: Consolas, monospace;
   color: var(--text);
-  cursor: pointer;
 }
 
-.vid-result-item .vid-link:hover { color: #45ff45; }
+.vid-result-item .vid-link:hover,
+.vid-result-item .vid-dest:hover { color: #45ff45; }
+.vid-result-item .vid-dest { color: #9ca3af; }
+.vid-copy-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.vid-copy-group .vid-copy-btn {
+  white-space: nowrap;
+  font-size: 10px;
+  padding: 5px 7px;
+}
 .vid-result-empty { padding: 20px; text-align: center; color: var(--muted); font-style: italic; font-size: 13px; }
+
+@media (max-width: 900px) {
+  .vid-result-head { display: none; }
+  .vid-result-item {
+    grid-template-columns: 55px 1fr;
+  }
+  .vid-result-item .vid-link,
+  .vid-result-item .vid-dest { grid-column: 2; }
+  .vid-copy-group { grid-column: 2; justify-content: flex-start; }
+}
 
 /* === PANEL === */
 .scan-panel { overflow: hidden; }
@@ -1587,6 +1621,22 @@ function clearResults() {
 /* =========================================================
    VID RESULT LIST
 ========================================================= */
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeJsString(value) {
+  return String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r?\n/g, '\\n');
+}
+
 function updateVidResultList() {
   const container = document.getElementById('vidResultList');
   const countSpan = document.getElementById('vidFoundLinks');
@@ -1598,15 +1648,29 @@ function updateVidResultList() {
     return;
   }
 
-  let html = '';
+  let html = `
+    <div class="vid-result-head">
+      <span>SỐ</span>
+      <span>LINK FREEM3U</span>
+      <span>LINK ĐÍCH</span>
+      <span>THAO TÁC</span>
+    </div>
+  `;
+
   state.vidFoundResults.forEach((result) => {
-    const escapedUrl = result.url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const escapedUrl = escapeJsString(result.url);
+    const destination = result.destination || 'Không lấy được link đích';
+    const escapedDestination = escapeJsString(result.destination || '');
     const isPlaying = state.freem3uPlaying && state.freem3uPlayingNumber === result.number;
     html += `
       <div class="vid-result-item" style="${isPlaying ? 'border-left:3px solid #ffaa00;' : ''}" onclick="playVidUrl('${escapedUrl}', ${result.number})">
         <span class="vid-number">#${result.number}${isPlaying ? ' ▶' : ''}</span>
-        <span class="vid-link" title="${result.url}">${result.url}</span>
-        <button class="vid-copy-btn" onclick="event.stopPropagation();copyToClipboard('${escapedUrl}')">📋 COPY</button>
+        <span class="vid-link" title="${escapeHtml(result.url)}">${escapeHtml(result.url)}</span>
+        <span class="vid-dest" title="${escapeHtml(destination)}">${escapeHtml(destination)}</span>
+        <span class="vid-copy-group">
+          <button class="vid-copy-btn" onclick="event.stopPropagation();copyToClipboard('${escapedUrl}')">📋 FREEM3U</button>
+          <button class="vid-copy-btn" ${result.destination ? '' : 'disabled'} onclick="event.stopPropagation();copyToClipboard('${escapedDestination}')">🎯 ĐÍCH</button>
+        </span>
       </div>
     `;
   });
@@ -1614,12 +1678,13 @@ function updateVidResultList() {
   if (countSpan) countSpan.textContent = state.vidFoundResults.length;
 }
 
-function addVidFoundResult(number, url) {
+function addVidFoundResult(number, url, destination = '') {
   const existing = state.vidFoundResults.find(r => r.number === number);
   if (existing) {
     existing.url = url;
+    existing.destination = destination || existing.destination || '';
   } else {
-    state.vidFoundResults.push({ number, url });
+    state.vidFoundResults.push({ number, url, destination });
   }
   state.vidFoundResults.sort((a, b) => a.number - b.number);
   updateVidResultList();
@@ -1628,6 +1693,22 @@ function addVidFoundResult(number, url) {
 /* =========================================================
    FREEM3U RANGE SCAN
 ========================================================= */
+async function checkNoSignal(url) {
+  try {
+    const response = await fetch(url, { redirect: "follow", cache: "no-store" });
+    const finalUrl = response.url || "";
+    if (finalUrl.toLowerCase().includes("no-signal")) {
+      return { noSignal: true, destination: finalUrl };
+    }
+
+    const text = await response.text();
+    const noSignal = text.toLowerCase().includes("no-signal");
+    return { noSignal, destination: finalUrl };
+  } catch (e) {
+    return { noSignal: false, destination: "" };
+  }
+}
+
 function tryVidNumber(number, token) {
   return new Promise((resolve) => {
     if (token !== state.vidScanToken || !state.vidScanning) {
@@ -1640,8 +1721,18 @@ function tryVidNumber(number, token) {
 
     const cancelFn = setupHlsPlayback(url, {
       timeout: state.VID_SCAN_TIMEOUT,
-      onPlaying: () => {
-        addVidFoundResult(number, url);
+      onPlaying: async () => {
+        const check = await checkNoSignal(url);
+        if (token !== state.vidScanToken || !state.vidScanning) {
+          resolve(false);
+          return;
+        }
+        if (check.noSignal) {
+          setVidScanStatus("🔴 Kênh #" + number + " — KHÔNG TÍN HIỆU", "error");
+          resolve(false);
+          return;
+        }
+        addVidFoundResult(number, url, check.destination);
         resolve(true);
       },
       onError: () => resolve(false)
