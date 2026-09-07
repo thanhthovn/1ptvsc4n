@@ -7,922 +7,658 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
-:root{
-  --bg:#050805;
-  --panel:#0a110a;
-  --panel2:#050905;
-  --border:#173817;
-  --text:#b7ffb7;
-  --muted:#5f9b5f;
-  --accent:#20e020;
-  --accent2:#13b913;
-  --danger:#ef4444;
-  --ok:#20e020;
+:root {
+  --bg: #050805;
+  --panel: #0a110a;
+  --panel2: #050905;
+  --border: #173817;
+  --text: #b7ffb7;
+  --muted: #5f9b5f;
+  --accent: #20e020;
+  --accent2: #13b913;
+  --danger: #ef4444;
+  --ok: #20e020;
 }
 
-*{box-sizing:border-box}
+* { box-sizing: border-box; }
 
-body{
-  margin:0;
-  min-height:100vh;
-  background:#030603;
-  color:#b7ffb7;
-  font-family:Arial,Helvetica,sans-serif;
-  -webkit-tap-highlight-color:transparent;
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #030603;
+  color: #b7ffb7;
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.app{
-  width:min(1180px,100%);
-  margin:auto;
-  padding:22px;
+.app {
+  width: min(1180px, 100%);
+  margin: auto;
+  padding: 22px;
 }
 
-header{
-  margin-bottom:18px;
+header { margin-bottom: 18px; }
+
+h1 {
+  margin: 0;
+  font-size: 23px;
+  color: #45ff45;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(32, 224, 32, .28);
 }
 
-h1{
-  margin:0;
-  font-size:23px;
-  color:#45ff45;
-  letter-spacing:1px;
-  text-shadow:0 0 8px rgba(32,224,32,.28);
+.subtitle {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
-.subtitle{
-  margin-top:6px;
-  color:var(--muted);
-  font-size:13px;
+.card {
+  background: #081008;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
 }
 
-.card{
-  background:#081008;
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:14px;
-  margin-bottom:14px;
+.player {
+  background: #000;
+  border-radius: 11px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
 }
 
-.player{
-  background:#000;
-  border-radius:11px;
-  overflow:hidden;
-  aspect-ratio:16/9;
+video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
 }
 
-video{
-  display:block;
-  width:100%;
-  height:100%;
-  background:#000;
+.status {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--panel2);
+  color: var(--muted);
+  font-size: 13px;
+  min-height: 44px;
+  word-break: break-word;
 }
 
-.status{
-  margin-top:12px;
-  padding:10px 12px;
-  border-radius:8px;
-  background:var(--panel2);
-  color:var(--muted);
-  font-size:13px;
-  min-height:44px;
-  word-break:break-word;
+.status.ok { color: #86efac; }
+.status.error { color: #fca5a5; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.status.ok{color:#86efac}
-.status.error{color:#fca5a5}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
+label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
 }
 
-label{
-  display:block;
-  margin-bottom:7px;
-  color:var(--muted);
-  font-size:13px;
-  font-weight:700;
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-/* ===== RESPONSIVE + iOS SAFARI ===== */
-html, body{
-  width:100%;
-  max-width:100%;
-  overflow-x:hidden;
+select, input {
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  width: 100%;
+  height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  background: #050905;
+  color: var(--text);
+  font-size: 16px;
 }
 
-select,
-input{
-  -webkit-appearance:none;
-  appearance:none;
-  touch-action:manipulation;
-  width:100%;
-  height:44px;
-  padding:6px 10px;
-  border:1px solid var(--border);
-  border-radius:8px;
-  outline:none;
-  background:#050905;
-  color:var(--text);
-  font-size:16px;
+select:focus, input:focus { border-color: var(--accent); }
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
 }
 
-#manualChannelInput{
-  height:44px;
+/* === COMMON STYLES === */
+.manual-channel-row, .channel-row, .vid-scan-control {
+  display: flex;
+  gap: 8px;
+  width: 100%;
 }
 
-#templateSelect,
-#channelSelect{
-  height:44px;
+.manual-channel-row { align-items: center; }
+.channel-row { align-items: center; }
+.vid-scan-control { align-items: flex-end; flex-wrap: wrap; }
+
+.manual-channel-row input { flex: 1 1 360px; min-width: 0; }
+
+.manual-channel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
-#vidCurrent{
-  height:44px;
-  padding:6px;
+.manual-channel-actions button { white-space: nowrap; }
+
+.channel-row select {
+  flex: 1 1 360px;
+  min-width: 260px;
+  width: 100%;
 }
 
-select:focus,
-input:focus{
-  border-color:var(--accent);
+.channel-nav {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
-#vidCurrent{
-  width:90px;
-  height:44px;
-  padding:6px;
-  text-align:center;
-  font-weight:700;
-  font-family:Consolas,monospace;
+.channel-nav button {
+  position: relative;
+  z-index: 31;
+  pointer-events: auto;
+  white-space: nowrap;
 }
 
-.actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:10px;
-}
-/* Ô nhập kênh thủ công */
-.manual-channel-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  width:100%;
-}
-.manual-channel-row input{
-  flex:1 1 360px;
-  min-width:0;
-}
-.manual-channel-actions{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex:0 0 auto;
-}
-.manual-channel-actions button{
-  white-space:nowrap;
+.vid-scan-number {
+  flex: 0 0 100px;
 }
 
-.channel-actions{
-  margin-top:8px;
+.vid-scan-number input {
+  width: 100px;
+  box-sizing: border-box;
+  text-align: center;
 }
 
-.channel-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
+.vid-scan-nav {
+  display: flex;
+  gap: 8px;
+  flex: 1;
 }
 
-.channel-row select{
-  flex:1 1 360px;
-  min-width:260px;
-  width:100%;
+.vid-scan-nav button { flex: 1; }
+
+.vid-scan-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
 }
 
-.channel-nav{
-  position:relative;
-  z-index:30;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex:0 0 auto;
-  flex-wrap:nowrap;
-  white-space:nowrap;
+.vid-scan-actions button { width: 100%; }
+
+/* === RANGE INPUTS === */
+.vid-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  flex-wrap: wrap;
 }
 
-.channel-nav button{
-  position:relative;
-  z-index:31;
-  pointer-events:auto;
-  white-space:nowrap;
+.vid-range-inputs input {
+  flex: 1;
+  min-width: 80px;
+  max-width: 150px;
+  height: 44px;
+  text-align: center;
 }
 
-@media(max-width:600px){
-
-  /* ===== iPHONE / SAFARI: KHÔNG CHO BẤT KỲ HÀNG NÀO TRÀN NGANG ===== */
-  .app{
-    width:100%;
-    max-width:100%;
-    padding:12px max(12px, env(safe-area-inset-right))
-             12px max(12px, env(safe-area-inset-left));
-  }
-
-  .card,
-  .grid,
-  .grid > div,
-  .panel-body,
-  .channel-row,
-  .manual-channel-row,
-  .url-row,
-  .vid-scan-control{
-    min-width:0;
-    max-width:100%;
-  }
-
-  /* Ô nhập kênh */
-  .manual-channel-row{
-    flex-direction:column;
-    align-items:stretch;
-    gap:8px;
-  }
-
-  .manual-channel-row input{
-    width:100%;
-    min-width:0;
-    flex:0 0 44px;
-    height:44px;
-    font-size:16px;
-  }
-
-  .manual-channel-actions{
-    display:flex;
-    width:100%;
-    min-width:0;
-    gap:8px;
-  }
-
-  .manual-channel-actions button{
-    flex:1 1 0;
-    min-width:0;
-    width:0;
-    height:44px;
-    padding:8px 5px;
-    font-size:12px;
-    white-space:normal;
-  }
-
-  /* Chọn list kênh */
-  .channel-row{
-    display:flex;
-    flex-direction:column;
-    align-items:stretch;
-    gap:8px;
-  }
-
-  .channel-row select{
-    width:100%;
-    min-width:0;
-    flex:0 0 auto;
-  }
-
-  /* 4 nút chia thành 2 x 2 để không tràn màn hình iPhone */
-  .channel-nav{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    width:100%;
-    min-width:0;
-    gap:8px;
-  }
-
-  .channel-nav button{
-    width:100%;
-    min-width:0;
-    flex:initial;
-    padding:9px 4px;
-    font-size:11px;
-    line-height:1.15;
-    white-space:normal;
-    overflow-wrap:anywhere;
-  }
+.vid-range-inputs span {
+  color: var(--muted);
+  font-weight: 700;
 }
 
-.vid-scan-control{
-  display:flex;
-  align-items:flex-end;
-  gap:8px;
-  margin-top:10px;
-  flex-wrap:wrap;
+.vid-range-inputs .range-btn {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 8px 12px;
+  font-size: 12px;
 }
 
-.vid-scan-control .vid-scan-actions{
-  margin-top:0;
-  flex:1;
+.counter {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 12px;
 }
 
-.vid-scan-control .vid-scan-actions button{
-  width:100%;
-}
-
-.vid-scan-number{
-  flex:0 0 100px;
-}
-
-.vid-scan-number label{
-  text-align:center;
-}
-
-.vid-scan-number input{
-  width:100px;
-  box-sizing:border-box;
-}
-
-.vid-scan-nav{
-  display:flex;
-  gap:8px;
-  flex:1;
-}
-
-.vid-scan-nav button{
-  flex:1;
-}
-
-.vid-scan-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:8px;
-}
-
-.vid-scan-actions button{
-  width:100%;
-}
-
-/* ===== THÊM: Nhập khoảng số ===== */
-.vid-range-inputs{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  width:100%;
-  margin-top:10px;
-  flex-wrap:wrap;
-}
-
-.vid-range-inputs input{
-  flex:1;
-  min-width:80px;
-  max-width:150px;
-  height:44px;
-  text-align:center;
-}
-
-.vid-range-inputs span{
-  color:var(--muted);
-  font-weight:700;
-}
-
-.vid-range-inputs .range-btn{
-  flex:0 0 auto;
-  min-width:0;
-  width:auto;
-  height:40px;
-  padding:8px 12px;
-  font-size:12px;
-}
-
-@media (max-width:600px){
-  .vid-scan-control{
-    flex-wrap:wrap;
-    width:100%;
-    min-width:0;
-  }
-
-  .vid-scan-number{
-    flex:0 0 100%;
-    width:100%;
-  }
-
-  .vid-scan-number input{
-    display:block;
-    margin:auto;
-  }
-
-  .vid-scan-nav{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    width:100%;
-    min-width:0;
-    gap:8px;
-  }
-
-  .vid-scan-nav button{
-    width:100%;
-    min-width:0;
-    padding:9px 4px;
-    font-size:11px;
-    line-height:1.15;
-    white-space:normal;
-  }
-
-  .vid-scan-control .vid-scan-actions{
-    width:100%;
-    min-width:0;
-  }
-
-  .vid-scan-actions{
-    grid-template-columns:1fr;
-  }
-
-  .vid-scan-actions button{
-    min-width:0;
-    white-space:normal;
-    font-size:11px;
-  }
-
-  .vid-range-inputs{
-    flex-direction:row;
-    align-items:center;
-  }
-
-  .vid-range-inputs input{
-    flex:1 1 70px;
-    max-width:120px;
-    width:auto;
-  }
-
-  .vid-range-inputs .range-btn{
-    width:auto;
-    flex:0 0 auto;
-  }
-}
-
-button{
+/* === BUTTONS === */
+button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
   position: relative;
   z-index: 20;
-  border:1px solid #25d925;
-  border-radius:7px;
-  padding:10px 14px;
-  background:#0b240b;
-  color:#7dff7d;
-  font-weight:700;
-  cursor:pointer;
-  text-transform:uppercase;
-  min-height:44px;
-  -webkit-touch-callout:none;
+  border: 1px solid #25d925;
+  border-radius: 7px;
+  padding: 10px 14px;
+  background: #0b240b;
+  color: #7dff7d;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  min-height: 44px;
+  -webkit-touch-callout: none;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-button:hover{
-  background:#123812;
-  color:#b7ffb7;
-  box-shadow:0 0 8px rgba(32,224,32,.18);
+button:hover {
+  background: #123812;
+  color: #b7ffb7;
+  box-shadow: 0 0 8px rgba(32, 224, 32, .18);
 }
 
-button:disabled{
-  opacity:.65;
-  cursor:not-allowed;
-  box-shadow:none;
+button:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
-button.secondary{
-  background:#0b1a0b;
-  color:#8cff8c;
-  border:1px solid #1c4d1c;
+button.secondary {
+  background: #0b1a0b;
+  color: #8cff8c;
+  border: 1px solid #1c4d1c;
 }
 
-button.secondary:hover{
-  background:#102410;
-  color:#b7ffb7;
+button.secondary:hover {
+  background: #102410;
+  color: #b7ffb7;
 }
 
-button.danger{
-  background:var(--danger);
-  color:#fff;
-  border-color:#dc2626;
+button.danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: #dc2626;
 }
 
-button.danger:hover{
-  background:#dc2626;
-  color:#fff;
+button.danger:hover {
+  background: #dc2626;
+  color: #fff;
 }
 
-button.stop-btn{
-  background:#f59e0b;
-  color:#000;
-  border-color:#d97706;
+button.stop-btn {
+  background: #f59e0b;
+  color: #000;
+  border-color: #d97706;
 }
 
-button.stop-btn:hover{
-  background:#d97706;
-  color:#fff;
+button.stop-btn:hover {
+  background: #d97706;
+  color: #fff;
 }
 
-.counter{
-  margin-top:9px;
-  color:var(--muted);
-  font-size:12px;
-}
-
-/* ===== BẢNG KẾT QUẢ DÒ ===== */
-.result-table-wrap {
-  margin-top:12px;
-  max-height:300px;
-  overflow-y:auto;
-  border:1px solid var(--border);
-  border-radius:8px;
-  background:var(--panel2);
-  -webkit-overflow-scrolling:touch;
+/* === RESULT TABLE === */
+.result-table-wrap, .vid-result-list {
+  margin-top: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel2);
+  -webkit-overflow-scrolling: touch;
 }
 
 .result-table {
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-  min-width:550px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 550px;
 }
 
 .result-table thead {
-  position:sticky;
-  top:0;
-  z-index:10;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .result-table th {
-  background:#0d1a0d;
-  color:#86efac;
-  padding:10px 12px;
-  text-align:left;
-  border-bottom:2px solid var(--border);
-  font-weight:700;
-  text-transform:uppercase;
-  font-size:11px;
-  letter-spacing:0.5px;
+  background: #0d1a0d;
+  color: #86efac;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
 }
 
 .result-table td {
-  padding:8px 12px;
-  border-bottom:1px solid var(--border);
-  vertical-align:middle;
-  color:var(--text);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
 }
 
-.result-table tr.found {
-  background:#0b1a0b;
-}
-
-.result-table tr.found td {
-  color:#86efac;
-}
+.result-table tr.found { background: #0b1a0b; }
+.result-table tr.found td { color: #86efac; }
 
 .result-table .link-cell {
-  max-width:300px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  font-family:Consolas,monospace;
-  font-size:12px;
-  color:#b7ffb7;
-  cursor:pointer;
-  -webkit-touch-callout:none;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: #b7ffb7;
+  cursor: pointer;
 }
 
-.result-table .link-cell:hover {
-  color:#45ff45;
+.result-table .link-cell:hover { color: #45ff45; }
+
+.result-summary, .vid-result-summary {
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.result-summary {
-  padding:10px 12px;
-  color:var(--muted);
-  font-size:12px;
-  border-top:1px solid var(--border);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:8px;
-}
-
-.result-summary .found-count {
-  color:#86efac;
-  font-weight:700;
+.result-summary .found-count, .vid-result-summary .vid-found-count {
+  color: #86efac;
+  font-weight: 700;
 }
 
 .no-results {
-  padding:30px 20px;
-  text-align:center;
-  color:var(--muted);
-  font-style:italic;
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
 }
 
-.copy-btn {
-  padding:6px 12px;
-  font-size:10px;
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--muted);
-  cursor:pointer;
-  border-radius:4px;
-  text-transform:none;
-  font-weight:400;
-  white-space:nowrap;
-  min-height:32px;
+.copy-btn, .vid-copy-btn, .result-clear-btn, .vid-clear-btn {
+  padding: 6px 12px;
+  font-size: 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 4px;
+  text-transform: none;
+  font-weight: 400;
+  white-space: nowrap;
+  min-height: 32px;
 }
 
-.copy-btn:hover {
-  background:var(--border);
-  color:var(--text);
+.copy-btn:hover, .vid-copy-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.result-clear-btn, .vid-clear-btn {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.result-clear-btn:hover, .vid-clear-btn:hover {
+  background: #ef4444;
+  color: #fff;
 }
 
 .found-badge {
-  display:inline-block;
-  padding:2px 10px;
-  border-radius:4px;
-  font-size:10px;
-  font-weight:700;
-  text-transform:uppercase;
-  background:#20e020;
-  color:#000;
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #20e020;
+  color: #000;
 }
 
-@media(max-width:600px){
-  .result-table-wrap {
-    max-height:250px;
-  }
-  
-  .result-table {
-    font-size:11px;
-    min-width:380px;
-  }
-  
-  .result-table th,
-  .result-table td {
-    padding:6px 8px;
-  }
-  
-  .result-table .link-cell {
-    max-width:120px;
-    font-size:10px;
-  }
-  
-  .copy-btn {
-    padding:4px 8px;
-    font-size:9px;
-    min-height:28px;
-  }
-}
-
-@media(max-width:760px){
-  .grid{
-    grid-template-columns:1fr;
-    min-width:0;
-  }
-
-  h1{
-    font-size:22px;
-    overflow-wrap:anywhere;
-  }
-
-  select,
-  input{
-    width:100%;
-    max-width:100%;
-    min-width:0;
-    height:44px;
-    padding:6px 10px;
-    font-size:16px;
-  }
-
-  #manualChannelInput,
-  #channelSelect,
-  #templateSelect{
-    width:100%;
-    max-width:100%;
-    min-width:0;
-    height:44px;
-  }
-
-  .status,
-  .counter{
-    max-width:100%;
-    overflow-wrap:anywhere;
-  }
-}
-
-.scan-panel{
-  overflow:hidden;
-}
-.panel-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:0;
-}
-.panel-head label{
-  margin:0;
-}
-.panel-toggle{
-  padding:7px 11px;
-  font-size:11px;
-  text-transform:uppercase;
-  white-space:nowrap;
-  min-height:36px;
-}
-.panel-body{
-  margin-top:12px;
-}
-.panel-body.is-hidden{
-  display:none;
-}
-
-
-/* ===== SAFARI FINAL OVERFLOW GUARD ===== */
-.card > *,
-.panel-body > *,
-.grid > *,
-.channel-row > *,
-.url-row > *,
-.vid-scan-control > *{
-  max-width:100%;
-  min-width:0;
-}
-
-button{
-  max-width:100%;
-  box-sizing:border-box;
-}
-
-/* Scrollbar style */
-.result-table-wrap::-webkit-scrollbar {
-  width:6px;
-  height:6px;
-}
-.result-table-wrap::-webkit-scrollbar-track {
-  background:var(--panel2);
-}
-.result-table-wrap::-webkit-scrollbar-thumb {
-  background:var(--border);
-  border-radius:3px;
-}
-.result-table-wrap::-webkit-scrollbar-thumb:hover {
-  background:var(--muted);
-}
-
-/* ===== BẢNG KẾT QUẢ FREEM3U NGAY TRONG PANEL ===== */
-.vid-result-list {
-  margin-top:12px;
-  max-height:250px;
-  overflow-y:auto;
-  border:1px solid var(--border);
-  border-radius:8px;
-  background:var(--panel2);
-  -webkit-overflow-scrolling:touch;
-}
-
+/* === VID RESULT ITEMS === */
 .vid-result-item {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:8px 12px;
-  border-bottom:1px solid var(--border);
-  gap:10px;
-  flex-wrap:wrap;
-  cursor:pointer;
-  transition:background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.vid-result-item:hover {
-  background:var(--border);
-}
-
-.vid-result-item:last-child {
-  border-bottom:none;
-}
+.vid-result-item:hover { background: var(--border); }
+.vid-result-item:last-child { border-bottom: none; }
 
 .vid-result-item .vid-number {
-  font-weight:700;
-  color:var(--accent);
-  min-width:50px;
-  font-size:13px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 50px;
+  font-size: 13px;
 }
 
 .vid-result-item .vid-link {
-  flex:1;
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  font-size:12px;
-  font-family:Consolas,monospace;
-  color:var(--text);
-  cursor:pointer;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-family: Consolas, monospace;
+  color: var(--text);
+  cursor: pointer;
 }
 
-.vid-result-item .vid-link:hover {
-  color:#45ff45;
-}
+.vid-result-item .vid-link:hover { color: #45ff45; }
+.vid-result-empty { padding: 20px; text-align: center; color: var(--muted); font-style: italic; font-size: 13px; }
 
-.vid-result-item .vid-copy-btn {
-  padding:4px 10px;
-  font-size:10px;
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--muted);
-  cursor:pointer;
-  border-radius:4px;
-  text-transform:none;
-  font-weight:400;
-  min-height:28px;
-  white-space:nowrap;
+/* === PANEL === */
+.scan-panel { overflow: hidden; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 0;
 }
-
-.vid-result-item .vid-copy-btn:hover {
-  background:var(--border);
-  color:var(--text);
+.panel-head label { margin: 0; }
+.panel-toggle {
+  padding: 7px 11px;
+  font-size: 11px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  min-height: 36px;
 }
+.panel-body { margin-top: 12px; }
+.panel-body.is-hidden { display: none; }
 
-.vid-result-empty {
-  padding:20px;
-  text-align:center;
-  color:var(--muted);
-  font-style:italic;
-  font-size:13px;
-}
-
-.vid-result-summary {
-  padding:8px 12px;
-  color:var(--muted);
-  font-size:12px;
-  border-top:1px solid var(--border);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:6px;
-}
-
-.vid-result-summary .vid-found-count {
-  color:#86efac;
-  font-weight:700;
-}
-
-.vid-result-summary .vid-clear-btn {
-  padding:3px 10px;
-  font-size:10px;
-  background:transparent;
-  border:1px solid #ef4444;
-  color:#ef4444;
-  cursor:pointer;
-  border-radius:4px;
-  text-transform:none;
-  font-weight:400;
-  min-height:28px;
-  white-space:nowrap;
-}
-
-.vid-result-summary .vid-clear-btn:hover {
-  background:#ef4444;
-  color:#fff;
-}
-
-/* Result section trong channel panel */
 .result-section {
-  margin-top:16px;
-  border-top:1px solid var(--border);
-  padding-top:14px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
 }
 
 .result-section .result-label {
-  color:var(--muted);
-  font-size:13px;
-  font-weight:700;
-  margin-bottom:8px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.result-section .result-clear-btn {
-  padding:3px 10px;
-  font-size:10px;
-  background:transparent;
-  border:1px solid #ef4444;
-  color:#ef4444;
-  cursor:pointer;
-  border-radius:4px;
-  text-transform:none;
-  font-weight:400;
-  min-height:28px;
-  white-space:nowrap;
+/* === SCROLLBAR === */
+.result-table-wrap::-webkit-scrollbar, .vid-result-list::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.result-table-wrap::-webkit-scrollbar-track, .vid-result-list::-webkit-scrollbar-track {
+  background: var(--panel2);
+}
+.result-table-wrap::-webkit-scrollbar-thumb, .vid-result-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+.result-table-wrap::-webkit-scrollbar-thumb:hover, .vid-result-list::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }
 
-.result-section .result-clear-btn:hover {
-  background:#ef4444;
-  color:#fff;
+.card > *, .panel-body > *, .grid > *, .channel-row > *, .vid-scan-control > * {
+  max-width: 100%;
+  min-width: 0;
 }
 
+/* === RESPONSIVE === */
+@media(max-width:760px) {
+  .grid { grid-template-columns: 1fr; min-width: 0; }
+  h1 { font-size: 22px; overflow-wrap: anywhere; }
+  select, input {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 44px;
+    padding: 6px 10px;
+    font-size: 16px;
+  }
+  .status, .counter { max-width: 100%; overflow-wrap: anywhere; }
+}
+
+@media(max-width:600px) {
+  .app {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left));
+  }
+
+  .card, .grid, .grid > div, .panel-body, .channel-row, .manual-channel-row, .vid-scan-control {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Manual channel */
+  .manual-channel-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .manual-channel-row input {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+  .manual-channel-actions {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+  .manual-channel-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 0;
+    height: 44px;
+    padding: 8px 5px;
+    font-size: 12px;
+    white-space: normal;
+  }
+
+  /* Channel row */
+  .channel-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .channel-row select {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+  .channel-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+  .channel-nav button {
+    width: 100%;
+    min-width: 0;
+    flex: initial;
+    padding: 9px 4px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Vid scan */
+  .vid-scan-control { flex-wrap: wrap; width: 100%; min-width: 0; }
+  .vid-scan-number { flex: 0 0 100%; width: 100%; }
+  .vid-scan-number input { display: block; margin: auto; }
+  .vid-scan-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+  }
+  .vid-scan-nav button {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 4px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+  .vid-scan-control .vid-scan-actions { width: 100%; min-width: 0; }
+  .vid-scan-actions { grid-template-columns: 1fr; }
+  .vid-scan-actions button {
+    min-width: 0;
+    white-space: normal;
+    font-size: 11px;
+  }
+
+  /* Range inputs */
+  .vid-range-inputs { flex-direction: row; align-items: center; }
+  .vid-range-inputs input {
+    flex: 1 1 70px;
+    max-width: 120px;
+    width: auto;
+  }
+  .vid-range-inputs .range-btn {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  /* Result table */
+  .result-table-wrap { max-height: 250px; }
+  .result-table { font-size: 11px; min-width: 380px; }
+  .result-table th, .result-table td { padding: 6px 8px; }
+  .result-table .link-cell { max-width: 120px; font-size: 10px; }
+  .copy-btn { padding: 4px 8px; font-size: 9px; min-height: 28px; }
+}
 </style>
 </head>
 
@@ -931,26 +667,21 @@ button{
 
 <header>
   <h1>⌨ M3U8 // STREAM SCANNING</h1>
-  </header>
+</header>
 
 <!-- PLAYER -->
 <div class="card">
   <div class="player">
     <video id="video" controls playsinline webkit-playsinline x-webkit-airplay="allow"></video>
   </div>
-
-  <div id="status" class="status">
-    ⚪ Chưa phát stream
-  </div>
+  <div id="status" class="status">⚪ Chưa phát stream</div>
 </div>
 
-<!-- DÒ KÊNH THỦ CÔNG + BẢNG KẾT QUẢ -->
+<!-- CHANNEL SCANNING -->
 <div class="card scan-panel" id="channelPanel">
   <div class="panel-head">
     <label>▸ DÒ KÊNH THỦ CÔNG</label>
-    <button class="secondary panel-toggle" type="button"
-            onclick="togglePanel('channelBody','channelToggle')" aria-expanded="true"
-            aria-label="Toggle channel panel">
+    <button class="secondary panel-toggle" type="button" onclick="togglePanel('channelBody','channelToggle')" aria-expanded="true">
       <span id="channelToggle">▲ ẨN</span>
     </button>
   </div>
@@ -959,18 +690,13 @@ button{
     <div class="grid">
       <div>
         <div class="manual-channel-row">
-          <input id="manualChannelInput" type="text"
-                 placeholder="Ví dụ: vtv1" autocomplete="off"
-                 aria-label="Nhập tên kênh thủ công">
+          <input id="manualChannelInput" type="text" placeholder="Ví dụ: vtv1" autocomplete="off" aria-label="Nhập tên kênh thủ công">
           <div class="manual-channel-actions">
             <button class="secondary" onclick="useManualChannel()" aria-label="Dùng kênh thủ công">DÙNG KÊNH</button>
             <button class="danger" onclick="clearManualChannel()" aria-label="Xóa kênh thủ công">XÓA KÊNH</button>
           </div>
         </div>
-
-        <div class="counter">
-          Kênh nhập thủ công chỉ dùng trong lần này — không lưu lại sau khi F5.
-        </div>
+        <div class="counter">Kênh nhập thủ công chỉ dùng trong lần này — không lưu lại sau khi F5.</div>
 
         <label style="margin-top:12px">▸ CHỌN LIST KÊNH</label>
         <div class="channel-row">
@@ -992,7 +718,7 @@ button{
       </div>
     </div>
 
-    <!-- BẢNG KẾT QUẢ NGAY TRONG PANEL -->
+    <!-- RESULT TABLE -->
     <div class="result-section">
       <div class="result-label">
         <span>▸ STREAM URL RESULT</span>
@@ -1008,8 +734,7 @@ button{
               <th style="width:70px;">COPY</th>
             </tr>
           </thead>
-          <tbody id="resultBody">
-          </tbody>
+          <tbody id="resultBody"></tbody>
         </table>
       </div>
       <div class="result-summary" id="resultSummary">
@@ -1020,38 +745,27 @@ button{
   </div>
 </div>
 
-<!-- DÒ KÊNH FREEM3U -->
+<!-- FREEM3U SCANNING -->
 <div class="card scan-panel" id="vidScanPanel">
   <div class="panel-head">
     <label>▸ FREEM3U // DÒ KÊNH THEO SỐ</label>
-    <button class="secondary panel-toggle" type="button"
-            onclick="togglePanel('vidScanBody','vidScanToggle')"
-            aria-expanded="true"
-            aria-label="Toggle FreeM3U panel">
+    <button class="secondary panel-toggle" type="button" onclick="togglePanel('vidScanBody','vidScanToggle')" aria-expanded="true">
       <span id="vidScanToggle">▲ ẨN</span>
     </button>
   </div>
 
   <div class="panel-body" id="vidScanBody">
-    <!-- KHOẢNG SỐ + CÁC NÚT ĐIỀU KHIỂN CÙNG HÀNG -->
     <div class="vid-range-inputs" style="margin-top:0;">
-      <input id="vidRangeFrom" type="number" min="1" max="999" value="1" 
-             aria-label="Từ số" placeholder="Từ">
+      <input id="vidRangeFrom" type="number" min="1" max="999" value="1" aria-label="Từ số" placeholder="Từ">
       <span>→</span>
-      <input id="vidRangeTo" type="number" min="1" max="999" value="10" 
-             aria-label="Đến số" placeholder="Đến">
-      <button class="danger range-btn" id="vidRangeScanBtn" onclick="startRangeVidScan()" 
-              aria-label="Dò khoảng số">🚀 DÒ</button>
-      <button class="stop-btn range-btn" id="vidRangeStopBtn" onclick="stopRangeVidScan()" 
-              aria-label="Dừng dò" style="display:none;">⏹ DỪNG</button>
+      <input id="vidRangeTo" type="number" min="1" max="999" value="10" aria-label="Đến số" placeholder="Đến">
+      <button class="danger range-btn" id="vidRangeScanBtn" onclick="startRangeVidScan()" aria-label="Dò khoảng số">🚀 DÒ</button>
+      <button class="stop-btn range-btn" id="vidRangeStopBtn" onclick="stopRangeVidScan()" aria-label="Dừng dò" style="display:none;">⏹ DỪNG</button>
       <button class="secondary" onclick="resetVidScan()" aria-label="Reset FreeM3U" style="flex:0 0 auto; height:40px; padding:8px 12px; font-size:12px;">↺ RESET</button>
     </div>
 
-    <div id="vidScanStatus" class="counter">
-      ⚪ Sẵn sàng
-    </div>
+    <div id="vidScanStatus" class="counter">⚪ Sẵn sàng</div>
 
-    <!-- BẢNG KẾT QUẢ FREEM3U NGAY TRONG PANEL -->
     <div class="vid-result-list" id="vidResultList">
       <div class="vid-result-empty">⚪ Chưa có kết quả dò FreeM3U</div>
     </div>
@@ -1065,206 +779,74 @@ button{
 
 <script>
 /* =========================================================
-   DANH SÁCH KÊNH
+   CONFIGURATION
 ========================================================= */
-
 const channels = [
-  "antv",
-  "anninhtv",
-  "ANNINHTV",
-  "film360",
-  "nghean",
-  "nghe-an",
-  "nghean01",
-  "laichau",
-  "laichautv",
-  "laichau01",
-  "bacninh01"
+  "antv", "anninhtv", "ANNINHTV", "film360", "nghean",
+  "nghe-an", "nghean01", "laichau", "laichautv", "laichau01", "bacninh01"
 ];
-
-/* =========================================================
-   CÁC MẪU LINK
-========================================================= */
 
 const templates = [
-
-  {
-    name:"Link 1 — Live247 AVC 4M",
-    url:"https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8"
-  },
-
-  {
-    name:"Link 2 — Live247 AVC 5.6M",
-    url:"https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8"
-  },
-
-  {
-    name:"Link 3 — Live HLS AVC 5.6M",
-    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8"
-  },
-
-  {
-    name:"Link 4 — Live HLS AVC 4M",
-    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8"
-  },
-
-  {
-    name:"Link 6 — Live HLS AVC INDEX",
-    url:"https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8"
-  },
-
-  {
-    name:"Link 5 — EPZ SD1 2.5M",
-    url:"https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 7 — EPZ SD2 2.5M",
-    url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 8 — EPZ SD1",
-    url:"https://live.fptplay53.net/epzsd1/{code}_hls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 9 — EPZ SD2",
-    url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 10 — EPZ SD1 5M",
-    url:"https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
-  },
-
-  {
-    name:"Link 11 — EPZ SD2 5M",
-    url:"https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
-  },
-
-  {
-    name:"Link 12 — EPZ HD1 2.5M",
-    url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 13 — EPZ HD2 2.5M",
-    url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 14 — EPZ HD1",
-    url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 15 — EPZ HD2",
-    url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 16 — EPZ HD1 5M",
-    url:"https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
-  },
-
-  {
-    name:"Link 17 — EPZ HD2 5M",
-    url:"https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
-  },
-
-  {
-    name:"Link 18 — FNX SD1 2.5M",
-    url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 19 — FNX SD2 2.5M",
-    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 20 — FNX SD1",
-    url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 21 — FNX SD2",
-    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 22 — FNX SD1 5M",
-    url:"https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b5000000.m3u8"
-  },
-
-  {
-    name:"Link 23 — FNX SD2 5M",
-    url:"https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b5000000.m3u8"
-  },
-
-  {
-    name:"Link 24 — FNX HD1 2.5M",
-    url:"https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 25 — FNX HD2 2.5M",
-    url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b2500000.m3u8"
-  },
-
-  {
-    name:"Link 26 — FNX HD1",
-    url:"https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 27 — FNX HD2",
-    url:"https://live.fptplay53.net/fnxhd2/{code}_hls.smil/chunklist.m3u8"
-  },
-
-  {
-    name:"Link 28 — FNX HD1 5M",
-    url:"https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b5000000.m3u8"
-  },
-
-  {
-    name:"Link 29 — FNX HD2 5M",
-    url:"https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8"
-  }
-
+  { name: "Link 1 — Live247 AVC 4M", url: "https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8" },
+  { name: "Link 2 — Live247 AVC 5.6M", url: "https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8" },
+  { name: "Link 3 — Live HLS AVC 5.6M", url: "https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8" },
+  { name: "Link 4 — Live HLS AVC 4M", url: "https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8" },
+  { name: "Link 6 — Live HLS AVC INDEX", url: "https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8" },
+  { name: "Link 5 — EPZ SD1 2.5M", url: "https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 7 — EPZ SD2 2.5M", url: "https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 8 — EPZ SD1", url: "https://live.fptplay53.net/epzsd1/{code}_hls.smil/chunklist.m3u8" },
+  { name: "Link 9 — EPZ SD2", url: "https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist.m3u8" },
+  { name: "Link 10 — EPZ SD1 5M", url: "https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 11 — EPZ SD2 5M", url: "https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 12 — EPZ HD1 2.5M", url: "https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 13 — EPZ HD2 2.5M", url: "https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 14 — EPZ HD1", url: "https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist.m3u8" },
+  { name: "Link 15 — EPZ HD2", url: "https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist.m3u8" },
+  { name: "Link 16 — EPZ HD1 5M", url: "https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 17 — EPZ HD2 5M", url: "https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 18 — FNX SD1 2.5M", url: "https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 19 — FNX SD2 2.5M", url: "https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 20 — FNX SD1", url: "https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist.m3u8" },
+  { name: "Link 21 — FNX SD2", url: "https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist.m3u8" },
+  { name: "Link 22 — FNX SD1 5M", url: "https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 23 — FNX SD2 5M", url: "https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 24 — FNX HD1 2.5M", url: "https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 25 — FNX HD2 2.5M", url: "https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b2500000.m3u8" },
+  { name: "Link 26 — FNX HD1", url: "https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8" },
+  { name: "Link 27 — FNX HD2", url: "https://live.fptplay53.net/fnxhd2/{code}_hls.smil/chunklist.m3u8" },
+  { name: "Link 28 — FNX HD1 5M", url: "https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 29 — FNX HD2 5M", url: "https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8" }
 ];
 
 /* =========================================================
-   BIẾN
+   STATE MANAGEMENT
 ========================================================= */
-
-let hls = null;
-let currentPlayingLink = 0;
-let autoScanning = false;
-let autoScanToken = 0;
-let autoScanNextIndex = 0;
-let autoScanTimers = [];
-
-/* FREEM3U numeric scanner - CHỈ DÒ KHOẢNG SỐ */
-let vidScanning = false;
-let vidScanToken = 0;
-let vidScanNumber = 1;
-let freem3uPlaying = false;
-let freem3uPlayingNumber = null;
-let vidFoundNumbers = [];
-let vidFoundResults = [];
-const VID_SCAN_MAX = 999;
-const VID_SCAN_TIMEOUT = 8000;
-
-// Lưu tham chiếu để hủy khi cần
-let activeProbeHls = null;
-let activePlaybackCancel = null;
-let activeNativeTimeout = null;
-
-// Lưu kết quả dò
-let foundResults = [];
-let lastFoundIndex = null;
+const state = {
+  hls: null,
+  currentPlayingLink: 0,
+  autoScanning: false,
+  autoScanToken: 0,
+  autoScanNextIndex: 0,
+  autoScanTimers: [],
+  
+  vidScanning: false,
+  vidScanToken: 0,
+  vidScanNumber: 1,
+  freem3uPlaying: false,
+  freem3uPlayingNumber: null,
+  vidFoundResults: [],
+  
+  activeProbeHls: null,
+  activePlaybackCancel: null,
+  activeNativeTimeout: null,
+  
+  foundResults: [],
+  lastFoundIndex: null,
+  manualChannelCode: "",
+  
+  VID_SCAN_MAX: 999,
+  VID_SCAN_TIMEOUT: 8000
+};
 
 const video = document.getElementById("video");
 const channelSelect = document.getElementById("channelSelect");
@@ -1272,18 +854,16 @@ const templateSelect = document.getElementById("templateSelect");
 const statusBox = document.getElementById("status");
 const channelCounter = document.getElementById("channelCounter");
 const linkCounter = document.getElementById("linkCounter");
-
 const vidScanStatus = document.getElementById("vidScanStatus");
 const prevChannelBtn = document.getElementById("prevChannelBtn");
 const nextChannelBtn = document.getElementById("nextChannelBtn");
 const autoScanBtn = document.getElementById("autoScanBtn");
 const resetAutoScanBtn = document.getElementById("resetAutoScanBtn");
-
 const vidRangeScanBtn = document.getElementById("vidRangeScanBtn");
 const vidRangeStopBtn = document.getElementById("vidRangeStopBtn");
 
 /* =========================================================
-   HÀM HELPER KIỂM TRA
+   UTILITY FUNCTIONS
 ========================================================= */
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -1303,19 +883,115 @@ function isNativeHLSSupported() {
   return video.canPlayType && video.canPlayType("application/vnd.apple.mpegurl") !== "";
 }
 
-/*
-   iOS/Safari BUTTON HANDLERS
-*/
+function getActiveChannelCode() {
+  return state.manualChannelCode.trim() || channelSelect.value;
+}
+
+function getUrl(index = Number(templateSelect.value)) {
+  if (index === undefined || index === null || !templates[index]) return "";
+  return templates[index].url.replaceAll("{code}", getActiveChannelCode());
+}
+
+function getQualityShort(index) {
+  if (index === undefined || index === null || !templates[index]) return "N/A";
+  const name = templates[index]?.name || "";
+  if (/5\.6M/i.test(name)) return "5.6M";
+  if (/5M/i.test(name)) return "5M";
+  if (/4M/i.test(name)) return "4M";
+  if (/2\.5M/i.test(name)) return "2.5M";
+  if (/HD/i.test(name)) return "HD";
+  if (/SD/i.test(name)) return "SD";
+  if (/INDEX/i.test(name)) return "INDEX";
+  return "N/A";
+}
+
+function getVidUrl(number) {
+  return "https://freem3u.xyz/api/live/play.m3u8?vid=" + number;
+}
+
+function scrollToPlayer() {
+  const player = document.querySelector(".player");
+  if (player) player.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setStatus(text, type = "") {
+  statusBox.textContent = text;
+  statusBox.className = "status " + type;
+}
+
+function setVidScanStatus(text, type = "") {
+  if (!vidScanStatus) return;
+  vidScanStatus.textContent = text;
+  vidScanStatus.style.color = type === "ok" ? "#86efac" : type === "error" ? "#fca5a5" : "";
+}
+
+function setAutoScanButton(scanning) {
+  if (!autoScanBtn) return;
+  autoScanBtn.disabled = !!scanning;
+  autoScanBtn.textContent = scanning ? "⏳ ĐANG DÒ..." : "⚡ DÒ TỰ ĐỘNG";
+}
+
+function setRangeScanButtons(scanning) {
+  if (vidRangeScanBtn) {
+    vidRangeScanBtn.disabled = scanning;
+    vidRangeScanBtn.textContent = scanning ? "⏳ ĐANG DÒ..." : "🚀 DÒ TỪ ... ĐẾN ...";
+    vidRangeScanBtn.style.display = scanning ? "none" : "inline-block";
+  }
+  if (vidRangeStopBtn) {
+    vidRangeStopBtn.style.display = scanning ? "inline-block" : "none";
+  }
+}
+
+function cancelActiveProbe() {
+  if (state.activeProbeHls) {
+    try { state.activeProbeHls.destroy(); } catch(e) {}
+    state.activeProbeHls = null;
+  }
+  if (state.activePlaybackCancel) {
+    try { state.activePlaybackCancel(); } catch(e) {}
+    state.activePlaybackCancel = null;
+  }
+  if (state.activeNativeTimeout) {
+    clearTimeout(state.activeNativeTimeout);
+    state.activeNativeTimeout = null;
+  }
+}
+
+function destroyPlayer() {
+  if (state.hls) {
+    state.hls.destroy();
+    state.hls = null;
+  }
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+}
+
+function togglePanel(bodyId, toggleId) {
+  const body = document.getElementById(bodyId);
+  const toggle = document.getElementById(toggleId);
+  if (!body || !toggle) return;
+  const hidden = body.classList.contains("is-hidden");
+  if (hidden) {
+    body.classList.remove("is-hidden");
+    toggle.textContent = "▲ ẨN";
+    toggle.setAttribute("aria-expanded", "true");
+  } else {
+    body.classList.add("is-hidden");
+    toggle.textContent = "▼ HIỆN";
+    toggle.setAttribute("aria-expanded", "false");
+  }
+}
+
 function bindIOSButton(button, handler) {
   if (!button) return;
-
   let lastTouch = 0;
   let isTouching = false;
 
   button.addEventListener("touchstart", function(event) {
     isTouching = true;
     lastTouch = Date.now();
-  }, {passive:true});
+  }, { passive: true });
 
   button.addEventListener("touchend", function(event) {
     if (isTouching) {
@@ -1324,7 +1000,7 @@ function bindIOSButton(button, handler) {
       event.stopPropagation();
       setTimeout(() => handler(), 50);
     }
-  }, {passive:false});
+  }, { passive: false });
 
   button.addEventListener("click", function(event) {
     if (Date.now() - lastTouch < 300) {
@@ -1337,378 +1013,34 @@ function bindIOSButton(button, handler) {
   }, false);
 }
 
-/*
-   KHỞI TẠO DROPDOWN
-*/
-channels.forEach(code => {
-  const option = document.createElement("option");
-  option.value = code;
-  option.textContent = code;
-  channelSelect.appendChild(option);
-});
-
-templates.forEach((template,index) => {
-  const option = document.createElement("option");
-  option.value = index;
-  option.textContent = template.name;
-  templateSelect.appendChild(option);
-});
-
-/* Mặc định */
-channelSelect.value = "nghean01";
-templateSelect.value = "0";
-
 /* =========================================================
-   KÊNH NHẬP THỦ CÔNG
+   COPY TO CLIPBOARD
 ========================================================= */
-
-let manualChannelCode = "";
-
-function getActiveChannelCode() {
-  return manualChannelCode.trim() || channelSelect.value;
-}
-
-function resetAutoScanIndex() {
-  autoScanToken++;
-  autoScanning = false;
-  autoScanNextIndex = 0;
-  setAutoScanButton(false);
-  autoScanTimers.forEach(timer => clearTimeout(timer));
-  autoScanTimers = [];
-  cancelActiveProbe();
-  setStatus("🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1", "ok");
-}
-
-function cancelActiveProbe() {
-  if (activeProbeHls) {
-    const probe = activeProbeHls;
-    activeProbeHls = null;
-    try { probe.destroy(); } catch(e) {}
-  }
-  if (activePlaybackCancel) {
-    const cancel = activePlaybackCancel;
-    activePlaybackCancel = null;
-    try { cancel(); } catch(e) {}
-  }
-  if (activeNativeTimeout) {
-    clearTimeout(activeNativeTimeout);
-    activeNativeTimeout = null;
-  }
-}
-
-function useManualChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
-
-  const input = document.getElementById("manualChannelInput");
-  const code = input ? input.value.trim() : "";
-  if(!code) {
-    setStatus("⚠️ Hãy nhập mã kênh, ví dụ: vtv1", "error");
-    return;
-  }
-  manualChannelCode = code;
-
-  resetAutoScanIndex();
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-  playCurrent();
-
-  setStatus(
-    "🟢 Đã nhận kênh: " + manualChannelCode + " — bấm DÒ TỰ ĐỘNG để dò",
-    "ok"
-  );
-}
-
-function clearManualChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
-  manualChannelCode = "";
-  const input = document.getElementById("manualChannelInput");
-  if(input) input.value = "";
-
-  resetAutoScanIndex();
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-  playCurrent();
-
-  setStatus(
-    "🟢 Đã xóa kênh nhập tay — đang dùng kênh trong danh sách",
-    "ok"
-  );
-}
-
-// Enter để dùng kênh
-const manualInputEl = document.getElementById("manualChannelInput");
-if(manualInputEl) {
-  manualInputEl.addEventListener("keydown", function(event) {
-    if(event.key === "Enter") {
-      event.preventDefault();
-      useManualChannel();
-    }
-  });
-}
-
-function getUrl(index = Number(templateSelect.value)) {
-  if (index === undefined || index === null || !templates[index]) {
-    return "";
-  }
-  return templates[index].url.replaceAll(
-    "{code}",
-    getActiveChannelCode()
-  );
-}
-
-/* =========================================================
-   CẬP NHẬT GIAO DIỆN
-========================================================= */
-
-function getQualityShort(index) {
-  if (index === undefined || index === null || !templates[index]) {
-    return "N/A";
-  }
-  
-  const name = templates[index]?.name || "";
-
-  if(/5\.6M/i.test(name)) return "5.6M";
-  if(/5M/i.test(name)) return "5M";
-  if(/4M/i.test(name)) return "4M";
-  if(/2\.5M/i.test(name)) return "2.5M";
-  if(/HD/i.test(name)) return "HD";
-  if(/SD/i.test(name)) return "SD";
-  if(/INDEX/i.test(name)) return "INDEX";
-  return "N/A";
-}
-
-function updateUrl() {
-  channelCounter.textContent =
-    "Kênh " +
-    (channelSelect.selectedIndex + 1) +
-    "/" +
-    channels.length;
-
-  linkCounter.textContent =
-    "Link " +
-    (templateSelect.selectedIndex + 1) +
-    "/" +
-    templates.length;
-}
-
-/* =========================================================
-   BẢNG KẾT QUẢ FREEM3U
-========================================================= */
-
-function playVidUrl(url, number) {
-  stopRangeVidScan();
-  scrollToPlayer();
-  cancelActiveProbe();
-  
-  freem3uPlaying = true;
-  freem3uPlayingNumber = number;
-  
-  video.muted = false;
-  destroyPlayer();
-  
-  setStatus(
-    "⏳ Đang kết nối FreeM3U #" + number + "..."
-  );
-  
-  const cancel = setupHlsPlayback(url, {
-    onPlaying: () => {
-      setStatus(
-        "🟢 FREEM3U — Đang phát kênh #" + number,
-        "ok"
-      );
-      setVidScanStatus(
-        "🟢 Đang phát kênh #" + number,
-        "ok"
-      );
-      updateVidResultList();
-    },
-    onError: () => {
-      setStatus(
-        "🔴 Không phát được FreeM3U #" + number,
-        "error"
-      );
-      freem3uPlaying = false;
-      freem3uPlayingNumber = null;
-      updateVidResultList();
-    }
-  });
-  activePlaybackCancel = cancel ? cancel.cancel : null;
-}
-
-function updateVidResultList() {
-  const container = document.getElementById('vidResultList');
-  const countSpan = document.getElementById('vidFoundLinks');
-  
-  if (!container) return;
-  
-  if (vidFoundResults.length === 0) {
-    container.innerHTML = `<div class="vid-result-empty">⚪ Chưa có kết quả dò FreeM3U</div>`;
-    if (countSpan) countSpan.textContent = '0';
-    return;
-  }
-  
-  let html = '';
-  vidFoundResults.forEach((result, idx) => {
-    const escapedUrl = result.url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    const isPlaying = freem3uPlaying && freem3uPlayingNumber === result.number;
-    
-    html += `
-      <div class="vid-result-item" style="${isPlaying ? 'border-left:3px solid #ffaa00;' : ''}" onclick="playVidUrl('${escapedUrl}', ${result.number})">
-        <span class="vid-number">#${result.number}${isPlaying ? ' ▶' : ''}</span>
-        <span class="vid-link" title="${result.url}">${result.url}</span>
-        <button class="vid-copy-btn" onclick="event.stopPropagation();copyToClipboard('${escapedUrl}')">📋 COPY</button>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-  if (countSpan) countSpan.textContent = vidFoundResults.length;
-}
-
-function addVidFoundResult(number, url) {
-  const existing = vidFoundResults.find(r => r.number === number);
-  if (existing) {
-    existing.url = url;
-  } else {
-    vidFoundResults.push({ number, url });
-  }
-  vidFoundResults.sort((a, b) => a.number - b.number);
-  updateVidResultList();
-}
-
-
-/* =========================================================
-   BẢNG KẾT QUẢ CHUNG
-========================================================= */
-
-function scrollToPlayer() {
-  const player = document.querySelector(".player");
-  if (player) {
-    player.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-  }
-}
-
-function playStreamUrl(url, index) {
-  stopRangeVidScan();
-  scrollToPlayer();
-  cancelActiveProbe();
-  
-  freem3uPlaying = false;
-  freem3uPlayingNumber = null;
-  
-  video.muted = false;
-  destroyPlayer();
-  
-  currentPlayingLink = index;
-  
-  setStatus(
-    "⏳ Đang mở link " + (index + 1) + "..."
-  );
-  
-  const cancel = setupHlsPlayback(url, {
-    onPlaying: () => {
-      setStatus(
-        "🟢 Đang phát — Link " + (index + 1),
-        "ok"
-      );
-      templateSelect.selectedIndex = index;
-      updateUrl();
-    },
-    onError: () => {
-      setStatus(
-        "🔴 Không phát được Link " + (index + 1),
-        "error"
-      );
-    }
-  });
-  activePlaybackCancel = cancel ? cancel.cancel : null;
-}
-
-function updateResultTable() {
-  const tbody = document.getElementById('resultBody');
-  const foundSpan = document.getElementById('foundLinks');
-  
-  if (!tbody) return;
-  
-  tbody.innerHTML = '';
-  
-  if (foundResults.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ TỰ ĐỘNG.</td></tr>`;
-    if (foundSpan) foundSpan.textContent = '0';
-    return;
-  }
-  
-  foundResults.forEach((result, index) => {
-    const tr = document.createElement('tr');
-    tr.className = 'found';
-    tr.style.cursor = 'pointer';
-    tr.addEventListener('click', function(event) {
-      if (event.target.closest('button')) return;
-      playStreamUrl(result.url, result.index);
-    });
-    
-    const escapedUrl = result.url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td style="font-size:11px;">${result.name || 'N/A'}</td>
-      <td class="link-cell" title="${result.url}" onclick="playStreamUrl('${escapedUrl}', ${result.index})">${result.url}</td>
-      <td>${result.quality || 'N/A'}</td>
-      <td><button class="copy-btn" onclick="copyToClipboard('${escapedUrl}')">📋 COPY</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  
-  if (foundSpan) foundSpan.textContent = foundResults.length;
-}
-
-function addFoundResult(index, url) {
-  const name = templates[index]?.name || `Link ${index + 1}`;
-  const quality = getQualityShort(index);
-  
-  const existing = foundResults.find(r => r.url === url);
-  if (existing) {
-    return;
-  }
-  
-  foundResults.push({
-    index: index,
-    name: name,
-    url: url,
-    quality: quality
-  });
-  
-  lastFoundIndex = index;
-  foundResults.sort((a, b) => a.index - b.index);
-  updateResultTable();
-}
-
-function clearResults() {
-  foundResults = [];
-  lastFoundIndex = null;
-  updateResultTable();
-  setStatus("🗑 Đã xóa toàn bộ kết quả", "ok");
-}
-
 function copyToClipboard(text) {
   if (!text) return;
-  
+
+  const fallbackCopy = (txt) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = txt;
+    textarea.style.cssText = 'position:fixed;opacity:0;top:-100px;left:-100px;';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      setStatus("📋 Đã copy: " + txt.substring(0, 50) + (txt.length > 50 ? '...' : ''), "ok");
+    } catch (e) {
+      setStatus("❌ Không thể copy", "error");
+    }
+    document.body.removeChild(textarea);
+  };
+
   if (isIOS()) {
     const tempInput = document.createElement('input');
     tempInput.value = text;
-    tempInput.style.position = 'fixed';
-    tempInput.style.opacity = '0';
-    tempInput.style.top = '-100px';
-    tempInput.style.left = '-100px';
+    tempInput.style.cssText = 'position:fixed;opacity:0;top:-100px;left:-100px;';
     document.body.appendChild(tempInput);
     tempInput.select();
     tempInput.setSelectionRange(0, 99999);
-    
     try {
       document.execCommand('copy');
       setStatus("📋 Đã copy: " + text.substring(0, 50) + (text.length > 50 ? '...' : ''), "ok");
@@ -1718,180 +1050,39 @@ function copyToClipboard(text) {
     document.body.removeChild(tempInput);
     return;
   }
-  
+
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
       setStatus("📋 Đã copy: " + text.substring(0, 50) + (text.length > 50 ? '...' : ''), "ok");
-    }).catch(() => {
-      fallbackCopy(text);
-    });
+    }).catch(() => fallbackCopy(text));
   } else {
     fallbackCopy(text);
   }
 }
 
-function fallbackCopy(text) {
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
-  textarea.select();
-  try {
-    document.execCommand('copy');
-    setStatus("📋 Đã copy: " + text.substring(0, 50) + (text.length > 50 ? '...' : ''), "ok");
-  } catch (e) {
-    setStatus("❌ Không thể copy", "error");
-  }
-  document.body.removeChild(textarea);
-}
-
 /* =========================================================
-   CHUYỂN KÊNH
+   HLS PLAYBACK ENGINE
 ========================================================= */
-
-function nextChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
-  resetAutoScanIndex();
-
-  let index = channelSelect.selectedIndex + 1;
-  if(index >= channels.length) {
-    index = 0;
-  }
-  channelSelect.selectedIndex = index;
-
-  manualChannelCode = "";
-  const input = document.getElementById("manualChannelInput");
-  if(input) input.value = "";
-
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-  playCurrent();
-}
-
-function prevChannel() {
-  stopRangeVidScan();
-  cancelActiveProbe();
-  resetAutoScanIndex();
-
-  let index = channelSelect.selectedIndex - 1;
-  if(index < 0) {
-    index = channels.length - 1;
-  }
-  channelSelect.selectedIndex = index;
-
-  manualChannelCode = "";
-  const input = document.getElementById("manualChannelInput");
-  if(input) input.value = "";
-
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-  playCurrent();
-}
-
-/* =========================================================
-   EVENT DROPDOWN
-========================================================= */
-
-channelSelect.addEventListener("change", function(){
-  stopRangeVidScan();
-  cancelActiveProbe();
-  manualChannelCode = "";
-  const manualInput = document.getElementById("manualChannelInput");
-  if(manualInput) manualInput.value = "";
-
-  resetAutoScanIndex();
-  templateSelect.selectedIndex = 0;
-  updateUrl();
-  playCurrent();
-});
-
-templateSelect.addEventListener("change", function(){
-  stopRangeVidScan();
-  cancelActiveProbe();
-  updateUrl();
-  playCurrent();
-});
-
-/* =========================================================
-   ẨN / HIỆN
-========================================================= */
-
-function togglePanel(bodyId, toggleId) {
-  const body = document.getElementById(bodyId);
-  const toggle = document.getElementById(toggleId);
-
-  if(!body || !toggle) return;
-
-  const hidden = body.classList.contains("is-hidden");
-
-  if(hidden) {
-    body.classList.remove("is-hidden");
-    toggle.textContent = "▲ ẨN";
-    toggle.setAttribute("aria-expanded", "true");
-  } else {
-    body.classList.add("is-hidden");
-    toggle.textContent = "▼ HIỆN";
-    toggle.setAttribute("aria-expanded", "false");
-  }
-}
-
-/* =========================================================
-   TRẠNG THÁI
-========================================================= */
-
-function setStatus(text,type="") {
-  statusBox.textContent = text;
-  statusBox.className = "status " + type;
-}
-
-/* =========================================================
-   HỦY PLAYER CŨ
-========================================================= */
-
-function destroyPlayer() {
-  if(hls) {
-    hls.destroy();
-    hls = null;
-  }
-  video.pause();
-  video.removeAttribute("src");
-  video.load();
-}
-
-/* =========================================================
-   PHÁT URL
-========================================================= */
-
-function setupHlsPlayback(url, {
-  onPlaying,
-  onError,
-  timeout = 15000
-} = {}) {
+function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
   let finished = false;
   let timer = null;
   let nativeCleanup = null;
 
   const cleanup = () => {
     clearTimeout(timer);
-    if (activeNativeTimeout) {
-      clearTimeout(activeNativeTimeout);
-      activeNativeTimeout = null;
+    if (state.activeNativeTimeout) {
+      clearTimeout(state.activeNativeTimeout);
+      state.activeNativeTimeout = null;
     }
     if (nativeCleanup) {
       nativeCleanup();
       nativeCleanup = null;
     }
-    if (onPlaying) {
-      video.removeEventListener("playing", onVideoPlaying);
-    }
-    if (onError) {
-      video.removeEventListener("error", onVideoError);
-    }
-    if (hls && isHlsEventsAvailable()) {
-      hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      hls.off(Hls.Events.ERROR, onHlsError);
+    if (onPlaying) video.removeEventListener("playing", onVideoPlaying);
+    if (onError) video.removeEventListener("error", onVideoError);
+    if (state.hls && isHlsEventsAvailable()) {
+      state.hls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      state.hls.off(Hls.Events.ERROR, onHlsError);
     }
   };
 
@@ -1899,38 +1090,27 @@ function setupHlsPlayback(url, {
     if (finished) return;
     finished = true;
     cleanup();
-
-    if (success) {
-      if (onPlaying) onPlaying();
-    } else if (onError) {
-      onError();
-    }
+    if (success) onPlaying?.();
+    else onError?.();
   };
 
-  const onManifestParsed = () => {
-    video.play().catch(() => {});
-  };
-
+  const onManifestParsed = () => { video.play().catch(() => {}); };
   const onHlsError = (event, data) => {
-    if (data && data.fatal) {
-      if (hls) {
-        hls.destroy();
-        hls = null;
+    if (data?.fatal) {
+      if (state.hls) {
+        state.hls.destroy();
+        state.hls = null;
       }
       finish(false);
     }
   };
-
   const onVideoPlaying = () => finish(true);
   const onVideoError = () => finish(false);
 
-  if (onPlaying) {
-    video.addEventListener("playing", onVideoPlaying, {once:true});
-  }
-  if (onError) {
-    video.addEventListener("error", onVideoError, {once:true});
-  }
+  if (onPlaying) video.addEventListener("playing", onVideoPlaying, { once: true });
+  if (onError) video.addEventListener("error", onVideoError, { once: true });
 
+  // Native HLS (iOS/Safari)
   if (isIOS() && isNativeHLSSupported()) {
     const onLoadedMetadata = () => {
       if (nativeCleanup) nativeCleanup();
@@ -1940,38 +1120,27 @@ function setupHlsPlayback(url, {
       if (nativeCleanup) nativeCleanup();
       finish(false);
     };
-    
     nativeCleanup = () => {
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
       video.removeEventListener("error", onErrorNative);
     };
-    
-    video.addEventListener("loadedmetadata", onLoadedMetadata, {once:true});
-    video.addEventListener("error", onErrorNative, {once:true});
+    video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+    video.addEventListener("error", onErrorNative, { once: true });
     video.src = url;
     video.load();
-    
-    activeNativeTimeout = setTimeout(() => {
-      if (!finished) {
-        finish(false);
-      }
-    }, timeout);
+    state.activeNativeTimeout = setTimeout(() => { if (!finished) finish(false); }, timeout);
   }
+  // HLS.js
   else if (isHlsSupported()) {
-    hls = new Hls({
-      enableWorker:true,
-      lowLatencyMode:true,
-      backBufferLength:30
-    });
-
+    state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
     if (isHlsEventsAvailable()) {
-      hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      hls.on(Hls.Events.ERROR, onHlsError);
+      state.hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+      state.hls.on(Hls.Events.ERROR, onHlsError);
     }
-
-    hls.loadSource(url);
-    hls.attachMedia(video);
+    state.hls.loadSource(url);
+    state.hls.attachMedia(video);
   }
+  // Fallback native
   else if (isNativeHLSSupported()) {
     const onLoadedMetadata = () => {
       if (nativeCleanup) nativeCleanup();
@@ -1981,172 +1150,264 @@ function setupHlsPlayback(url, {
       if (nativeCleanup) nativeCleanup();
       finish(false);
     };
-    
     nativeCleanup = () => {
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
       video.removeEventListener("error", onErrorNative);
     };
-    
-    video.addEventListener("loadedmetadata", onLoadedMetadata, {once:true});
-    video.addEventListener("error", onErrorNative, {once:true});
+    video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+    video.addEventListener("error", onErrorNative, { once: true });
     video.src = url;
     video.load();
-  }
-  else {
+  } else {
     finish(false);
-    return;
+    return { cancel: () => finish(false) };
   }
 
   timer = setTimeout(() => finish(false), timeout);
-
-  return {
-    cancel: () => finish(false)
-  };
-}
-
-function playUrl(url,index) {
-  video.muted = false;
-  freem3uPlaying = false;
-  freem3uPlayingNumber = null;
-  destroyPlayer();
-
-  currentPlayingLink = index;
-
-  setStatus(
-    "⏳ Đang kết nối Link " +
-    (index + 1) +
-    "..."
-  );
-
-  const cancel = setupHlsPlayback(url, {
-    onPlaying: () => {
-      setStatus(
-        "🟢 Đang phát — Link " +
-        (index + 1),
-        "ok"
-      );
-    },
-    onError: () => {
-      setStatus(
-        "🔴 Không phát được Link " +
-        (index + 1),
-        "error"
-      );
-    }
-  });
-  activePlaybackCancel = cancel ? cancel.cancel : null;
+  return { cancel: () => finish(false) };
 }
 
 /* =========================================================
-   DÒ LINK TỰ ĐỘNG
+   PLAY FUNCTIONS
 ========================================================= */
+function playUrl(url, index) {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  state.freem3uPlaying = false;
+  state.freem3uPlayingNumber = null;
+  video.muted = false;
+  destroyPlayer();
+  state.currentPlayingLink = index;
 
-function setAutoScanButton(scanning) {
-  const btn = document.getElementById("autoScanBtn");
-  if(!btn) return;
+  setStatus("⏳ Đang kết nối Link " + (index + 1) + "...");
 
-  btn.disabled = !!scanning;
-  btn.textContent = scanning
-    ? "⏳ ĐANG DÒ..."
-    : "⚡ DÒ TỰ ĐỘNG";
+  const cancel = setupHlsPlayback(url, {
+    onPlaying: () => setStatus("🟢 Đang phát — Link " + (index + 1), "ok"),
+    onError: () => setStatus("🔴 Không phát được Link " + (index + 1), "error")
+  });
+  state.activePlaybackCancel = cancel ? cancel.cancel : null;
+}
+
+function playCurrent() {
+  const index = Number(templateSelect.value);
+  playUrl(getUrl(index), index);
+}
+
+function playStreamUrl(url, index) {
+  stopRangeVidScan();
+  scrollToPlayer();
+  cancelActiveProbe();
+  state.freem3uPlaying = false;
+  state.freem3uPlayingNumber = null;
+  video.muted = false;
+  destroyPlayer();
+  state.currentPlayingLink = index;
+
+  setStatus("⏳ Đang mở link " + (index + 1) + "...");
+
+  const cancel = setupHlsPlayback(url, {
+    onPlaying: () => {
+      setStatus("🟢 Đang phát — Link " + (index + 1), "ok");
+      templateSelect.selectedIndex = index;
+      updateUrl();
+    },
+    onError: () => setStatus("🔴 Không phát được Link " + (index + 1), "error")
+  });
+  state.activePlaybackCancel = cancel ? cancel.cancel : null;
+}
+
+function playVidUrl(url, number) {
+  stopRangeVidScan();
+  scrollToPlayer();
+  cancelActiveProbe();
+  state.freem3uPlaying = true;
+  state.freem3uPlayingNumber = number;
+  video.muted = false;
+  destroyPlayer();
+
+  setStatus("⏳ Đang kết nối FreeM3U #" + number + "...");
+
+  const cancel = setupHlsPlayback(url, {
+    onPlaying: () => {
+      setStatus("🟢 FREEM3U — Đang phát kênh #" + number, "ok");
+      setVidScanStatus("🟢 Đang phát kênh #" + number, "ok");
+      updateVidResultList();
+    },
+    onError: () => {
+      setStatus("🔴 Không phát được FreeM3U #" + number, "error");
+      state.freem3uPlaying = false;
+      state.freem3uPlayingNumber = null;
+      updateVidResultList();
+    }
+  });
+  state.activePlaybackCancel = cancel ? cancel.cancel : null;
+}
+
+/* =========================================================
+   CHANNEL NAVIGATION
+========================================================= */
+function nextChannel() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  resetAutoScanIndex();
+  let index = channelSelect.selectedIndex + 1;
+  if (index >= channels.length) index = 0;
+  channelSelect.selectedIndex = index;
+  state.manualChannelCode = "";
+  document.getElementById("manualChannelInput").value = "";
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+  playCurrent();
+}
+
+function prevChannel() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  resetAutoScanIndex();
+  let index = channelSelect.selectedIndex - 1;
+  if (index < 0) index = channels.length - 1;
+  channelSelect.selectedIndex = index;
+  state.manualChannelCode = "";
+  document.getElementById("manualChannelInput").value = "";
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+  playCurrent();
+}
+
+function nextLink() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  let index = templateSelect.selectedIndex + 1;
+  if (index >= templates.length) index = 0;
+  resetAutoScanIndex();
+  state.autoScanNextIndex = index;
+  templateSelect.selectedIndex = index;
+  updateUrl();
+  playCurrent();
+}
+
+function prevLink() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  let index = templateSelect.selectedIndex - 1;
+  if (index < 0) index = templates.length - 1;
+  resetAutoScanIndex();
+  state.autoScanNextIndex = index;
+  templateSelect.selectedIndex = index;
+  updateUrl();
+  playCurrent();
+}
+
+/* =========================================================
+   MANUAL CHANNEL
+========================================================= */
+function useManualChannel() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  const input = document.getElementById("manualChannelInput");
+  const code = input ? input.value.trim() : "";
+  if (!code) {
+    setStatus("⚠️ Hãy nhập mã kênh, ví dụ: vtv1", "error");
+    return;
+  }
+  state.manualChannelCode = code;
+  resetAutoScanIndex();
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+  playCurrent();
+  setStatus("🟢 Đã nhận kênh: " + code + " — bấm DÒ TỰ ĐỘNG để dò", "ok");
+}
+
+function clearManualChannel() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  state.manualChannelCode = "";
+  document.getElementById("manualChannelInput").value = "";
+  resetAutoScanIndex();
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+  playCurrent();
+  setStatus("🟢 Đã xóa kênh nhập tay — đang dùng kênh trong danh sách", "ok");
+}
+
+/* =========================================================
+   AUTO SCAN
+========================================================= */
+function resetAutoScanIndex() {
+  state.autoScanToken++;
+  state.autoScanning = false;
+  state.autoScanNextIndex = 0;
+  setAutoScanButton(false);
+  state.autoScanTimers.forEach(timer => clearTimeout(timer));
+  state.autoScanTimers = [];
+  cancelActiveProbe();
+  setStatus("🔄 Đã reset dò — lần dò tiếp theo bắt đầu từ Link 1", "ok");
 }
 
 function tryAutoScanLink(index, token) {
   return new Promise((resolve) => {
-    if(token !== autoScanToken) { resolve(false); return; }
+    if (token !== state.autoScanToken) { resolve(false); return; }
 
     const url = getUrl(index);
-    currentPlayingLink = index;
+    state.currentPlayingLink = index;
     templateSelect.selectedIndex = index;
-
     setStatus("🔎 Đang kiểm tra " + getActiveChannelCode() + " — Link " + (index + 1) + "/" + templates.length + "...");
 
     let done = false;
     let timer = null;
     let probeHls = null;
     let nativeCleanup = null;
-    let probeCancel = null;
     let nativeTimeout = null;
 
     const finish = (ok) => {
-      if(done) return;
+      if (done) return;
       done = true;
       clearTimeout(timer);
-      if (nativeTimeout) {
-        clearTimeout(nativeTimeout);
-        nativeTimeout = null;
-      }
-      
-      if(probeHls) {
+      if (nativeTimeout) { clearTimeout(nativeTimeout); nativeTimeout = null; }
+      if (probeHls) {
         const probe = probeHls;
         probeHls = null;
-        if (activeProbeHls === probe) {
-          activeProbeHls = null;
-        }
+        if (state.activeProbeHls === probe) state.activeProbeHls = null;
         try { probe.destroy(); } catch(e) {}
       }
-      
-      if(nativeCleanup) {
-        nativeCleanup();
-        nativeCleanup = null;
-      }
-      if (probeCancel) {
-        probeCancel();
-        probeCancel = null;
-      }
-      
-      if (ok) {
-        addFoundResult(index, url);
-      }
-      
+      if (nativeCleanup) { nativeCleanup(); nativeCleanup = null; }
+      if (ok) addFoundResult(index, url);
       resolve(ok);
     };
 
     timer = setTimeout(() => finish(false), 15000);
 
+    // Native HLS probe
     if (isIOS() && isNativeHLSSupported()) {
-      const onLoadedMetadata = () => {
-        if (nativeCleanup) nativeCleanup();
-        finish(true);
-      };
-      const onError = () => {
-        if (nativeCleanup) nativeCleanup();
-        finish(false);
-      };
-      
+      const onLoadedMetadata = () => { if (nativeCleanup) nativeCleanup(); finish(true); };
+      const onError = () => { if (nativeCleanup) nativeCleanup(); finish(false); };
       nativeCleanup = () => {
         video.removeEventListener("loadedmetadata", onLoadedMetadata);
         video.removeEventListener("error", onError);
         video.removeAttribute("src");
         video.load();
       };
-      
-      video.addEventListener("loadedmetadata", onLoadedMetadata, {once:true});
-      video.addEventListener("error", onError, {once:true});
+      video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+      video.addEventListener("error", onError, { once: true });
       video.src = url;
       video.load();
-      
-      nativeTimeout = setTimeout(() => {
-        if (!done) {
-          finish(false);
-        }
-      }, 10000);
+      nativeTimeout = setTimeout(() => { if (!done) finish(false); }, 10000);
       return;
     }
 
-    if(isHlsSupported()) {
+    // HLS.js probe
+    if (isHlsSupported()) {
       try {
-        probeHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
-        activeProbeHls = probeHls;
-        
+        probeHls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
+        state.activeProbeHls = probeHls;
         if (isHlsEventsAvailable()) {
           probeHls.once(Hls.Events.MANIFEST_PARSED, () => finish(true));
           probeHls.once(Hls.Events.ERROR, (event, data) => {
-            if(data && data.fatal) {
-              if(probeHls) {
+            if (data?.fatal) {
+              if (probeHls) {
                 probeHls.destroy();
                 probeHls = null;
-                if (activeProbeHls === probeHls) activeProbeHls = null;
+                if (state.activeProbeHls === probeHls) state.activeProbeHls = null;
               }
               finish(false);
             }
@@ -2154,15 +1415,14 @@ function tryAutoScanLink(index, token) {
         } else {
           setTimeout(() => finish(false), 5000);
         }
-        
         probeHls.attachMedia(video);
         probeHls.loadSource(url);
       } catch(e) {
         console.error("Probe HLS:", e);
-        if(probeHls) {
+        if (probeHls) {
           probeHls.destroy();
           probeHls = null;
-          if (activeProbeHls === probeHls) activeProbeHls = null;
+          if (state.activeProbeHls === probeHls) state.activeProbeHls = null;
         }
         finish(false);
       }
@@ -2174,77 +1434,67 @@ function tryAutoScanLink(index, token) {
 }
 
 function autoScanLinks() {
-  if(autoScanning) {
+  if (state.autoScanning) {
     setStatus("⏳ Đang dò, vui lòng chờ...", "ok");
     return;
   }
 
   const input = document.getElementById("manualChannelInput");
   const typedCode = input ? input.value.trim() : "";
-
-  if(typedCode) {
-    if(typedCode !== manualChannelCode.trim()) {
-      manualChannelCode = typedCode;
-      autoScanNextIndex = 0;
-      autoScanToken++;
-    } else {
-      manualChannelCode = typedCode;
-    }
+  if (typedCode && typedCode !== state.manualChannelCode.trim()) {
+    state.manualChannelCode = typedCode;
+    state.autoScanNextIndex = 0;
+    state.autoScanToken++;
   }
 
   const code = getActiveChannelCode().trim();
-  if(!code) {
+  if (!code) {
     setStatus("⚠️ Chưa có mã kênh để dò", "error");
     return;
   }
 
-  foundResults = [];
-  lastFoundIndex = null;
+  state.foundResults = [];
+  state.lastFoundIndex = null;
   updateResultTable();
 
-  if(autoScanNextIndex >= templates.length) {
+  if (state.autoScanNextIndex >= templates.length) {
     setStatus("⚪ " + code + " đã dò hết " + templates.length + " link — bấm DÒ LẠI TỪ ĐẦU", "error");
     return;
   }
 
-  vidScanToken++;
-  vidScanning = false;
-  freem3uPlaying = false;
-  freem3uPlayingNumber = null;
+  state.vidScanToken++;
+  state.vidScanning = false;
+  state.freem3uPlaying = false;
+  state.freem3uPlayingNumber = null;
   setRangeScanButtons(false);
-
   cancelActiveProbe();
 
-  autoScanning = true;
-  autoScanToken++;
-  const token = autoScanToken;
-  let index = autoScanNextIndex;
+  state.autoScanning = true;
+  state.autoScanToken++;
+  const token = state.autoScanToken;
+  let index = state.autoScanNextIndex;
   setAutoScanButton(true);
 
   const scanNext = () => {
-    if(token !== autoScanToken || !autoScanning) {
-      autoScanTimers = [];
+    if (token !== state.autoScanToken || !state.autoScanning) {
+      state.autoScanTimers = [];
       return;
     }
 
-    if(index >= templates.length) {
-      autoScanNextIndex = templates.length;
-      autoScanning = false;
+    if (index >= templates.length) {
+      state.autoScanNextIndex = templates.length;
+      state.autoScanning = false;
       setAutoScanButton(false);
-      autoScanTimers = [];
+      state.autoScanTimers = [];
       
-      const foundCount = foundResults.length;
-      if (foundCount > 0) {
-        if (lastFoundIndex !== null) {
-          templateSelect.selectedIndex = lastFoundIndex;
-          updateUrl();
-          setTimeout(() => {
-            playUrl(getUrl(lastFoundIndex), lastFoundIndex);
-          }, 300);
-          setStatus("✅ Dò xong! Tìm thấy " + foundCount + " link. Đang phát link cuối cùng (Link " + (lastFoundIndex + 1) + ")", "ok");
-        } else {
-          setStatus("✅ Dò xong! Tìm thấy " + foundCount + " link phát được cho " + code, "ok");
-        }
+      const foundCount = state.foundResults.length;
+      if (foundCount > 0 && state.lastFoundIndex !== null) {
+        templateSelect.selectedIndex = state.lastFoundIndex;
+        updateUrl();
+        setTimeout(() => playUrl(getUrl(state.lastFoundIndex), state.lastFoundIndex), 300);
+        setStatus("✅ Dò xong! Tìm thấy " + foundCount + " link. Đang phát link cuối cùng (Link " + (state.lastFoundIndex + 1) + ")", "ok");
+      } else if (foundCount > 0) {
+        setStatus("✅ Dò xong! Tìm thấy " + foundCount + " link phát được cho " + code, "ok");
       } else {
         setStatus("🔴 Đã dò hết " + templates.length + " link, không tìm thấy link nào phát được", "error");
       }
@@ -2252,27 +1502,23 @@ function autoScanLinks() {
     }
 
     const testIndex = index++;
-    autoScanNextIndex = index;
+    state.autoScanNextIndex = index;
 
     tryAutoScanLink(testIndex, token).then(success => {
-      if(token !== autoScanToken || !autoScanning) {
-        autoScanTimers = [];
+      if (token !== state.autoScanToken || !state.autoScanning) {
+        state.autoScanTimers = [];
         return;
       }
-
-      if(success) {
-        setStatus("✅ Tìm thấy link " + (testIndex + 1) + " — tiếp tục dò...", "ok");
-      }
-
+      if (success) setStatus("✅ Tìm thấy link " + (testIndex + 1) + " — tiếp tục dò...", "ok");
       const timer = setTimeout(scanNext, isIOS() ? 100 : 30);
-      autoScanTimers.push(timer);
+      state.autoScanTimers.push(timer);
     }).catch(err => {
       console.error("Auto scan:", err);
-      if(token === autoScanToken && autoScanning) {
+      if (token === state.autoScanToken && state.autoScanning) {
         const timer = setTimeout(scanNext, isIOS() ? 200 : 100);
-        autoScanTimers.push(timer);
+        state.autoScanTimers.push(timer);
       } else {
-        autoScanTimers = [];
+        state.autoScanTimers = [];
       }
     });
   };
@@ -2284,37 +1530,107 @@ function autoScanLinks() {
 }
 
 /* =========================================================
-   FREEM3U // DÒ KHOẢNG SỐ (ĐÃ BỎ DÒ TỚI/DÒ LÙI)
+   RESULTS TABLE
 ========================================================= */
-
-function getVidUrl(number) {
-  return "https://freem3u.xyz/api/live/play.m3u8?vid=" + number;
-}
-
-function setRangeScanButtons(scanning) {
-  if(vidRangeScanBtn) {
-    vidRangeScanBtn.disabled = scanning;
-    vidRangeScanBtn.textContent = scanning ? "⏳ ĐANG DÒ..." : "🚀 DÒ TỪ ... ĐẾN ...";
-    vidRangeScanBtn.style.display = scanning ? "none" : "inline-block";
+function updateResultTable() {
+  const tbody = document.getElementById('resultBody');
+  const foundSpan = document.getElementById('foundLinks');
+  if (!tbody) return;
+  
+  tbody.innerHTML = '';
+  if (state.foundResults.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ TỰ ĐỘNG.</td></tr>`;
+    if (foundSpan) foundSpan.textContent = '0';
+    return;
   }
-  if(vidRangeStopBtn) {
-    vidRangeStopBtn.style.display = scanning ? "inline-block" : "none";
+
+  state.foundResults.forEach((result, index) => {
+    const tr = document.createElement('tr');
+    tr.className = 'found';
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', function(event) {
+      if (event.target.closest('button')) return;
+      playStreamUrl(result.url, result.index);
+    });
+    const escapedUrl = result.url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td style="font-size:11px;">${result.name || 'N/A'}</td>
+      <td class="link-cell" title="${result.url}" onclick="playStreamUrl('${escapedUrl}', ${result.index})">${result.url}</td>
+      <td>${result.quality || 'N/A'}</td>
+      <td><button class="copy-btn" onclick="copyToClipboard('${escapedUrl}')">📋 COPY</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  if (foundSpan) foundSpan.textContent = state.foundResults.length;
+}
+
+function addFoundResult(index, url) {
+  const name = templates[index]?.name || `Link ${index + 1}`;
+  const quality = getQualityShort(index);
+  const existing = state.foundResults.find(r => r.url === url);
+  if (existing) return;
+  
+  state.foundResults.push({ index, name, url, quality });
+  state.lastFoundIndex = index;
+  state.foundResults.sort((a, b) => a.index - b.index);
+  updateResultTable();
+}
+
+function clearResults() {
+  state.foundResults = [];
+  state.lastFoundIndex = null;
+  updateResultTable();
+  setStatus("🗑 Đã xóa toàn bộ kết quả", "ok");
+}
+
+/* =========================================================
+   VID RESULT LIST
+========================================================= */
+function updateVidResultList() {
+  const container = document.getElementById('vidResultList');
+  const countSpan = document.getElementById('vidFoundLinks');
+  if (!container) return;
+
+  if (state.vidFoundResults.length === 0) {
+    container.innerHTML = `<div class="vid-result-empty">⚪ Chưa có kết quả dò FreeM3U</div>`;
+    if (countSpan) countSpan.textContent = '0';
+    return;
   }
+
+  let html = '';
+  state.vidFoundResults.forEach((result) => {
+    const escapedUrl = result.url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const isPlaying = state.freem3uPlaying && state.freem3uPlayingNumber === result.number;
+    html += `
+      <div class="vid-result-item" style="${isPlaying ? 'border-left:3px solid #ffaa00;' : ''}" onclick="playVidUrl('${escapedUrl}', ${result.number})">
+        <span class="vid-number">#${result.number}${isPlaying ? ' ▶' : ''}</span>
+        <span class="vid-link" title="${result.url}">${result.url}</span>
+        <button class="vid-copy-btn" onclick="event.stopPropagation();copyToClipboard('${escapedUrl}')">📋 COPY</button>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+  if (countSpan) countSpan.textContent = state.vidFoundResults.length;
 }
 
-function setVidScanStatus(text, type="") {
-  if(!vidScanStatus) return;
-
-  vidScanStatus.textContent = text;
-  vidScanStatus.style.color =
-    type === "ok" ? "#86efac" :
-    type === "error" ? "#fca5a5" :
-    "";
+function addVidFoundResult(number, url) {
+  const existing = state.vidFoundResults.find(r => r.number === number);
+  if (existing) {
+    existing.url = url;
+  } else {
+    state.vidFoundResults.push({ number, url });
+  }
+  state.vidFoundResults.sort((a, b) => a.number - b.number);
+  updateVidResultList();
 }
 
+/* =========================================================
+   FREEM3U RANGE SCAN
+========================================================= */
 function tryVidNumber(number, token) {
   return new Promise((resolve) => {
-    if (token !== vidScanToken || !vidScanning) {
+    if (token !== state.vidScanToken || !state.vidScanning) {
       resolve(false);
       return;
     }
@@ -2323,121 +1639,80 @@ function tryVidNumber(number, token) {
     destroyPlayer();
 
     const cancelFn = setupHlsPlayback(url, {
-      timeout: VID_SCAN_TIMEOUT,
+      timeout: state.VID_SCAN_TIMEOUT,
       onPlaying: () => {
         addVidFoundResult(number, url);
         resolve(true);
       },
       onError: () => resolve(false)
     });
-    if (cancelFn) {
-      activePlaybackCancel = cancelFn.cancel;
-    } else {
-      activePlaybackCancel = null;
-    }
+    state.activePlaybackCancel = cancelFn ? cancelFn.cancel : null;
   });
 }
 
-/* ===== DÒ KHOẢNG SỐ ===== */
 function startRangeVidScan() {
   const fromInput = document.getElementById('vidRangeFrom');
   const toInput = document.getElementById('vidRangeTo');
+  let from = parseInt(fromInput.value) || 1;
+  let to = parseInt(toInput.value) || 10;
+  if (from < 1) from = 1;
+  if (to > state.VID_SCAN_MAX) to = state.VID_SCAN_MAX;
+  if (from > to) { [from, to] = [to, from]; fromInput.value = from; toInput.value = to; }
   
-  let from = parseInt(fromInput.value);
-  let to = parseInt(toInput.value);
-  
-  if (isNaN(from) || from < 1) from = 1;
-  if (isNaN(to) || to > VID_SCAN_MAX) to = VID_SCAN_MAX;
-  if (from > to) {
-    [from, to] = [to, from];
-    fromInput.value = from;
-    toInput.value = to;
-  }
-  
-  // Nếu đang dò thì dừng lại trước
-  if (vidScanning) {
+  if (state.vidScanning) {
     stopRangeVidScan();
-    // Đợi một chút rồi bắt đầu
-    setTimeout(() => {
-      startRangeVidScanInternal(from, to);
-    }, 300);
+    setTimeout(() => startRangeVidScanInternal(from, to), 300);
     return;
   }
-  
   startRangeVidScanInternal(from, to);
 }
 
 function startRangeVidScanInternal(from, to) {
-  // Reset kết quả cũ nếu bắt đầu từ 1
   if (from === 1) {
-    vidFoundResults = [];
-    vidFoundNumbers = [];
+    state.vidFoundResults = [];
     updateVidResultList();
   }
   
-  // Cập nhật số đang dò
-  vidScanNumber = from;
-  
-  // Bắt đầu dò
-  vidScanning = true;
-  vidScanToken++;
+  state.vidScanNumber = from;
+  state.vidScanning = true;
+  state.vidScanToken++;
   cancelActiveProbe();
   
-  const token = vidScanToken;
-  const targetEnd = Math.min(to, VID_SCAN_MAX);
+  const token = state.vidScanToken;
+  const targetEnd = Math.min(to, state.VID_SCAN_MAX);
   setRangeScanButtons(true);
-  
-  setVidScanStatus(
-    "🔎 Bắt đầu dò khoảng từ #" + from + " đến #" + targetEnd + "...",
-    "ok"
-  );
-  
+  setVidScanStatus("🔎 Bắt đầu dò khoảng từ #" + from + " đến #" + targetEnd + "...", "ok");
+
   function scanNextRange() {
-    if(token !== vidScanToken || !vidScanning) {
-      // Đã bị dừng
-      return;
-    }
+    if (token !== state.vidScanToken || !state.vidScanning) return;
     
-    if(vidScanNumber > targetEnd) {
-      vidScanning = false;
+    if (state.vidScanNumber > targetEnd) {
+      state.vidScanning = false;
       setRangeScanButtons(false);
       setVidScanStatus(
-        vidFoundResults.length
-          ? "🟢 Đã dò xong khoảng #" + from + " → #" + targetEnd +
-            " | Tìm thấy: " + vidFoundResults.map(r => r.number).join(", ")
+        state.vidFoundResults.length
+          ? "🟢 Đã dò xong khoảng #" + from + " → #" + targetEnd + " | Tìm thấy: " + state.vidFoundResults.map(r => r.number).join(", ")
           : "🔴 Đã dò xong khoảng #" + from + " → #" + targetEnd + " mà chưa tìm thấy kênh.",
-        vidFoundResults.length ? "ok" : "error"
+        state.vidFoundResults.length ? "ok" : "error"
       );
       return;
     }
     
-    const number = vidScanNumber;
-    
-    setVidScanStatus(
-      "🔎 Đang dò kênh #" + number + " (từ #" + from + " → #" + targetEnd + ")..."
-    );
+    const number = state.vidScanNumber;
+    setVidScanStatus("🔎 Đang dò kênh #" + number + " (từ #" + from + " → #" + targetEnd + ")...");
     
     tryVidNumber(number, token).then((success) => {
-      if(token !== vidScanToken || !vidScanning) return;
-      
-      if(success) {
-        vidFoundNumbers.push(number);
+      if (token !== state.vidScanToken || !state.vidScanning) return;
+      state.vidScanNumber = number + 1;
+      if (success) {
         updateVidResultList();
-        // Tiếp tục dò sau khi tìm thấy
-        vidScanNumber = number + 1;
         setTimeout(scanNextRange, isIOS() ? 200 : 100);
-        return;
+      } else {
+        setTimeout(scanNextRange, isIOS() ? 50 : 0);
       }
-      
-      vidScanNumber = number + 1;
-      setTimeout(scanNextRange, isIOS() ? 50 : 0);
-      
-    }).catch((error) => {
-      console.log("FreeM3U range scan:", error);
-      
-      if(token !== vidScanToken || !vidScanning) return;
-      
-      vidScanNumber = number + 1;
+    }).catch(() => {
+      if (token !== state.vidScanToken || !state.vidScanning) return;
+      state.vidScanNumber = number + 1;
       setTimeout(scanNextRange, isIOS() ? 50 : 0);
     });
   }
@@ -2445,111 +1720,53 @@ function startRangeVidScanInternal(from, to) {
   setTimeout(scanNextRange, isIOS() ? 100 : 0);
 }
 
-/* ===== DỪNG DÒ KHOẢNG SỐ ===== */
 function stopRangeVidScan() {
-  vidScanToken++;
-  vidScanning = false;
-  freem3uPlaying = false;
-  freem3uPlayingNumber = null;
+  state.vidScanToken++;
+  state.vidScanning = false;
+  state.freem3uPlaying = false;
+  state.freem3uPlayingNumber = null;
   setRangeScanButtons(false);
   cancelActiveProbe();
   destroyPlayer();
-
-  setVidScanStatus(
-    "⏹ Đã dừng dò tại số " + vidScanNumber + "."
-  );
+  setVidScanStatus("⏹ Đã dừng dò tại số " + state.vidScanNumber + ".");
   updateVidResultList();
 }
 
-/* ===== RESET FREEM3U ===== */
 function resetVidScan() {
-  vidScanToken++;
-  vidScanning = false;
-  freem3uPlaying = false;
-  freem3uPlayingNumber = null;
-  vidScanNumber = 1;
-  vidFoundNumbers = [];
-  vidFoundResults = [];
+  state.vidScanToken++;
+  state.vidScanning = false;
+  state.freem3uPlaying = false;
+  state.freem3uPlayingNumber = null;
+  state.vidScanNumber = 1;
+  state.vidFoundResults = [];
   cancelActiveProbe();
   destroyPlayer();
-
   setRangeScanButtons(false);
   updateVidResultList();
-
-  setVidScanStatus(
-    "🔄 Đã reset — sẵn sàng dò khoảng mới."
-  );
-  
-  const fromInput = document.getElementById('vidRangeFrom');
-  const toInput = document.getElementById('vidRangeTo');
-  if (fromInput) fromInput.value = '1';
-  if (toInput) toInput.value = '10';
+  setVidScanStatus("🔄 Đã reset — sẵn sàng dò khoảng mới.");
+  document.getElementById('vidRangeFrom').value = '1';
+  document.getElementById('vidRangeTo').value = '10';
 }
 
 /* =========================================================
-   PHÁT LINK ĐANG CHỌN
+   UI UPDATE
 ========================================================= */
-
-function playCurrent() {
-  const index = Number(templateSelect.value);
-  playUrl(getUrl(index), index);
-}
-
-function nextLink() {
-  stopRangeVidScan();
-  cancelActiveProbe();
-
-  let index = templateSelect.selectedIndex + 1;
-  if(index >= templates.length) index = 0;
-
-  resetAutoScanIndex();
-  autoScanNextIndex = index;
-
-  templateSelect.selectedIndex = index;
-  updateUrl();
-  playCurrent();
-}
-
-function prevLink() {
-  stopRangeVidScan();
-  cancelActiveProbe();
-
-  let index = templateSelect.selectedIndex - 1;
-  if(index < 0) index = templates.length - 1;
-
-  resetAutoScanIndex();
-  autoScanNextIndex = index;
-
-  templateSelect.selectedIndex = index;
-  updateUrl();
-  playCurrent();
+function updateUrl() {
+  channelCounter.textContent = "Kênh " + (channelSelect.selectedIndex + 1) + "/" + channels.length;
+  linkCounter.textContent = "Link " + (templateSelect.selectedIndex + 1) + "/" + templates.length;
 }
 
 /* =========================================================
    VIDEO EVENTS
 ========================================================= */
-
 video.addEventListener("playing", function() {
-  if(freem3uPlaying) {
-    setVidScanStatus(
-      "🟢 Đang phát kênh #" + freem3uPlayingNumber,
-      "ok"
-    );
-
-    setStatus(
-      "🟢 FREEM3U — Kênh số " + freem3uPlayingNumber + " đang phát",
-      "ok"
-    );
-
+  if (state.freem3uPlaying) {
+    setVidScanStatus("🟢 Đang phát kênh #" + state.freem3uPlayingNumber, "ok");
+    setStatus("🟢 FREEM3U — Kênh số " + state.freem3uPlayingNumber + " đang phát", "ok");
     updateVidResultList();
     return;
   }
-
-  setStatus(
-    "🟢 Đang phát — Link " +
-    (currentPlayingLink + 1),
-    "ok"
-  );
+  setStatus("🟢 Đang phát — Link " + (state.currentPlayingLink + 1), "ok");
 });
 
 video.addEventListener("waiting", function() {
@@ -2561,70 +1778,99 @@ video.addEventListener("error", function() {
 });
 
 /* =========================================================
-   PHÍM TẮT
+   DROPDOWN EVENTS
 ========================================================= */
+channelSelect.addEventListener("change", function() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  state.manualChannelCode = "";
+  document.getElementById("manualChannelInput").value = "";
+  resetAutoScanIndex();
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+  playCurrent();
+});
 
+templateSelect.addEventListener("change", function() {
+  stopRangeVidScan();
+  cancelActiveProbe();
+  updateUrl();
+  playCurrent();
+});
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+========================================================= */
 document.addEventListener("keydown", function(event) {
-  if(
-    event.target.tagName === "INPUT" ||
-    event.target.tagName === "TEXTAREA"
-  ) {
-    return;
-  }
-
-  if(event.key === "ArrowRight") {
-    event.preventDefault();
-    nextLink();
-  }
-  else if(event.key === "ArrowLeft") {
-    event.preventDefault();
-    prevLink();
-  }
-  else if(event.key === "ArrowDown") {
-    event.preventDefault();
-    nextChannel();
-  }
-  else if(event.key === "ArrowUp") {
-    event.preventDefault();
-    prevChannel();
-  }
-  else if(event.key === "Enter") {
-    event.preventDefault();
-    playCurrent();
+  if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") return;
+  switch(event.key) {
+    case "ArrowRight": event.preventDefault(); nextLink(); break;
+    case "ArrowLeft": event.preventDefault(); prevLink(); break;
+    case "ArrowDown": event.preventDefault(); nextChannel(); break;
+    case "ArrowUp": event.preventDefault(); prevChannel(); break;
+    case "Enter": event.preventDefault(); playCurrent(); break;
   }
 });
 
 /* =========================================================
-   BIND BUTTONS CHO iOS
+   MANUAL INPUT ENTER
 ========================================================= */
-
-document.addEventListener('DOMContentLoaded', function() {
-  bindIOSButton(prevChannelBtn, prevChannel);
-  bindIOSButton(nextChannelBtn, nextChannel);
-  bindIOSButton(autoScanBtn, autoScanLinks);
-  bindIOSButton(resetAutoScanBtn, resetAutoScanIndex);
+document.getElementById("manualChannelInput")?.addEventListener("keydown", function(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    useManualChannel();
+  }
 });
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+function init() {
+  // Populate dropdowns
+  channels.forEach(code => {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = code;
+    channelSelect.appendChild(option);
+  });
+
+  templates.forEach((template, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = template.name;
+    templateSelect.appendChild(option);
+  });
+
+  // Set defaults
+  channelSelect.value = "nghean01";
+  templateSelect.value = "0";
+
+  // Bind iOS buttons
   bindIOSButton(prevChannelBtn, prevChannel);
   bindIOSButton(nextChannelBtn, nextChannel);
   bindIOSButton(autoScanBtn, autoScanLinks);
   bindIOSButton(resetAutoScanBtn, resetAutoScanIndex);
+
+  // Set initial state
+  document.getElementById("channelToggle")?.setAttribute("aria-expanded", "true");
+  document.getElementById("vidScanToggle")?.setAttribute("aria-expanded", "true");
+
+  updateUrl();
+  updateResultTable();
+  updateVidResultList();
+
+  console.log("✅ M3U8 Stream Discovery - Đã sẵn sàng");
+  console.log("📱 iOS:", isIOS());
+  console.log("🎬 Native HLS:", isNativeHLSSupported());
+  console.log("📦 HLS.js:", isHlsSupported());
 }
 
-/* Khởi tạo */
-document.getElementById("channelToggle")?.setAttribute("aria-expanded", "true");
-document.getElementById("vidScanToggle")?.setAttribute("aria-expanded", "true");
-
-updateUrl();
-updateResultTable();
-updateVidResultList();
-
-console.log("✅ M3U8 Stream Discovery - Đã sẵn sàng");
-console.log("📱 iOS:", isIOS());
-console.log("🎬 Native HLS:", isNativeHLSSupported());
-console.log("📦 HLS.js:", isHlsSupported());
-
+// Run initialization
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  init();
+} else {
+  document.addEventListener("DOMContentLoaded", init);
+}
 </script>
 </body>
 </html>
