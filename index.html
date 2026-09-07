@@ -468,7 +468,7 @@ button.danger:hover{
 /* ===== BẢNG KẾT QUẢ DÒ ===== */
 .result-table-wrap {
   margin-top:12px;
-  max-height:400px;
+  max-height:300px;
   overflow-y:auto;
   border:1px solid var(--border);
   border-radius:8px;
@@ -588,7 +588,7 @@ button.danger:hover{
 
 @media(max-width:600px){
   .result-table-wrap {
-    max-height:300px;
+    max-height:250px;
   }
   
   .result-table {
@@ -716,6 +716,140 @@ button{
   background:var(--muted);
 }
 
+/* ===== BẢNG KẾT QUẢ FREEM3U NGAY TRONG PANEL ===== */
+.vid-result-list {
+  margin-top:12px;
+  max-height:250px;
+  overflow-y:auto;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--panel2);
+  -webkit-overflow-scrolling:touch;
+}
+
+.vid-result-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 12px;
+  border-bottom:1px solid var(--border);
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.vid-result-item:last-child {
+  border-bottom:none;
+}
+
+.vid-result-item .vid-number {
+  font-weight:700;
+  color:var(--accent);
+  min-width:50px;
+  font-size:13px;
+}
+
+.vid-result-item .vid-link {
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+  font-family:Consolas,monospace;
+  color:var(--text);
+  cursor:pointer;
+}
+
+.vid-result-item .vid-link:hover {
+  color:#45ff45;
+}
+
+.vid-result-item .vid-status {
+  font-size:11px;
+  padding:2px 10px;
+  border-radius:4px;
+  font-weight:700;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.vid-result-item .vid-status.found {
+  background:#20e020;
+  color:#000;
+}
+
+.vid-result-item .vid-status.playing {
+  background:#ffaa00;
+  color:#000;
+  animation:pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity:1; }
+  50% { opacity:0.5; }
+}
+
+.vid-result-item .vid-copy-btn {
+  padding:4px 10px;
+  font-size:10px;
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--muted);
+  cursor:pointer;
+  border-radius:4px;
+  text-transform:none;
+  font-weight:400;
+  min-height:28px;
+  white-space:nowrap;
+}
+
+.vid-result-item .vid-copy-btn:hover {
+  background:var(--border);
+  color:var(--text);
+}
+
+.vid-result-empty {
+  padding:20px;
+  text-align:center;
+  color:var(--muted);
+  font-style:italic;
+  font-size:13px;
+}
+
+.vid-result-summary {
+  padding:8px 12px;
+  color:var(--muted);
+  font-size:12px;
+  border-top:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.vid-result-summary .vid-found-count {
+  color:#86efac;
+  font-weight:700;
+}
+
+/* Result section trong channel panel */
+.result-section {
+  margin-top:16px;
+  border-top:1px solid var(--border);
+  padding-top:14px;
+}
+
+.result-section .result-label {
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
 </style>
 </head>
 
@@ -737,11 +871,11 @@ button{
   </div>
 </div>
 
-<!-- CHỌN KÊNH / LINK -->
+<!-- DÒ KÊNH THỦ CÔNG + BẢNG KẾT QUẢ -->
 <div class="card scan-panel" id="channelPanel">
-    <div class="panel-head">
+  <div class="panel-head">
     <label>▸ DÒ KÊNH THỦ CÔNG</label>
-       <button class="secondary panel-toggle" type="button"
+    <button class="secondary panel-toggle" type="button"
             onclick="togglePanel('channelBody','channelToggle')" aria-expanded="true"
             aria-label="Toggle channel panel">
       <span id="channelToggle">▲ ẨN</span>
@@ -784,6 +918,33 @@ button{
         <div id="linkCounter" class="counter"></div>
       </div>
     </div>
+
+    <!-- BẢNG KẾT QUẢ NGAY TRONG PANEL -->
+    <div class="result-section">
+      <div class="result-label">
+        <span>▸ STREAM URL RESULT</span>
+        <button class="secondary" onclick="clearResults()" style="padding:4px 12px;font-size:11px;min-height:32px;">🗑 XÓA KQ</button>
+      </div>
+      <div class="result-table-wrap" id="resultTableWrap">
+        <table class="result-table" id="resultTable">
+          <thead>
+            <tr>
+              <th style="width:50px;">STT</th>
+              <th style="width:130px;">TÊN LINK</th>
+              <th>ĐƯỜNG DẪN</th>
+              <th style="width:80px;">CHẤT LƯỢNG</th>
+              <th style="width:80px;">TRẠNG THÁI</th>
+              <th style="width:70px;">COPY</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody">
+          </tbody>
+        </table>
+      </div>
+      <div class="result-summary" id="resultSummary">
+        <span>🔍 Tổng số link phát được: <span class="found-count" id="foundLinks">0</span></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -813,38 +974,20 @@ button{
 
       <div class="vid-scan-actions">
         <button class="secondary" onclick="resetVidScan()" aria-label="Dò lại từ đầu FreeM3U">↺ DÒ LẠI TỪ ĐẦU</button>
+        <button class="secondary danger" onclick="clearVidResults()" aria-label="Xóa kết quả FreeM3U" style="border-color:#ef4444;color:#ef4444;">🗑 XÓA KQ</button>
       </div>
     </div>
 
     <div id="vidScanStatus" class="counter">
       ⚪ Sẵn sàng
     </div>
-  </div>
-</div>
 
-<!-- BẢNG KẾT QUẢ -->
-<div class="card">
-  <label style="margin-bottom:8px;">▸ STREAM URL RESULT</label>
-  <div id="resultContainer">
-    <div class="result-table-wrap" id="resultTableWrap">
-      <table class="result-table" id="resultTable">
-        <thead>
-          <tr>
-            <th style="width:50px;">STT</th>
-            <th style="width:140px;">TÊN LINK</th>
-            <th>ĐƯỜNG DẪN</th>
-            <th style="width:90px;">CHẤT LƯỢNG</th>
-            <th style="width:80px;">TRẠNG THÁI</th>
-            <th style="width:70px;">COPY</th>
-          </tr>
-        </thead>
-        <tbody id="resultBody">
-        </tbody>
-      </table>
+    <!-- BẢNG KẾT QUẢ FREEM3U NGAY TRONG PANEL -->
+    <div class="vid-result-list" id="vidResultList">
+      <div class="vid-result-empty">⚪ Chưa có kết quả dò FreeM3U</div>
     </div>
-    <div class="result-summary" id="resultSummary">
-      <span>🔍 Tổng số link phát được: <span class="found-count" id="foundLinks">0</span></span>
-      <button class="secondary" onclick="clearResults()" style="padding:4px 12px;font-size:11px;min-height:32px;">🗑 XÓA KẾT QUẢ</button>
+    <div class="vid-result-summary" id="vidResultSummary">
+      <span>🔍 Tổng số link FreeM3U phát được: <span class="vid-found-count" id="vidFoundLinks">0</span></span>
     </div>
   </div>
 </div>
@@ -874,7 +1017,6 @@ const channels = [
 /* =========================================================
    CÁC MẪU LINK
    Danh sách link thực tế; {code} sẽ được thay bằng mã kênh.
-   {code} sẽ được thay bằng mã kênh.
 ========================================================= */
 
 const templates = [
@@ -1044,6 +1186,7 @@ let vidScanNumber = 1;
 let freem3uPlaying = false;
 let freem3uPlayingNumber = null;
 let vidFoundNumbers = [];
+let vidFoundResults = []; // Lưu kết quả dò FreeM3U {number, url}
 const VID_SCAN_MAX = 999;
 const VID_SCAN_TIMEOUT = 8000;
 
@@ -1283,7 +1426,64 @@ function updateUrl() {
 }
 
 /* =========================================================
-   BẢNG KẾT QUẢ - CHỈ HIỆN LINK OK
+   BẢNG KẾT QUẢ FREEM3U NGAY TRONG PANEL
+========================================================= */
+
+function updateVidResultList() {
+  const container = document.getElementById('vidResultList');
+  const countSpan = document.getElementById('vidFoundLinks');
+  
+  if (!container) return;
+  
+  if (vidFoundResults.length === 0) {
+    container.innerHTML = `<div class="vid-result-empty">⚪ Chưa có kết quả dò FreeM3U</div>`;
+    if (countSpan) countSpan.textContent = '0';
+    return;
+  }
+  
+  let html = '';
+  vidFoundResults.forEach((result, idx) => {
+    const isPlaying = freem3uPlaying && freem3uPlayingNumber === result.number;
+    const statusClass = isPlaying ? 'playing' : 'found';
+    const statusText = isPlaying ? '▶ ĐANG PHÁT' : '✅ OK';
+    const escapedUrl = result.url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    
+    html += `
+      <div class="vid-result-item">
+        <span class="vid-number">#${result.number}</span>
+        <span class="vid-link" onclick="copyToClipboard('${escapedUrl}')" title="${result.url}">${result.url}</span>
+        <span class="vid-status ${statusClass}">${statusText}</span>
+        <button class="vid-copy-btn" onclick="copyToClipboard('${escapedUrl}')">📋 COPY</button>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  if (countSpan) countSpan.textContent = vidFoundResults.length;
+}
+
+function addVidFoundResult(number, url) {
+  const existing = vidFoundResults.find(r => r.number === number);
+  if (existing) {
+    existing.url = url;
+  } else {
+    vidFoundResults.push({ number, url });
+  }
+  vidFoundResults.sort((a, b) => a.number - b.number);
+  updateVidResultList();
+}
+
+function clearVidResults() {
+  vidFoundResults = [];
+  vidFoundNumbers = [];
+  freem3uPlaying = false;
+  freem3uPlayingNumber = null;
+  updateVidResultList();
+  setVidScanStatus("🗑 Đã xóa toàn bộ kết quả FreeM3U");
+}
+
+/* =========================================================
+   BẢNG KẾT QUẢ CHUNG - CHỈ HIỆN LINK OK
 ========================================================= */
 
 function updateResultTable() {
@@ -1987,7 +2187,11 @@ function tryVidNumber(number, token) {
 
     const cancelFn = setupHlsPlayback(url, {
       timeout: VID_SCAN_TIMEOUT,
-      onPlaying: () => resolve(true),
+      onPlaying: () => {
+        // Khi phát thành công, lưu kết quả vào danh sách FreeM3U
+        addVidFoundResult(number, url);
+        resolve(true);
+      },
       onError: () => resolve(false)
     });
     if (cancelFn) {
@@ -2007,15 +2211,17 @@ function startVidScan() {
   if(vidScanNumber > VID_SCAN_MAX) {
     setVidScanStatus(
       "🟢 Đã dò hết số 1 → " + VID_SCAN_MAX +
-      (vidFoundNumbers.length
-        ? " | Tìm thấy: " + vidFoundNumbers.join(", ")
+      (vidFoundResults.length
+        ? " | Tìm thấy: " + vidFoundResults.map(r => r.number).join(", ")
         : " | Không tìm thấy kênh.")
     );
     return;
   }
 
   if(vidScanNumber === 1) {
+    vidFoundResults = [];
     vidFoundNumbers = [];
+    updateVidResultList();
   }
 
   vidScanning = true;
@@ -2032,11 +2238,11 @@ function startVidScan() {
       vidScanning = false;
       setVidScanButton(false);
       setVidScanStatus(
-        vidFoundNumbers.length
+        vidFoundResults.length
           ? "🟢 Đã dò hết 1 → " + VID_SCAN_MAX +
-            " | Tìm thấy: " + vidFoundNumbers.join(", ")
+            " | Tìm thấy: " + vidFoundResults.map(r => r.number).join(", ")
           : "🔴 Đã dò hết số 1 → " + VID_SCAN_MAX + " mà chưa tìm thấy kênh.",
-        vidFoundNumbers.length ? "ok" : "error"
+        vidFoundResults.length ? "ok" : "error"
       );
       return;
     }
@@ -2074,6 +2280,7 @@ function startVidScan() {
           " — đã dừng dò để bạn xem."
         );
 
+        updateVidResultList();
         return;
       }
 
@@ -2131,6 +2338,7 @@ function stopVidScan() {
   setVidScanStatus(
     "⚪ Đã dừng dò tại số " + vidScanNumber + ". Bấm DÒ TỚI để tiếp tục."
   );
+  updateVidResultList();
 }
 
 function resetVidScan() {
@@ -2140,11 +2348,13 @@ function resetVidScan() {
   freem3uPlayingNumber = null;
   vidScanNumber = 1;
   vidFoundNumbers = [];
+  vidFoundResults = [];
   cancelActiveProbe();
   destroyPlayer();
 
   setVidScanButton(false);
   updateVidScanDisplay(1);
+  updateVidResultList();
 
   setVidScanStatus(
     "🔄 Đã reset — lần dò tiếp theo bắt đầu từ kênh số 1."
@@ -2206,6 +2416,7 @@ video.addEventListener("playing", function() {
       "ok"
     );
 
+    updateVidResultList();
     return;
   }
 
@@ -2283,6 +2494,7 @@ document.getElementById("vidScanToggle")?.setAttribute("aria-expanded", "true");
 updateVidScanDisplay(1);
 updateUrl();
 updateResultTable();
+updateVidResultList();
 
 console.log("✅ M3U8 Stream Discovery - Đã sẵn sàng");
 console.log("📱 iOS:", isIOS());
