@@ -311,6 +311,7 @@ input:focus{
   align-items:flex-end;
   gap:8px;
   margin-top:10px;
+  flex-wrap:wrap;
 }
 
 .vid-scan-control .vid-scan-actions{
@@ -354,6 +355,34 @@ input:focus{
 
 .vid-scan-actions button{
   width:100%;
+}
+
+/* ===== THÊM: Nhập khoảng số ===== */
+.vid-range-inputs{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+
+.vid-range-inputs input{
+  flex:1;
+  min-width:80px;
+  max-width:150px;
+  height:44px;
+  text-align:center;
+}
+
+.vid-range-inputs span{
+  color:var(--muted);
+  font-weight:700;
+}
+
+.vid-range-inputs .range-btn{
+  flex:1;
+  min-width:120px;
 }
 
 @media (max-width:600px){
@@ -403,6 +432,20 @@ input:focus{
     min-width:0;
     white-space:normal;
     font-size:11px;
+  }
+
+  .vid-range-inputs{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .vid-range-inputs input{
+    max-width:100%;
+    width:100%;
+  }
+
+  .vid-range-inputs .range-btn{
+    width:100%;
   }
 }
 
@@ -456,6 +499,17 @@ button.danger{
 
 button.danger:hover{
   background:#dc2626;
+  color:#fff;
+}
+
+button.stop-btn{
+  background:#f59e0b;
+  color:#000;
+  border-color:#d97706;
+}
+
+button.stop-btn:hover{
+  background:#d97706;
   color:#fff;
 }
 
@@ -979,20 +1033,25 @@ button{
   </div>
 
   <div class="panel-body" id="vidScanBody">
-    <div class="vid-scan-control">
-      <div class="vid-scan-number">
-        <label>SỐ ĐANG DÒ</label>
-        <input id="vidCurrent" value="1" readonly aria-label="Số kênh đang dò">
-      </div>
+    <!-- KHOẢNG SỐ + NÚT DÒ / DỪNG -->
+    <div class="vid-range-inputs" style="margin-top:0;">
+      <input id="vidRangeFrom" type="number" min="1" max="999" value="1" 
+             aria-label="Từ số" placeholder="Từ">
+      <span>→</span>
+      <input id="vidRangeTo" type="number" min="1" max="999" value="10" 
+             aria-label="Đến số" placeholder="Đến">
+      <button class="danger range-btn" id="vidRangeScanBtn" onclick="startRangeVidScan()" 
+              aria-label="Dò khoảng số">🚀 DÒ TỪ ... ĐẾN ...</button>
+      <button class="stop-btn range-btn" id="vidRangeStopBtn" onclick="stopRangeVidScan()" 
+              aria-label="Dừng dò" style="display:none;">⏹ DỪNG</button>
+    </div>
 
-      <div class="vid-scan-nav">
-        <button id="vidScanBtn" class="danger" onclick="startVidScan()" aria-label="Dò tới">🔎 DÒ TỚI</button>
-        <button class="secondary" onclick="scanBackward()" aria-label="Dò lùi">◀️ DÒ LÙI</button>
-      </div>
-
-      <div class="vid-scan-actions">
-        <button class="secondary" onclick="resetVidScan()" aria-label="Dò lại từ đầu FreeM3U">↺ DÒ LẠI TỪ ĐẦU</button>
-      </div>
+    <!-- SỐ ĐANG DÒ -->
+    <div style="display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap;">
+      <label style="margin:0;">SỐ ĐANG DÒ:</label>
+      <input id="vidCurrent" value="1" readonly aria-label="Số kênh đang dò" style="width:90px; text-align:center;">
+      <button class="secondary" onclick="resetVidScan()" aria-label="Reset FreeM3U" style="flex:0 0 auto;">↺ RESET</button>
+      <button class="secondary" onclick="clearVidResults()" aria-label="Xóa kết quả FreeM3U" style="flex:0 0 auto;">🗑 XÓA KQ</button>
     </div>
 
     <div id="vidScanStatus" class="counter">
@@ -1005,7 +1064,6 @@ button{
     </div>
     <div class="vid-result-summary" id="vidResultSummary">
       <span>🔍 Tổng số link FreeM3U phát được: <span class="vid-found-count" id="vidFoundLinks">0</span></span>
-      <button class="vid-clear-btn" onclick="clearVidResults()">🗑 XÓA</button>
     </div>
   </div>
 </div>
@@ -1015,7 +1073,6 @@ button{
 <script>
 /* =========================================================
    DANH SÁCH KÊNH
-   Chỉ cần thêm mã vào đây khi muốn thêm kênh.
 ========================================================= */
 
 const channels = [
@@ -1034,7 +1091,6 @@ const channels = [
 
 /* =========================================================
    CÁC MẪU LINK
-   Danh sách link thực tế; {code} sẽ được thay bằng mã kênh.
 ========================================================= */
 
 const templates = [
@@ -1197,14 +1253,14 @@ let autoScanToken = 0;
 let autoScanNextIndex = 0;
 let autoScanTimers = [];
 
-/* FREEM3U numeric scanner */
+/* FREEM3U numeric scanner - CHỈ DÒ KHOẢNG SỐ */
 let vidScanning = false;
 let vidScanToken = 0;
 let vidScanNumber = 1;
 let freem3uPlaying = false;
 let freem3uPlayingNumber = null;
 let vidFoundNumbers = [];
-let vidFoundResults = []; // Lưu kết quả dò FreeM3U {number, url}
+let vidFoundResults = [];
 const VID_SCAN_MAX = 999;
 const VID_SCAN_TIMEOUT = 8000;
 
@@ -1213,9 +1269,9 @@ let activeProbeHls = null;
 let activePlaybackCancel = null;
 let activeNativeTimeout = null;
 
-// Lưu kết quả dò - CHỈ LƯU LINK OK
+// Lưu kết quả dò
 let foundResults = [];
-let lastFoundIndex = null; // Link OK cuối cùng
+let lastFoundIndex = null;
 
 const video = document.getElementById("video");
 const channelSelect = document.getElementById("channelSelect");
@@ -1226,11 +1282,13 @@ const linkCounter = document.getElementById("linkCounter");
 
 const vidCurrent = document.getElementById("vidCurrent");
 const vidScanStatus = document.getElementById("vidScanStatus");
-const vidScanBtn = document.getElementById("vidScanBtn");
 const prevChannelBtn = document.getElementById("prevChannelBtn");
 const nextChannelBtn = document.getElementById("nextChannelBtn");
 const autoScanBtn = document.getElementById("autoScanBtn");
 const resetAutoScanBtn = document.getElementById("resetAutoScanBtn");
+
+const vidRangeScanBtn = document.getElementById("vidRangeScanBtn");
+const vidRangeStopBtn = document.getElementById("vidRangeStopBtn");
 
 /* =========================================================
    HÀM HELPER KIỂM TRA
@@ -1254,7 +1312,7 @@ function isNativeHLSSupported() {
 }
 
 /*
-   iOS/Safari BUTTON HANDLERS - Tối ưu cho touch
+   iOS/Safari BUTTON HANDLERS
 */
 function bindIOSButton(button, handler) {
   if (!button) return;
@@ -1347,7 +1405,7 @@ function cancelActiveProbe() {
 }
 
 function useManualChannel() {
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
 
   const input = document.getElementById("manualChannelInput");
@@ -1370,7 +1428,7 @@ function useManualChannel() {
 }
 
 function clearManualChannel() {
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
   manualChannelCode = "";
   const input = document.getElementById("manualChannelInput");
@@ -1444,18 +1502,16 @@ function updateUrl() {
 }
 
 /* =========================================================
-   BẢNG KẾT QUẢ FREEM3U NGAY TRONG PANEL
+   BẢNG KẾT QUẢ FREEM3U
 ========================================================= */
 
 function playVidUrl(url, number) {
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
   
-  // Đánh dấu đang phát FreeM3U
   freem3uPlaying = true;
   freem3uPlayingNumber = number;
   
-  // Phát link
   video.muted = false;
   destroyPlayer();
   
@@ -1539,21 +1595,16 @@ function clearVidResults() {
 }
 
 /* =========================================================
-   BẢNG KẾT QUẢ CHUNG - CHỈ HIỆN LINK OK
-   ĐÃ SỬA: click vào link => phát stream
+   BẢNG KẾT QUẢ CHUNG
 ========================================================= */
 
-/* HÀM MỚI: Phát stream từ bảng STREAM URL RESULT */
 function playStreamUrl(url, index) {
-  // Dừng mọi tiến trình đang chạy
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
   
-  // Đánh dấu không phải FreeM3U
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
   
-  // Phát link
   video.muted = false;
   destroyPlayer();
   
@@ -1569,7 +1620,6 @@ function playStreamUrl(url, index) {
         "🟢 Đang phát — Link " + (index + 1),
         "ok"
       );
-      // Cập nhật dropdown để khớp với link đang phát
       templateSelect.selectedIndex = index;
       updateUrl();
     },
@@ -1647,7 +1697,6 @@ function clearResults() {
 function copyToClipboard(text) {
   if (!text) return;
   
-  // iOS fallback
   if (isIOS()) {
     const tempInput = document.createElement('input');
     tempInput.value = text;
@@ -1669,7 +1718,6 @@ function copyToClipboard(text) {
     return;
   }
   
-  // Modern browsers
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
       setStatus("📋 Đã copy: " + text.substring(0, 50) + (text.length > 50 ? '...' : ''), "ok");
@@ -1702,7 +1750,7 @@ function fallbackCopy(text) {
 ========================================================= */
 
 function nextChannel() {
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
   resetAutoScanIndex();
 
@@ -1722,7 +1770,7 @@ function nextChannel() {
 }
 
 function prevChannel() {
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
   resetAutoScanIndex();
 
@@ -1746,7 +1794,7 @@ function prevChannel() {
 ========================================================= */
 
 channelSelect.addEventListener("change", function(){
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
   manualChannelCode = "";
   const manualInput = document.getElementById("manualChannelInput");
@@ -1759,14 +1807,14 @@ channelSelect.addEventListener("change", function(){
 });
 
 templateSelect.addEventListener("change", function(){
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
   updateUrl();
   playCurrent();
 });
 
 /* =========================================================
-   ẨN / HIỆN CÁC BẢNG DÒ
+   ẨN / HIỆN
 ========================================================= */
 
 function togglePanel(bodyId, toggleId) {
@@ -1812,7 +1860,7 @@ function destroyPlayer() {
 }
 
 /* =========================================================
-   PHÁT URL - TỐI ƯU CHO iOS
+   PHÁT URL
 ========================================================= */
 
 function setupHlsPlayback(url, {
@@ -1882,7 +1930,6 @@ function setupHlsPlayback(url, {
     video.addEventListener("error", onVideoError, {once:true});
   }
 
-  // ƯU TIÊN NATIVE HLS CHO iOS
   if (isIOS() && isNativeHLSSupported()) {
     const onLoadedMetadata = () => {
       if (nativeCleanup) nativeCleanup();
@@ -1909,7 +1956,6 @@ function setupHlsPlayback(url, {
       }
     }, timeout);
   }
-  // HLS.js cho Android/PC
   else if (isHlsSupported()) {
     hls = new Hls({
       enableWorker:true,
@@ -1925,7 +1971,6 @@ function setupHlsPlayback(url, {
     hls.loadSource(url);
     hls.attachMedia(video);
   }
-  // Native HLS fallback
   else if (isNativeHLSSupported()) {
     const onLoadedMetadata = () => {
       if (nativeCleanup) nativeCleanup();
@@ -1992,7 +2037,7 @@ function playUrl(url,index) {
 }
 
 /* =========================================================
-   DÒ LINK TỰ ĐỘNG - TỐI ƯU CHO iOS
+   DÒ LINK TỰ ĐỘNG
 ========================================================= */
 
 function setAutoScanButton(scanning) {
@@ -2058,7 +2103,6 @@ function tryAutoScanLink(index, token) {
 
     timer = setTimeout(() => finish(false), 15000);
 
-    // ƯU TIÊN NATIVE HLS CHO iOS
     if (isIOS() && isNativeHLSSupported()) {
       const onLoadedMetadata = () => {
         if (nativeCleanup) nativeCleanup();
@@ -2089,7 +2133,6 @@ function tryAutoScanLink(index, token) {
       return;
     }
 
-    // HLS.js cho Android/PC
     if(isHlsSupported()) {
       try {
         probeHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
@@ -2167,7 +2210,7 @@ function autoScanLinks() {
   vidScanning = false;
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
-  setVidScanButton(false);
+  setRangeScanButtons(false);
 
   cancelActiveProbe();
 
@@ -2240,20 +2283,22 @@ function autoScanLinks() {
 }
 
 /* =========================================================
-   FREEM3U // DÒ KÊNH THEO SỐ
+   FREEM3U // DÒ KHOẢNG SỐ (ĐÃ BỎ DÒ TỚI/DÒ LÙI)
 ========================================================= */
 
 function getVidUrl(number) {
   return "https://freem3u.xyz/api/live/play.m3u8?vid=" + number;
 }
 
-function setVidScanButton(scanning) {
-  if(!vidScanBtn) return;
-
-  vidScanBtn.disabled = scanning;
-  vidScanBtn.textContent = scanning
-    ? "⏳ ĐANG DÒ KÊNH..."
-    : "🔎 DÒ TỚI";
+function setRangeScanButtons(scanning) {
+  if(vidRangeScanBtn) {
+    vidRangeScanBtn.disabled = scanning;
+    vidRangeScanBtn.textContent = scanning ? "⏳ ĐANG DÒ..." : "🚀 DÒ TỪ ... ĐẾN ...";
+    vidRangeScanBtn.style.display = scanning ? "none" : "inline-block";
+  }
+  if(vidRangeStopBtn) {
+    vidRangeStopBtn.style.display = scanning ? "inline-block" : "none";
+  }
 }
 
 function updateVidScanDisplay(number) {
@@ -2284,7 +2329,6 @@ function tryVidNumber(number, token) {
     const cancelFn = setupHlsPlayback(url, {
       timeout: VID_SCAN_TIMEOUT,
       onPlaying: () => {
-        // Khi phát thành công, lưu kết quả vào danh sách FreeM3U
         addVidFoundResult(number, url);
         resolve(true);
       },
@@ -2298,145 +2342,132 @@ function tryVidNumber(number, token) {
   });
 }
 
-function startVidScan() {
-  if(vidScanning) {
-    setVidScanStatus("⏳ Đang dò, vui lòng chờ...", "ok");
+/* ===== DÒ KHOẢNG SỐ ===== */
+function startRangeVidScan() {
+  const fromInput = document.getElementById('vidRangeFrom');
+  const toInput = document.getElementById('vidRangeTo');
+  
+  let from = parseInt(fromInput.value);
+  let to = parseInt(toInput.value);
+  
+  if (isNaN(from) || from < 1) from = 1;
+  if (isNaN(to) || to > VID_SCAN_MAX) to = VID_SCAN_MAX;
+  if (from > to) {
+    [from, to] = [to, from];
+    fromInput.value = from;
+    toInput.value = to;
+  }
+  
+  // Nếu đang dò thì dừng lại trước
+  if (vidScanning) {
+    stopRangeVidScan();
+    // Đợi một chút rồi bắt đầu
+    setTimeout(() => {
+      startRangeVidScanInternal(from, to);
+    }, 300);
     return;
   }
+  
+  startRangeVidScanInternal(from, to);
+}
 
-  if(vidScanNumber > VID_SCAN_MAX) {
-    setVidScanStatus(
-      "🟢 Đã dò hết số 1 → " + VID_SCAN_MAX +
-      (vidFoundResults.length
-        ? " | Tìm thấy: " + vidFoundResults.map(r => r.number).join(", ")
-        : " | Không tìm thấy kênh.")
-    );
-    return;
-  }
-
-  if(vidScanNumber === 1) {
+function startRangeVidScanInternal(from, to) {
+  // Reset kết quả cũ nếu bắt đầu từ 1
+  if (from === 1) {
     vidFoundResults = [];
     vidFoundNumbers = [];
     updateVidResultList();
   }
-
+  
+  // Cập nhật số đang dò
+  vidScanNumber = from;
+  updateVidScanDisplay(from);
+  
+  // Bắt đầu dò
   vidScanning = true;
   vidScanToken++;
   cancelActiveProbe();
-
+  
   const token = vidScanToken;
-  setVidScanButton(true);
-
-  function scanNext() {
-    if(token !== vidScanToken || !vidScanning) return;
-
-    if(vidScanNumber > VID_SCAN_MAX) {
+  const targetEnd = Math.min(to, VID_SCAN_MAX);
+  setRangeScanButtons(true);
+  
+  setVidScanStatus(
+    "🔎 Bắt đầu dò khoảng từ #" + from + " đến #" + targetEnd + "...",
+    "ok"
+  );
+  
+  function scanNextRange() {
+    if(token !== vidScanToken || !vidScanning) {
+      // Đã bị dừng
+      return;
+    }
+    
+    if(vidScanNumber > targetEnd) {
       vidScanning = false;
-      setVidScanButton(false);
+      setRangeScanButtons(false);
       setVidScanStatus(
         vidFoundResults.length
-          ? "🟢 Đã dò hết 1 → " + VID_SCAN_MAX +
+          ? "🟢 Đã dò xong khoảng #" + from + " → #" + targetEnd +
             " | Tìm thấy: " + vidFoundResults.map(r => r.number).join(", ")
-          : "🔴 Đã dò hết số 1 → " + VID_SCAN_MAX + " mà chưa tìm thấy kênh.",
+          : "🔴 Đã dò xong khoảng #" + from + " → #" + targetEnd + " mà chưa tìm thấy kênh.",
         vidFoundResults.length ? "ok" : "error"
       );
       return;
     }
-
+    
     const number = vidScanNumber;
     updateVidScanDisplay(number);
-
+    
     setVidScanStatus(
-      "🔎 Đang dò kênh số " + number + "/" + VID_SCAN_MAX + "..."
+      "🔎 Đang dò kênh #" + number + " (từ #" + from + " → #" + targetEnd + ")..."
     );
-
+    
     tryVidNumber(number, token).then((success) => {
       if(token !== vidScanToken || !vidScanning) return;
-
+      
       if(success) {
         vidFoundNumbers.push(number);
-        updateVidScanDisplay(number);
-
-        freem3uPlaying = true;
-        freem3uPlayingNumber = number;
-
-        vidScanNumber = number + 1;
-        vidScanning = false;
-        if(vidScanBtn) vidScanBtn.disabled = false;
-
-        setVidScanStatus(
-          "🎯 TÌM THẤY TÍN HIỆU Ở KÊNH #" + number +
-          " — ĐÃ DỪNG. Bấm DÒ TỚI để dò tiếp từ #" +
-          vidScanNumber + ".",
-          "ok"
-        );
-
-        setStatus(
-          "🟢 FREEM3U — Tìm thấy kênh " + number +
-          " — đã dừng dò để bạn xem."
-        );
-
         updateVidResultList();
+        // Tiếp tục dò sau khi tìm thấy
+        vidScanNumber = number + 1;
+        setTimeout(scanNextRange, isIOS() ? 200 : 100);
         return;
       }
-
+      
       vidScanNumber = number + 1;
-      setTimeout(scanNext, isIOS() ? 100 : 0);
-
+      setTimeout(scanNextRange, isIOS() ? 50 : 0);
+      
     }).catch((error) => {
-      console.log("FreeM3U scan:", error);
-
+      console.log("FreeM3U range scan:", error);
+      
       if(token !== vidScanToken || !vidScanning) return;
-
+      
       vidScanNumber = number + 1;
-      setTimeout(scanNext, isIOS() ? 100 : 0);
+      setTimeout(scanNextRange, isIOS() ? 50 : 0);
     });
   }
-
-  setTimeout(scanNext, isIOS() ? 100 : 0);
+  
+  setTimeout(scanNextRange, isIOS() ? 100 : 0);
 }
 
-function scanBackward() {
-  if(vidScanning) {
-    setVidScanStatus("⏳ Đang dò, vui lòng chờ...", "ok");
-    return;
-  }
-
-  const current = Number(
-    vidCurrent ? vidCurrent.value : vidScanNumber
-  );
-
-  if(!Number.isFinite(current) || current < 1) {
-    setVidScanStatus("⚪ Không xác định được số hiện tại để dò lùi.", "error");
-    return;
-  }
-
-  const start = current - 1;
-
-  if(start < 1) {
-    setVidScanStatus("⚪ Đang ở số 1 — không còn số nhỏ hơn để dò lùi.");
-    return;
-  }
-
-  vidScanNumber = start;
-  startVidScan();
-}
-
-function stopVidScan() {
+/* ===== DỪNG DÒ KHOẢNG SỐ ===== */
+function stopRangeVidScan() {
   vidScanToken++;
   vidScanning = false;
   freem3uPlaying = false;
   freem3uPlayingNumber = null;
-  setVidScanButton(false);
+  setRangeScanButtons(false);
   cancelActiveProbe();
   destroyPlayer();
 
   setVidScanStatus(
-    "⚪ Đã dừng dò tại số " + vidScanNumber + ". Bấm DÒ TỚI để tiếp tục."
+    "⏹ Đã dừng dò tại số " + vidScanNumber + "."
   );
   updateVidResultList();
 }
 
+/* ===== RESET FREEM3U ===== */
 function resetVidScan() {
   vidScanToken++;
   vidScanning = false;
@@ -2448,13 +2479,18 @@ function resetVidScan() {
   cancelActiveProbe();
   destroyPlayer();
 
-  setVidScanButton(false);
+  setRangeScanButtons(false);
   updateVidScanDisplay(1);
   updateVidResultList();
 
   setVidScanStatus(
-    "🔄 Đã reset — lần dò tiếp theo bắt đầu từ kênh số 1."
+    "🔄 Đã reset — sẵn sàng dò khoảng mới."
   );
+  
+  const fromInput = document.getElementById('vidRangeFrom');
+  const toInput = document.getElementById('vidRangeTo');
+  if (fromInput) fromInput.value = '1';
+  if (toInput) toInput.value = '10';
 }
 
 /* =========================================================
@@ -2467,7 +2503,7 @@ function playCurrent() {
 }
 
 function nextLink() {
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
 
   let index = templateSelect.selectedIndex + 1;
@@ -2482,7 +2518,7 @@ function nextLink() {
 }
 
 function prevLink() {
-  stopVidScan();
+  stopRangeVidScan();
   cancelActiveProbe();
 
   let index = templateSelect.selectedIndex - 1;
