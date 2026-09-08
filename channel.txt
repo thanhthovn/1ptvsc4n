@@ -6,6 +6,7 @@ angiang01
 angiang02
 angiang03
 angiangtv
+angianghd
 bacninh
 bacninh1
 bacninh2
@@ -14,6 +15,7 @@ bacninh01
 bacninh02
 bacninh03
 bacninhtv
+bacninhhd
 camau
 camau1
 camau2
@@ -22,6 +24,7 @@ camau01
 camau02
 camau03
 camautv
+camauhd
 caobang
 caobang1
 caobang2
@@ -30,6 +33,7 @@ caobang01
 caobang02
 caobang03
 caobangtv
+caobanghd
 daklak
 daklak1
 daklak2
@@ -38,6 +42,7 @@ daklak01
 daklak02
 daklak03
 daklaktv
+daklakhd
 dienbien
 dienbien1
 dienbien2
@@ -46,6 +51,7 @@ dienbien01
 dienbien02
 dienbien03
 dienbientv
+dienbienhd
 dongnai
 dongnai1
 dongnai2
@@ -54,6 +60,7 @@ dongnai01
 dongnai02
 dongnai03
 dongnaitv
+dongnaihd
 dongthap
 dongthap1
 dongthap2
@@ -62,6 +69,7 @@ dongthap01
 dongthap02
 dongthap03
 dongthaptv
+dongthaphd
 gialai
 gialai1
 gialai2
@@ -70,6 +78,7 @@ gialai01
 gialai02
 gialai03
 gialaitv
+gialaihd
 hatinh
 hatinh1
 hatinh2
@@ -78,6 +87,7 @@ hatinh01
 hatinh02
 hatinh03
 hatinhtv
+hatinhhd
 hungyen
 hungyen1
 hungyen2
@@ -86,6 +96,7 @@ hungyen01
 hungyen02
 hungyen03
 hungenytv
+hungyenhd
 khanhhoa
 khanhhoa1
 khanhhoa2
@@ -94,6 +105,7 @@ khanhhoa01
 khanhhoa02
 khanhhoa03
 khanhhoatv
+khanhhoahd
 laichau
 laichau1
 laichau2
@@ -102,6 +114,7 @@ laichau01
 laichau02
 laichau03
 laichautv
+laichauhd
 langson
 langson1
 langson2
@@ -110,6 +123,7 @@ langson01
 langson02
 langson03
 langsontv
+langsonhd
 laocai
 laocai1
 laocai2
@@ -118,6 +132,7 @@ laocai01
 laocai02
 laocai03
 laocaitv
+laocaihd
 lamdong
 lamdong1
 lamdong2
@@ -126,6 +141,7 @@ lamdong01
 lamdong02
 lamdong03
 lamdongtv
+lamdonghd
 nghean
 nghean1
 nghean2
@@ -134,6 +150,7 @@ nghean01
 nghean02
 nghean03
 ngheantv
+ngheanhd
 ninhbinh
 ninhbinh1
 ninhbinh2
@@ -142,6 +159,7 @@ ninhbinh01
 ninhbinh02
 ninhbinh03
 ninhbinhtv
+ninhbinhhd
 phutho
 phutho1
 phutho2
@@ -150,6 +168,7 @@ phutho01
 phutho02
 phutho03
 phuthotv
+phuthohd
 quangngai
 quangngai1
 quangngai2
@@ -158,6 +177,7 @@ quangngai01
 quangngai02
 quangngai03
 quangngaitv
+quangngaihd
 quangninh
 quangninh1
 quangninh2
@@ -166,6 +186,7 @@ quangninh01
 quangninh02
 quangninh03
 quangninhtv
+quangninhhd
 quangtri
 quangtri1
 quangtri2
@@ -174,6 +195,7 @@ quangtri01
 quangtri02
 quangtri03
 quangtritv
+quangtrihd
 sonla
 sonla1
 sonla2
@@ -182,6 +204,7 @@ sonla01
 sonla02
 sonla03
 sonlatv
+sonlahd
 tayninh
 tayninh1
 tayninh2
@@ -190,6 +213,7 @@ tayninh01
 tayninh02
 tayninh03
 tayninhtv
+tayninhhd
 thainguyen
 thainguyen1
 thainguyen2
@@ -198,6 +222,7 @@ thainguyen01
 thainguyen02
 thainguyen03
 thainguyentv
+thainguyenhd
 thanhhoa
 thanhhoa1
 thanhhoa2
@@ -206,6 +231,7 @@ thanhhoa01
 thanhhoa02
 thanhhoa03
 thanhhoatv
+thanhhoahd
 cantho
 cantho1
 cantho2
@@ -214,6 +240,7 @@ cantho01
 cantho02
 cantho03
 canthotv
+canthohd
 danang
 danang1
 danang2
@@ -222,6 +249,7 @@ danang01
 danang02
 danang03
 danangtv
+dananghd
 hanoi
 hanoi1
 hanoi2
@@ -230,6 +258,7 @@ hanoi01
 hanoi02
 hanoi03
 hanoitv
+hanoihd
 haiphong
 haiphong1
 haiphong2
@@ -238,8 +267,10 @@ haiphong01
 haiphong02
 haiphong03
 haiphongtv
+haiphonghd
 hue
 huetv
+huehd
 tuyenquang
 tuyenquang1
 tuyenquang2
@@ -248,6 +279,7 @@ tuyenquang01
 tuyenquang02
 tuyenquang03
 tuyenquangtv
+tuyenquanghd
 vinhlong
 vinhlong1
 vinhlong2
@@ -259,6 +291,7 @@ vinhlong02
 vinhlong03
 vinhlong04
 vinhlong05
+vinhlonghd
 thvl1
 thvl2
 thvl3
