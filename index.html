@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>M3U8 STREAM SCANNING</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 :root {
@@ -811,6 +812,7 @@ button.auto-all-btn:hover {
       </div>
       <div class="result-summary" id="resultSummary">
         <span>🔍 Tổng số link phát được: <span class="found-count" id="foundLinks">0</span></span>
+        <button class="result-clear-btn" onclick="exportResultsToExcel()">📊 XUẤT EXCEL</button>
         <button class="result-clear-btn" onclick="clearResults()">🗑 XÓA</button>
       </div>
     </div>
@@ -1658,10 +1660,7 @@ function autoScanAllChannels() {
   stopRangeVidScan({ silent: true });
   resetAutoScanIndex();
 
-  // Không xóa kết quả cũ: kết quả mới sẽ nối tiếp xuống dưới.
-  state.foundResults = [];
-  state.lastFoundIndex = null;
-  updateResultTable();
+  // Giữ nguyên kết quả cũ khi dò lại; kết quả mới sẽ nối tiếp xuống dưới.
 
   state.autoAllScanning = true;
   state.autoAllToken++;
@@ -1748,7 +1747,7 @@ function updateResultTable() {
   
   tbody.innerHTML = '';
   if (state.foundResults.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ TỰ ĐỘNG.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ TỰ ĐỘNG.</td></tr>`;
     if (foundSpan) foundSpan.textContent = '0';
     return;
   }
@@ -1782,6 +1781,39 @@ function addFoundResult(index, url, channel = getActiveChannelCode()) {
   state.foundResults.push({ index, name, url, channel });
   state.lastFoundIndex = index;
   updateResultTable();
+}
+
+function exportResultsToExcel() {
+  if (!state.foundResults.length) {
+    setStatus("⚠️ Chưa có kết quả để xuất Excel", "error");
+    return;
+  }
+  if (typeof XLSX === "undefined") {
+    setStatus("❌ Không tải được thư viện Excel", "error");
+    return;
+  }
+
+  const rows = state.foundResults.map((result, index) => ({
+    "STT": index + 1,
+    "KÊNH": result.channel || "N/A",
+    "LINK #": (result.index ?? index) + 1,
+    "ĐƯỜNG DẪN": result.url
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  worksheet["!cols"] = [
+    { wch: 8 },
+    { wch: 18 },
+    { wch: 10 },
+    { wch: 100 }
+  ];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Result");
+
+  const now = new Date();
+  const stamp = now.toISOString().slice(0, 19).replace(/[T:]/g, "-");
+  XLSX.writeFile(workbook, `M3U8_Result_${stamp}.xlsx`);
+  setStatus("📊 Đã xuất " + state.foundResults.length + " kết quả ra Excel", "ok");
 }
 
 function clearResults() {
