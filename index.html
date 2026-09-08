@@ -1186,7 +1186,7 @@ function setAutoScanButton(scanning) {
 function setAutoAllButtons(scanning) {
   if (autoAllScanBtn) {
     autoAllScanBtn.disabled = !!scanning;
-    autoAllScanBtn.textContent = scanning ? "⏳ ĐANG DÒ KÊNH ....." : "🤖 DÒ TỰ ĐỘNG";
+    autoAllScanBtn.textContent = scanning ? "⏳ ....." : "🤖 DÒ TỰ ĐỘNG";
   }
   if (stopAutoAllBtn) stopAutoAllBtn.style.display = scanning ? "inline-block" : "none";
 }
