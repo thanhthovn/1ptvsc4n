@@ -801,9 +801,8 @@ button.auto-all-btn:hover {
             <tr>
               <th style="width:50px;">STT</th>
               <th style="width:130px;">KÊNH</th>
-              <th style="width:140px;">TÊN LINK</th>
+              <th style="width:100px;">LINK #</th>
               <th>ĐƯỜNG DẪN</th>
-              <th style="width:80px;">CHẤT LƯỢNG</th>
               <th style="width:70px;">COPY</th>
             </tr>
           </thead>
@@ -1766,9 +1765,8 @@ function updateResultTable() {
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td style="font-size:11px;">${escapeHtml(result.channel || getActiveChannelCode() || 'N/A')}</td>
-      <td style="font-size:11px;">${result.name || 'N/A'}</td>
-      <td class="link-cell" title="${result.url}" onclick="playStreamUrl('${escapedUrl}', ${result.index})">${result.url}</td>
-      <td>${result.quality || 'N/A'}</td>
+      <td style="font-size:11px;">${result.index + 1}</td>
+      <td class="link-cell" style="color:red;" title="${result.url}" onclick="playStreamUrl('${escapedUrl}', ${result.index})">${result.url}</td>
       <td><button class="copy-btn" onclick="copyToClipboard('${escapedUrl}')">📋 COPY</button></td>
     `;
     tbody.appendChild(tr);
@@ -1778,11 +1776,10 @@ function updateResultTable() {
 
 function addFoundResult(index, url, channel = getActiveChannelCode()) {
   const name = templates[index]?.name || `Link ${index + 1}`;
-  const quality = getQualityShort(index);
   const existing = state.foundResults.find(r => r.url === url && r.channel === channel);
   if (existing) return;
 
-  state.foundResults.push({ index, name, url, quality, channel });
+  state.foundResults.push({ index, name, url, channel });
   state.lastFoundIndex = index;
   updateResultTable();
 }
