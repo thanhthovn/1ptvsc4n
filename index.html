@@ -9,16 +9,13 @@
 
 <style>
 :root {
-  --bg: #050805;
   --panel: #0a110a;
   --panel2: #050905;
   --border: #173817;
   --text: #b7ffb7;
   --muted: #5f9b5f;
   --accent: #20e020;
-  --accent2: #13b913;
   --danger: #ef4444;
-  --ok: #20e020;
 }
 
 * { box-sizing: border-box; }
@@ -142,7 +139,10 @@ select:focus, input:focus { border-color: var(--accent); }
 }
 
 .manual-channel-row { align-items: center; }
-.channel-row { align-items: center; }
+.channel-row {
+  align-items: stretch;
+  width: 100%;
+}
 .vid-scan-control { align-items: flex-end; flex-wrap: wrap; }
 
 .manual-channel-row input { flex: 1 1 360px; min-width: 0; }
@@ -157,9 +157,49 @@ select:focus, input:focus { border-color: var(--accent); }
 .manual-channel-actions button { white-space: nowrap; }
 
 .channel-row select {
-  flex: 1 1 360px;
-  min-width: 260px;
+  display: block;
   width: 100%;
+  min-width: 0;
+  height: 44px;
+  flex: none;
+}
+.channel-select-stack {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 160px minmax(220px, 1fr) 42px 42px;
+  gap: 8px;
+  align-items: end;
+}
+
+.channel-field {
+  min-width: 0;
+}
+
+.channel-field label {
+  margin-bottom: 7px;
+}
+
+.channel-field select {
+  width: 100%;
+  min-width: 0;
+}
+
+#channelSelect {
+  color: #fbbf24;
+}
+
+#channelSelect option {
+  color: #fbbf24;
+  background: #050905;
+}
+
+#channelGroupSelect {
+  height: 44px;
+  font-size: 15px;
+}
+
+.channel-name-label {
+  color: #fbbf24;
 }
 
 .channel-nav {
@@ -171,6 +211,25 @@ select:focus, input:focus { border-color: var(--accent); }
   gap: 8px;
   flex: 0 0 auto;
   white-space: nowrap;
+}
+.channel-nav-inline {
+  display: contents;
+}
+
+.arrow-btn {
+  width: 42px;
+  height: 44px;
+  min-width: 42px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.channel-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .channel-nav button {
@@ -654,33 +713,24 @@ button.auto-all-btn:hover {
     white-space: normal;
   }
 
-  /* Channel row */
-  .channel-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+  /* Channel group + name */
+  .channel-select-stack {
+    grid-template-columns: minmax(105px, 0.34fr) minmax(0, 1fr) 38px 38px;
+    gap: 6px;
   }
-  .channel-row select {
-    width: 100%;
-    min-width: 0;
-    flex: 0 0 auto;
-  }
-  .channel-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-    min-width: 0;
-    gap: 8px;
-  }
-  .channel-nav button {
-    width: 100%;
-    min-width: 0;
-    flex: initial;
-    padding: 9px 4px;
+  .channel-field label {
     font-size: 11px;
-    line-height: 1.15;
-    white-space: normal;
-    overflow-wrap: anywhere;
+    margin-bottom: 5px;
+  }
+  .channel-select-stack select {
+    height: 44px;
+    width: 100%;
+  }
+  .channel-select-stack .arrow-btn {
+    width: 38px;
+    min-width: 38px;
+    height: 44px;
+    font-size: 18px;
   }
 
   /* Vid scan */
@@ -768,18 +818,26 @@ button.auto-all-btn:hover {
         </div>
         <div class="counter">Kênh nhập thủ công chỉ dùng trong lần này — không lưu lại sau khi F5.</div>
 
-        <label style="margin-top:12px">▸ CHỌN LIST KÊNH</label>
-        <div class="channel-row">
-          <select id="channelSelect" aria-label="Chọn kênh"></select>
-          <div class="channel-nav">
-            <button id="prevChannelBtn" class="secondary" type="button" aria-label="Kênh trước">⬅ KÊNH TRƯỚC</button>
-            <button id="nextChannelBtn" class="secondary" type="button" aria-label="Kênh sau">KÊNH SAU ➡</button>
-            <button id="autoScanBtn" class="danger" type="button" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
-            <button id="resetAutoScanBtn" class="secondary" type="button" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
-            <button id="autoAllScanBtn" class="auto-all-btn" type="button" aria-label="Dò kênh tự động hóa">🤖 DÒ KÊNH TỰ ĐỘNG HÓA</button>
-            <button id="stopAutoAllBtn" class="stop-btn" type="button" aria-label="Dừng dò kênh tự động hóa" style="display:none;">⏹ DỪNG TỰ ĐỘNG HÓA</button>
+        <div class="channel-select-stack">
+          <div class="channel-field channel-group-field">
+            <label for="channelGroupSelect">▸ NHÓM KÊNH</label>
+            <select id="channelGroupSelect" aria-label="Chọn nhóm kênh"></select>
           </div>
+          <div class="channel-field channel-name-field">
+            <label class="channel-name-label" for="channelSelect">▸ TÊN KÊNH</label>
+            <select id="channelSelect" aria-label="Chọn kênh"></select>
+          </div>
+          <button id="prevChannelBtn" class="secondary arrow-btn" type="button" aria-label="Kênh trước">←</button>
+          <button id="nextChannelBtn" class="secondary arrow-btn" type="button" aria-label="Kênh sau">→</button>
         </div>
+
+        <div class="channel-actions-row">
+          <button id="autoScanBtn" class="danger" type="button" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
+          <button id="resetAutoScanBtn" class="secondary" type="button" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
+          <button id="autoAllScanBtn" class="auto-all-btn" type="button" aria-label="Dò kênh tự động hóa">🤖 DÒ KÊNH TỰ ĐỘNG HÓA</button>
+          <button id="stopAutoAllBtn" class="stop-btn" type="button" aria-label="Dừng dò kênh tự động hóa" style="display:none;">⏹ DỪNG TỰ ĐỘNG HÓA</button>
+        </div>
+
         <div id="channelCounter" class="counter"></div>
         <div id="autoAllStatus" class="auto-all-status">🤖 Tự động hóa: Sẵn sàng</div>
       </div>
@@ -856,20 +914,90 @@ button.auto-all-btn:hover {
    CONFIGURATION
 ========================================================= */
 let channels = [];
+let channelGroups = [];
+let channelsByGroup = new Map();
 
-// Danh sach kenh duoc nap tu file channel.txt
+function getVisibleChannels() {
+  const group = document.getElementById("channelGroupSelect")?.value || "__all__";
+  if (group === "__all__") return channels;
+  return channelsByGroup.get(group) || [];
+}
+
+function populateChannelGroupSelect() {
+  const select = document.getElementById("channelGroupSelect");
+  if (!select) return;
+
+  select.innerHTML = "";
+  const allOption = document.createElement("option");
+  allOption.value = "__all__";
+  allOption.textContent = "TẤT CẢ CÁC KÊNH";
+  select.appendChild(allOption);
+
+  channelGroups.forEach(group => {
+    const option = document.createElement("option");
+    option.value = group;
+    option.textContent = group;
+    select.appendChild(option);
+  });
+}
+
+function populateChannelSelect(preferredCode = "") {
+  const visibleChannels = getVisibleChannels();
+  channelSelect.innerHTML = "";
+
+  visibleChannels.forEach(code => {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = code;
+    channelSelect.appendChild(option);
+  });
+
+  if (visibleChannels.length) {
+    channelSelect.value = visibleChannels.includes(preferredCode)
+      ? preferredCode
+      : visibleChannels[0];
+  }
+
+  updateUrl();
+}
+
+// Danh sach kenh duoc nap tu file channel.txt.
+// Dong bat dau bang # duoc xem la tieu de nhom, vi du: #vtv, #htv.
 async function loadChannels() {
   try {
     const response = await fetch("channel.txt", { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const text = await response.text();
-    channels = [...new Set(
-      text
-        .split(/\r?\n/)
-        .map(line => line.trim())
-        .filter(Boolean)
-    )];
+    const allChannels = [];
+    const groups = [];
+    const groupedChannels = new Map();
+    let currentGroup = "__all__";
+
+    text.split(/\r?\n/).forEach(line => {
+      const value = line.trim();
+      if (!value) return;
+
+      if (value.startsWith("#")) {
+        const group = value.slice(1).trim();
+        if (!group) return;
+        currentGroup = group;
+        if (!groupedChannels.has(group)) {
+          groupedChannels.set(group, []);
+          groups.push(group);
+        }
+        return;
+      }
+
+      if (!allChannels.includes(value)) allChannels.push(value);
+      if (!groupedChannels.has(currentGroup)) groupedChannels.set(currentGroup, []);
+      const groupChannels = groupedChannels.get(currentGroup);
+      if (!groupChannels.includes(value)) groupChannels.push(value);
+    });
+
+    channels = allChannels;
+    channelGroups = groups;
+    channelsByGroup = groupedChannels;
 
     if (!channels.length) {
       throw new Error("channel.txt khong co ma kenh hop le");
@@ -1346,8 +1474,10 @@ function nextChannel() {
   stopAutoChannelScan();
   stopRangeVidScan({ silent: true });
   resetAutoScanIndex();
+  const visibleChannels = getVisibleChannels();
+  if (!visibleChannels.length) return;
   let index = channelSelect.selectedIndex + 1;
-  if (index >= channels.length) index = 0;
+  if (index >= visibleChannels.length) index = 0;
   channelSelect.selectedIndex = index;
   state.manualChannelCode = "";
   document.getElementById("manualChannelInput").value = "";
@@ -1360,8 +1490,10 @@ function prevChannel() {
   stopAutoChannelScan();
   stopRangeVidScan({ silent: true });
   resetAutoScanIndex();
+  const visibleChannels = getVisibleChannels();
+  if (!visibleChannels.length) return;
   let index = channelSelect.selectedIndex - 1;
-  if (index < 0) index = channels.length - 1;
+  if (index < 0) index = visibleChannels.length - 1;
   channelSelect.selectedIndex = index;
   state.manualChannelCode = "";
   document.getElementById("manualChannelInput").value = "";
@@ -1711,7 +1843,8 @@ function autoScanAllChannels() {
     setStatus("⏳ DÒ KÊNH TỰ ĐỘNG HÓA đang chạy...", "ok");
     return;
   }
-  if (!channels.length || !templates.length) {
+  const scanChannels = getVisibleChannels();
+  if (!scanChannels.length || !templates.length) {
     setStatus("⚠️ Chưa có danh sách kênh hoặc link để dò.", "error");
     return;
   }
@@ -1732,20 +1865,20 @@ function autoScanAllChannels() {
   const scanStep = () => {
     if (token !== state.autoAllToken || !state.autoAllScanning) return;
 
-    if (state.autoAllChannelIndex >= channels.length) {
+    if (state.autoAllChannelIndex >= scanChannels.length) {
       state.autoAllScanning = false;
-      state.autoAllChannelIndex = channels.length;
+      state.autoAllChannelIndex = scanChannels.length;
       state.autoAllLinkIndex = templates.length;
       setAutoAllButtons(false);
       state.autoScanTimer = null;
-      setAutoAllStatus("✅ ĐÃ DÒ XONG TOÀN BỘ " + channels.length + " KÊNH × " + templates.length + " LINK.", "ok");
+      setAutoAllStatus("✅ ĐÃ DÒ XONG " + scanChannels.length + " KÊNH × " + templates.length + " LINK.", "ok");
       setStatus("✅ Dò tự động hóa hoàn tất — tìm thấy " + state.foundResults.length + " link. Kết quả nằm bên dưới.", "ok");
       return;
     }
 
     const channelIndex = state.autoAllChannelIndex;
     const linkIndex = state.autoAllLinkIndex;
-    const code = channels[channelIndex];
+    const code = scanChannels[channelIndex];
 
     // Chuyển UI sang đúng kênh/link đang dò.
     state.manualChannelCode = "";
@@ -1793,7 +1926,7 @@ function autoScanAllChannels() {
     });
   };
 
-  setAutoAllStatus("🚀 Bắt đầu từ kênh " + channels[state.autoAllChannelIndex] + " — Link 1...", "ok");
+  setAutoAllStatus("🚀 Bắt đầu từ kênh " + scanChannels[state.autoAllChannelIndex] + " — Link 1...", "ok");
   state.autoScanTimer = setTimeout(scanStep, isIOS() ? 150 : 0);
 }
 
@@ -2096,7 +2229,10 @@ function resetVidScan() {
    UI UPDATE
 ========================================================= */
 function updateUrl() {
-  channelCounter.textContent = "Kênh " + (channelSelect.selectedIndex + 1) + "/" + channels.length;
+  const visibleChannels = getVisibleChannels();
+  channelCounter.textContent = visibleChannels.length
+    ? "Kênh " + (channelSelect.selectedIndex + 1) + "/" + visibleChannels.length
+    : "Kênh 0/0";
   linkCounter.textContent = "Link " + (templateSelect.selectedIndex + 1) + "/" + templates.length;
 }
 
@@ -2124,6 +2260,19 @@ video.addEventListener("error", function() {
 /* =========================================================
    DROPDOWN EVENTS
 ========================================================= */
+document.getElementById("channelGroupSelect")?.addEventListener("change", function() {
+  stopAutoChannelScan();
+  stopRangeVidScan({ silent: true });
+  state.manualChannelCode = "";
+  const manualInput = document.getElementById("manualChannelInput");
+  if (manualInput) manualInput.value = "";
+  resetAutoScanIndex();
+  populateChannelSelect();
+  templateSelect.selectedIndex = 0;
+  updateUrl();
+  playCurrent();
+});
+
 channelSelect.addEventListener("change", function() {
   stopAutoChannelScan();
   stopRangeVidScan({ silent: true });
@@ -2175,12 +2324,8 @@ async function init() {
   if (!channelsLoaded) return;
 
   // Populate dropdowns
-  channels.forEach(code => {
-    const option = document.createElement("option");
-    option.value = code;
-    option.textContent = code;
-    channelSelect.appendChild(option);
-  });
+  populateChannelGroupSelect();
+  populateChannelSelect("angiang");
 
   templates.forEach((template, index) => {
     const option = document.createElement("option");
@@ -2190,7 +2335,6 @@ async function init() {
   });
 
   // Set defaults
-  channelSelect.value = "angiang";
   templateSelect.value = "0";
 
   // Bind iOS buttons
