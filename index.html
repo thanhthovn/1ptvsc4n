@@ -1442,86 +1442,146 @@ function resetAutoScanIndex() {
 
 function tryAutoScanLink(index, token, mode = "normal") {
   return new Promise((resolve) => {
-    if ((mode === "all" ? token !== state.autoAllToken : token !== state.autoScanToken)) { resolve(false); return; }
+    const tokenValid = () =>
+      mode === "all" ? token === state.autoAllToken && state.autoAllScanning
+                       : token === state.autoScanToken && state.autoScanning;
+
+    if (!tokenValid()) { resolve(false); return; }
 
     const url = getUrl(index);
+    const channel = getActiveChannelCode();
     state.currentPlayingLink = index;
     templateSelect.selectedIndex = index;
-    setStatus("🔎 Đang kiểm tra " + getActiveChannelCode() + " — Link " + (index + 1) + "/" + templates.length + "...");
+    setStatus("🔎 Đang kiểm tra " + channel + " — Link " + (index + 1) + "/" + templates.length + "...");
 
     let done = false;
     let timer = null;
     let probeHls = null;
+    let probeVideo = null;
     let nativeCleanup = null;
-    let nativeTimeout = null;
+
+    const cleanup = () => {
+      if (timer) { clearTimeout(timer); timer = null; }
+
+      if (probeHls) {
+        const hls = probeHls;
+        try { hls.__autoProbeCleanup?.(); } catch (e) {}
+        probeHls = null;
+        if (state.activeProbeHls === hls) state.activeProbeHls = null;
+        try { hls.stopLoad(); } catch (e) {}
+        try { hls.detachMedia(); } catch (e) {}
+        try { hls.destroy(); } catch (e) {}
+      }
+
+      if (nativeCleanup) {
+        try { nativeCleanup(); } catch (e) {}
+        nativeCleanup = null;
+      }
+
+      if (probeVideo) {
+        try {
+          probeVideo.pause();
+          probeVideo.removeAttribute("src");
+          probeVideo.load();
+          probeVideo.remove();
+        } catch (e) {}
+        probeVideo = null;
+      }
+    };
 
     const finish = (ok) => {
       if (done) return;
       done = true;
-      clearTimeout(timer);
-      if (nativeTimeout) { clearTimeout(nativeTimeout); nativeTimeout = null; }
-      if (probeHls) {
-        const probe = probeHls;
-        probeHls = null;
-        if (state.activeProbeHls === probe) state.activeProbeHls = null;
-        try { probe.destroy(); } catch(e) {}
-      }
-      if (nativeCleanup) { nativeCleanup(); nativeCleanup = null; }
-      if (ok) addFoundResult(index, url, getActiveChannelCode());
-      resolve(ok);
+      cleanup();
+      if (ok && tokenValid()) addFoundResult(index, url, channel);
+      resolve(!!ok);
     };
 
+    // Dùng một video probe RIÊNG. Không dùng player chính khi tự động dò,
+    // tránh probe AVC bị ảnh hưởng bởi stream/link trước đó.
+    probeVideo = document.createElement("video");
+    probeVideo.muted = true;
+    probeVideo.playsInline = true;
+    probeVideo.preload = "metadata";
+    probeVideo.setAttribute("playsinline", "");
+    probeVideo.setAttribute("webkit-playsinline", "");
+    probeVideo.style.cssText = "position:fixed;left:-99999px;top:-99999px;width:1px;height:1px;opacity:0;pointer-events:none;";
+    document.body.appendChild(probeVideo);
+
+    // Cho AVC/HLS đủ thời gian để manifest hoặc level đầu tiên được tải.
     timer = setTimeout(() => finish(false), 15000);
 
-    // Native HLS probe
-    if (isIOS() && isNativeHLSSupported()) {
-      const onLoadedMetadata = () => { if (nativeCleanup) nativeCleanup(); finish(true); };
-      const onError = () => { if (nativeCleanup) nativeCleanup(); finish(false); };
+    // Native HLS (Safari/iOS)
+    if (isNativeHLSSupported()) {
+      const onLoadedMetadata = () => finish(true);
+      const onCanPlay = () => finish(true);
+      const onPlaying = () => finish(true);
+      const onError = () => finish(false);
+
+      probeVideo.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+      probeVideo.addEventListener("canplay", onCanPlay, { once: true });
+      probeVideo.addEventListener("playing", onPlaying, { once: true });
+      probeVideo.addEventListener("error", onError, { once: true });
+
       nativeCleanup = () => {
-        video.removeEventListener("loadedmetadata", onLoadedMetadata);
-        video.removeEventListener("error", onError);
-        video.removeAttribute("src");
-        video.load();
+        probeVideo?.removeEventListener("loadedmetadata", onLoadedMetadata);
+        probeVideo?.removeEventListener("canplay", onCanPlay);
+        probeVideo?.removeEventListener("playing", onPlaying);
+        probeVideo?.removeEventListener("error", onError);
       };
-      video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
-      video.addEventListener("error", onError, { once: true });
-      video.src = url;
-      video.load();
-      nativeTimeout = setTimeout(() => { if (!done) finish(false); }, 10000);
+
+      try {
+        probeVideo.src = url;
+        probeVideo.load();
+      } catch (e) {
+        finish(false);
+      }
       return;
     }
 
     // HLS.js probe
     if (isHlsSupported()) {
       try {
-        probeHls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
+        probeHls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          backBufferLength: 30,
+          maxBufferLength: 10,
+          manifestLoadingMaxRetry: 1,
+          levelLoadingMaxRetry: 1,
+          fragLoadingMaxRetry: 1
+        });
         state.activeProbeHls = probeHls;
+
+        // MANIFEST_PARSED là tín hiệu chính. LEVEL_LOADED / FRAG_LOADED
+        // là fallback cho một số AVC playlist không phát sinh sự kiện như mong đợi.
         if (isHlsEventsAvailable()) {
-          probeHls.once(Hls.Events.MANIFEST_PARSED, () => finish(true));
-          probeHls.once(Hls.Events.ERROR, (event, data) => {
-            if (data?.fatal) {
-              if (probeHls) {
-                const probe = probeHls;
-                probeHls = null;
-                if (state.activeProbeHls === probe) state.activeProbeHls = null;
-                try { probe.destroy(); } catch(e) {}
-              }
-              finish(false);
-            }
-          });
-        } else {
-          setTimeout(() => finish(false), 5000);
+          const onManifestParsed = () => finish(true);
+          const onLevelLoaded = () => finish(true);
+          const onFragLoaded = () => finish(true);
+          const onHlsError = (event, data) => {
+            if (data?.fatal) finish(false);
+          };
+
+          probeHls.once(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+          probeHls.once(Hls.Events.LEVEL_LOADED, onLevelLoaded);
+          probeHls.once(Hls.Events.FRAG_LOADED, onFragLoaded);
+          probeHls.on(Hls.Events.ERROR, onHlsError);
+
+          const oldCleanup = cleanup;
+          // Gắn listener cleanup vào HLS instance để tránh listener sót lại.
+          probeHls.__autoProbeCleanup = () => {
+            try { probeHls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed); } catch (e) {}
+            try { probeHls.off(Hls.Events.LEVEL_LOADED, onLevelLoaded); } catch (e) {}
+            try { probeHls.off(Hls.Events.FRAG_LOADED, onFragLoaded); } catch (e) {}
+            try { probeHls.off(Hls.Events.ERROR, onHlsError); } catch (e) {}
+          };
         }
-        probeHls.attachMedia(video);
+
+        probeHls.attachMedia(probeVideo);
         probeHls.loadSource(url);
-      } catch(e) {
-        console.error("Probe HLS:", e);
-        if (probeHls) {
-          const probe = probeHls;
-          probeHls = null;
-          if (state.activeProbeHls === probe) state.activeProbeHls = null;
-          try { probe.destroy(); } catch(e) {}
-        }
+      } catch (e) {
+        console.error("Probe HLS:", e, url);
         finish(false);
       }
       return;
