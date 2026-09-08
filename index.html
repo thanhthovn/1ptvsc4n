@@ -239,17 +239,25 @@ select:focus, input:focus { border-color: var(--accent); }
   white-space: nowrap;
 }
 
-/* Hai nút tự động hóa xuống một hàng riêng */
-#autoScanBtn, #resetAutoScanBtn {
-  flex: 1 1 calc(50% - 4px);
+/* Ba nút dò chính nằm chung một hàng */
+.channel-actions-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
 }
 
-#autoScanBtn {
-  margin-left: 0;
+.channel-actions-row button {
+  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
 }
 
-#resetAutoScanBtn {
-  margin-left: 0;
+/* Nút DỪNG thay thế đúng vị trí của DÒ TỰ ĐỘNG */
+#autoAllScanBtn,
+#stopAutoAllBtn {
+  grid-column: 3;
+  grid-row: 1;
 }
 
 
@@ -733,6 +741,17 @@ button.auto-all-btn:hover {
     font-size: 18px;
   }
 
+  .channel-actions-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .channel-actions-row button {
+    padding: 9px 4px;
+    font-size: 10px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
   /* Vid scan */
   .vid-scan-control { flex-wrap: wrap; width: 100%; min-width: 0; }
   .vid-scan-number { flex: 0 0 100%; width: 100%; }
@@ -832,14 +851,14 @@ button.auto-all-btn:hover {
         </div>
 
         <div class="channel-actions-row">
-          <button id="autoScanBtn" class="danger" type="button" aria-label="Dò tự động">⚡ DÒ TỰ ĐỘNG</button>
+          <button id="autoScanBtn" class="danger" type="button" aria-label="DÒ KÊNH">⚡ DÒ KÊNH</button>
           <button id="resetAutoScanBtn" class="secondary" type="button" aria-label="Dò lại từ đầu">↻ DÒ LẠI TỪ ĐẦU</button>
-          <button id="autoAllScanBtn" class="auto-all-btn" type="button" aria-label="Dò kênh tự động hóa">🤖 DÒ KÊNH TỰ ĐỘNG HÓA</button>
-          <button id="stopAutoAllBtn" class="stop-btn" type="button" aria-label="Dừng dò kênh tự động hóa" style="display:none;">⏹ DỪNG TỰ ĐỘNG HÓA</button>
+          <button id="autoAllScanBtn" class="auto-all-btn" type="button" aria-label="DÒ TỰ ĐỘNG">🤖 DÒ TỰ ĐỘNG</button>
+          <button id="stopAutoAllBtn" class="stop-btn" type="button" aria-label="Dừng DÒ TỰ ĐỘNG" style="display:none;">⏹ DỪNG DÒ</button>
         </div>
 
         <div id="channelCounter" class="counter"></div>
-        <div id="autoAllStatus" class="auto-all-status">🤖 Tự động hóa: Sẵn sàng</div>
+        <div id="autoAllStatus" class="auto-all-status">🤖 DÒ KÊNH TỰ ĐỘNG: Sẵn sàng</div>
       </div>
 
       <div>
@@ -1161,13 +1180,13 @@ function setVidScanStatus(text, type = "") {
 function setAutoScanButton(scanning) {
   if (!autoScanBtn) return;
   autoScanBtn.disabled = !!scanning;
-  autoScanBtn.textContent = scanning ? "⏳ ĐANG DÒ..." : "⚡ DÒ TỰ ĐỘNG";
+  autoScanBtn.textContent = scanning ? "⏳ ĐANG DÒ..." : "⚡ DÒ KÊNH";
 }
 
 function setAutoAllButtons(scanning) {
   if (autoAllScanBtn) {
     autoAllScanBtn.disabled = !!scanning;
-    autoAllScanBtn.textContent = scanning ? "⏳ ĐANG TỰ ĐỘNG HÓA..." : "🤖 DÒ KÊNH TỰ ĐỘNG HÓA";
+    autoAllScanBtn.textContent = scanning ? "⏳ ĐANG DÒ KÊNH ....." : "🤖 DÒ TỰ ĐỘNG";
   }
   if (stopAutoAllBtn) stopAutoAllBtn.style.display = scanning ? "inline-block" : "none";
 }
@@ -1543,7 +1562,7 @@ function useManualChannel() {
   templateSelect.selectedIndex = 0;
   updateUrl();
   playCurrent();
-  setStatus("🟢 Đã nhận kênh: " + code + " — bấm DÒ TỰ ĐỘNG để dò", "ok");
+  setStatus("🟢 Đã nhận kênh: " + code + " — bấm DÒ KÊNH để dò", "ok");
 }
 
 function clearManualChannel() {
@@ -1834,13 +1853,13 @@ function stopAutoChannelScan() {
   }
   setAutoAllButtons(false);
   cancelActiveProbe();
-  setAutoAllStatus("⏹ Đã dừng DÒ KÊNH TỰ ĐỘNG HÓA. Kết quả đã tìm được vẫn được giữ lại.", "error");
-  setStatus("⏹ Đã dừng tự động hóa — kết quả đã tìm được vẫn còn bên dưới.", "error");
+  setAutoAllStatus("⏹ Đã dừng DÒ TỰ ĐỘNG. Kết quả đã tìm được vẫn được giữ lại.", "error");
+  setStatus("⏹ Đã dừng dò kênh — kết quả đã tìm được vẫn còn bên dưới.", "error");
 }
 
 function autoScanAllChannels() {
   if (state.autoAllScanning) {
-    setStatus("⏳ DÒ KÊNH TỰ ĐỘNG HÓA đang chạy...", "ok");
+    setStatus("⏳ DÒ TỰ ĐỘNG đang chạy...", "ok");
     return;
   }
   const scanChannels = getVisibleChannels();
@@ -1872,7 +1891,7 @@ function autoScanAllChannels() {
       setAutoAllButtons(false);
       state.autoScanTimer = null;
       setAutoAllStatus("✅ ĐÃ DÒ XONG " + scanChannels.length + " KÊNH × " + templates.length + " LINK.", "ok");
-      setStatus("✅ Dò tự động hóa hoàn tất — tìm thấy " + state.foundResults.length + " link. Kết quả nằm bên dưới.", "ok");
+      setStatus("✅ DÒ TỰ ĐỘNG hoàn tất — tìm thấy " + state.foundResults.length + " link. Kết quả nằm bên dưới.", "ok");
       return;
     }
 
@@ -1894,7 +1913,7 @@ function autoScanAllChannels() {
       " | Đã tìm thấy: " + state.foundResults.length,
       "ok"
     );
-    setStatus("🔎 Tự động hóa: " + code + " — Link " + (linkIndex + 1) + "/" + templates.length + "...");
+    setStatus("🔎 Dò kênh tự động: " + code + " — Link " + (linkIndex + 1) + "/" + templates.length + "...");
 
     tryAutoScanLink(linkIndex, token, "all").then((success) => {
       if (token !== state.autoAllToken || !state.autoAllScanning) return;
@@ -1940,7 +1959,7 @@ function updateResultTable() {
   
   tbody.innerHTML = '';
   if (state.foundResults.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ TỰ ĐỘNG.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ KÊNH.</td></tr>`;
     if (foundSpan) foundSpan.textContent = '0';
     return;
   }
