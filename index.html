@@ -226,9 +226,6 @@ select:focus, input:focus { border-color: var(--accent); }
 }
 
 .channel-actions-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
   margin-top: 10px;
 }
 
@@ -1060,7 +1057,8 @@ const templates = [
   { name: "Link 26 — FNX HD1", url: "https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8" },
   { name: "Link 27 — FNX HD2", url: "https://live.fptplay53.net/fnxhd2/{code}_hls.smil/chunklist.m3u8" },
   { name: "Link 28 — FNX HD1 5M", url: "https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 29 — FNX HD2 5M", url: "https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8" }
+  { name: "Link 29 — FNX HD2 5M", url: "https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8" },
+  { name: "Link 30 — VTV Prime HLS (UPPERCASE)", url: "https://liveh12byt.vtvprime.vn/hls/{code}/index.m3u8", uppercaseCode: true }
 ];
 
 /* =========================================================
@@ -1093,8 +1091,7 @@ const state = {
   lastFoundIndex: null,
   manualChannelCode: "",
   
-  VID_SCAN_MAX: 999,
-  VID_SCAN_TIMEOUT: 8000
+  VID_SCAN_MAX: 999
 };
 
 const video = document.getElementById("video");
@@ -1141,21 +1138,13 @@ function getActiveChannelCode() {
 
 function getUrl(index = Number(templateSelect.value)) {
   if (index === undefined || index === null || !templates[index]) return "";
-  return templates[index].url.replaceAll("{code}", getActiveChannelCode());
+  const code = templates[index].uppercaseCode
+    ? getActiveChannelCode().toUpperCase()
+    : getActiveChannelCode();
+  return templates[index].url.replaceAll("{code}", code);
 }
 
-function getQualityShort(index) {
-  if (index === undefined || index === null || !templates[index]) return "N/A";
-  const name = templates[index]?.name || "";
-  if (/5\.6M/i.test(name)) return "5.6M";
-  if (/5M/i.test(name)) return "5M";
-  if (/4M/i.test(name)) return "4M";
-  if (/2\.5M/i.test(name)) return "2.5M";
-  if (/HD/i.test(name)) return "HD";
-  if (/SD/i.test(name)) return "SD";
-  if (/INDEX/i.test(name)) return "INDEX";
-  return "N/A";
-}
+
 
 function getVidUrl(number) {
   return "https://freem3u.xyz/api/live/play.m3u8?vid=" + number;
