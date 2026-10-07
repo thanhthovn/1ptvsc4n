@@ -1025,38 +1025,40 @@ async function loadChannels() {
 }
 
 
-const templates = [
-  { name: "Link 1 — ViPs AVC 5.6M", url: "https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8" },
-  { name: "Link 2 — ViPs AVC 4M", url: "https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8" },
-  { name: "Link 3 — ViPs AVC INDEX", url: "https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8" },
-  { name: "Link 4 — Live247 AVC 4M", url: "https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8" },
-  { name: "Link 5 — Live247 AVC 5.6M", url: "https://live-a.fptplay53.net/live/media/{code}/live247-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8" },
-  { name: "Link 6 — EPZ SD1 2.5M", url: "https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 7 — EPZ SD2 2.5M", url: "https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 8 — EPZ SD1", url: "https://live.fptplay53.net/epzsd1/{code}_hls.smil/chunklist.m3u8" },
-  { name: "Link 9 — EPZ SD2", url: "https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist.m3u8" },
-  { name: "Link 10 — EPZ SD1 5M", url: "https://live.fptplay53.net/epzsd1/{code}_vhls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 11 — EPZ SD2 5M", url: "https://live.fptplay53.net/epzsd2/{code}_vhls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 12 — EPZ HD1 2.5M", url: "https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 13 — EPZ HD2 2.5M", url: "https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 14 — EPZ HD1", url: "https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist.m3u8" },
-  { name: "Link 15 — EPZ HD2", url: "https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist.m3u8" },
-  { name: "Link 16 — EPZ HD1 5M", url: "https://live.fptplay53.net/epzhd1/{code}_vhls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 17 — EPZ HD2 5M", url: "https://live.fptplay53.net/epzhd2/{code}_vhls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 18 — FNX SD1 2.5M", url: "https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 19 — FNX SD2 2.5M", url: "https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 20 — FNX SD1", url: "https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist.m3u8" },
-  { name: "Link 21 — FNX SD2", url: "https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist.m3u8" },
-  { name: "Link 22 — FNX SD1 5M", url: "https://live.fptplay53.net/fnxsd1/{code}_hls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 23 — FNX SD2 5M", url: "https://live.fptplay53.net/fnxsd2/{code}_hls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 24 — FNX HD1 2.5M", url: "https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 25 — FNX HD2 2.5M", url: "https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b2500000.m3u8" },
-  { name: "Link 26 — FNX HD1", url: "https://live.fptplay53.net/fnxhd1/{code}_hls.smil/chunklist.m3u8" },
-  { name: "Link 27 — FNX HD2", url: "https://live.fptplay53.net/fnxhd2/{code}_hls.smil/chunklist.m3u8" },
-  { name: "Link 28 — FNX HD1 5M", url: "https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 29 — FNX HD2 5M", url: "https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8" },
-  { name: "Link 30 — VTV Prime HLS (UPPERCASE)", url: "https://liveh12byt.vtvprime.vn/hls/{code}/index.m3u8", uppercaseCode: true }
-];
+const templates = [];
+
+async function loadTemplates() {
+  try {
+    const response = await fetch("link.txt", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const lines = (await response.text())
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith("#"));
+
+    const streamLinks = lines.filter(url => /^https?:\/\//i.test(url));
+
+    templates.length = 0;
+    streamLinks.forEach((url, index) => {
+      templates.push({
+        name: `Link ${index + 1}`,
+        url,
+        uppercaseCode: url.includes("liveh12byt.vtvprime.vn")
+      });
+    });
+
+    if (!templates.length) {
+      throw new Error("link.txt không có link stream hợp lệ");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("❌ Không thể tải link.txt:", error);
+    alert("Không thể tải link.txt. Hãy đặt link.txt cùng thư mục với index.html và chạy bằng web server.");
+    return false;
+  }
+}
 
 /* =========================================================
    STATE MANAGEMENT
@@ -2324,6 +2326,10 @@ document.getElementById("manualChannelInput")?.addEventListener("keydown", funct
    INITIALIZATION
 ========================================================= */
 async function init() {
+  // Load stream links from link.txt
+  const templatesLoaded = await loadTemplates();
+  if (!templatesLoaded) return;
+
   // Load channel list from channel.txt
   const channelsLoaded = await loadChannels();
   if (!channelsLoaded) return;
