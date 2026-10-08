@@ -1,6 +1,4 @@
 https://vips-livecdn.fptplay.net/live/media/{code}/live247-hls-avc/{code}-avc1_5600000=10000-mp4a_140800_vie=20000.m3u8
-https://vtvgolive-sctvdrm.vtvdigital.vn/manifest/{code}/playlist_720p.m3u8
-https://vtvgolive-vtv02.vtvdigital.vn/TW7z-ZT_NvvoWSJJOVchhw/1782750595/hls/vtv/live/{code}__vtv1080p-h264/index.m3u8
 https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_5600000=10000-mp4a_131600=20000.m3u8
 https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/{code}-avc1_4000000=10000-mp4a_131600=20000.m3u8
 https://vips-livecdn.fptplay.net/live/media/{code}/live-hls-avc/index.m3u8
@@ -31,3 +29,5 @@ https://live.fptplay53.net/fnxhd2/{code}_hls.smil/chunklist.m3u8
 https://live.fptplay53.net/fnxhd1/{code}_vhls.smil/chunklist_b5000000.m3u8
 https://live.fptplay53.net/fnxhd2/{code}_vhls.smil/chunklist_b5000000.m3u8
 https://liveh12byt.vtvprime.vn/hls/{code}/index.m3u8
+https://vtvgolive-sctvdrm.vtvdigital.vn/manifest/{code}/playlist_720p.m3u8
+https://vtvgolive-vtv02.vtvdigital.vn/TW7z-ZT_NvvoWSJJOVchhw/1782750595/hls/vtv/live/{code}__vtv1080p-h264/index.m3u8
