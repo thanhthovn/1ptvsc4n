@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>M3U8 STREAM SCANNING...</title>
+<title>M3U8 STREAM SCANNING .....</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -2333,6 +2333,7 @@ function updateExportM3uButton() {
 }
 
 // Xuất file m3u — CHỈ THAY DÒNG URL, giữ nguyên mọi thứ khác
+// Nếu 1 kênh có nhiều link → chọn link có số thứ tự (index) NHỎ NHẤT
 function exportResultsToM3u() {
   if (!state.iptvM3uLoaded) {
     setStatus('⚠️ Chưa nạp được m3uiptv.m3u — đặt file cùng thư mục index.html', 'error');
@@ -2343,8 +2344,16 @@ function exportResultsToM3u() {
     return;
   }
 
+  // Sắp xếp theo số thứ tự link TĂNG DẦN
+  // → link có index nhỏ hơn được ưu tiên (lấy link đầu tiên map được)
+  const sortedResults = [...state.foundResults].sort((a, b) => {
+    const ai = Number.isFinite(a.index) ? a.index : 999999;
+    const bi = Number.isFinite(b.index) ? b.index : 999999;
+    return ai - bi;
+  });
+
   const newLinks = new Map();
-  state.foundResults.forEach(r => {
+  sortedResults.forEach(r => {
     const key = normalizeTvgId(r.channel);
     if (key && !newLinks.has(key)) newLinks.set(key, r.url);
   });
@@ -2372,7 +2381,16 @@ function exportResultsToM3u() {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 
-  setStatus(`📺 Đã xuất m3uiptv.m3u — thay ${replaced}/${newLinks.size} link`, 'ok');
+  // Log chi tiết link đã chọn cho từng kênh
+  const detail = [...newLinks.entries()]
+    .map(([k, v]) => {
+      const found = state.foundResults.find(r => r.url === v);
+      return `  • ${k} → Link ${(found?.index ?? 0) + 1}`;
+    })
+    .join('\n');
+  console.log('📺 Chi tiết link đã chọn (ưu tiên số thứ tự nhỏ):\n' + detail);
+
+  setStatus(`📺 Đã xuất m3uiptv.m3u — thay ${replaced}/${newLinks.size} link (ưu tiên số thứ tự nhỏ)`, 'ok');
 }
 
 /* =========================================================
