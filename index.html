@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>M3U8 STREAM SCANNING</title>
+<title>M3U8 STREAM SCANNING...</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -131,7 +131,6 @@ select:focus, input:focus { border-color: var(--accent); }
   margin-top: 10px;
 }
 
-/* === COMMON STYLES === */
 .manual-channel-row, .channel-row, .vid-scan-control {
   display: flex;
   gap: 8px;
@@ -236,7 +235,6 @@ select:focus, input:focus { border-color: var(--accent); }
   white-space: nowrap;
 }
 
-/* Ba nút dò chính nằm chung một hàng */
 .channel-actions-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -250,13 +248,11 @@ select:focus, input:focus { border-color: var(--accent); }
   white-space: nowrap;
 }
 
-/* Nút DỪNG thay thế đúng vị trí của DÒ TỰ ĐỘNG */
 #autoAllScanBtn,
 #stopAutoAllBtn {
   grid-column: 3;
   grid-row: 1;
 }
-
 
 .vid-scan-number {
   flex: 0 0 100px;
@@ -286,7 +282,6 @@ select:focus, input:focus { border-color: var(--accent); }
 
 .vid-scan-actions button { width: 100%; }
 
-/* === RANGE INPUTS === */
 .vid-range-inputs {
   display: flex;
   align-items: center;
@@ -322,7 +317,6 @@ select:focus, input:focus { border-color: var(--accent); }
   font-size: 12px;
 }
 
-/* === BUTTONS === */
 button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -410,7 +404,6 @@ button.auto-all-btn:hover {
   font-size: 12px;
 }
 
-/* === RESULT TABLE === */
 .result-table-wrap, .vid-result-list {
   margin-top: 12px;
   max-height: 300px;
@@ -522,6 +515,16 @@ button.auto-all-btn:hover {
   color: #fff;
 }
 
+.result-clear-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.result-clear-btn:disabled:hover {
+  background: transparent;
+  color: #ef4444;
+}
+
 .found-badge {
   display: inline-block;
   padding: 2px 10px;
@@ -533,7 +536,6 @@ button.auto-all-btn:hover {
   color: #000;
 }
 
-/* === VID RESULT ITEMS === */
 .vid-result-head {
   display: grid;
   grid-template-columns: 60px minmax(220px, 1fr) minmax(220px, 1fr) 150px;
@@ -605,7 +607,6 @@ button.auto-all-btn:hover {
   .vid-copy-group { grid-column: 2; justify-content: flex-start; }
 }
 
-/* === PANEL === */
 .scan-panel { overflow: hidden; }
 .panel-head {
   display: flex;
@@ -641,7 +642,6 @@ button.auto-all-btn:hover {
   justify-content: space-between;
 }
 
-/* === SCROLLBAR === */
 .result-table-wrap::-webkit-scrollbar, .vid-result-list::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -662,7 +662,6 @@ button.auto-all-btn:hover {
   min-width: 0;
 }
 
-/* === RESPONSIVE === */
 @media(max-width:760px) {
   .grid { grid-template-columns: 1fr; min-width: 0; }
   h1 { font-size: 22px; overflow-wrap: anywhere; }
@@ -689,7 +688,6 @@ button.auto-all-btn:hover {
     max-width: 100%;
   }
 
-  /* Manual channel */
   .manual-channel-row {
     flex-direction: column;
     align-items: stretch;
@@ -718,7 +716,6 @@ button.auto-all-btn:hover {
     white-space: normal;
   }
 
-  /* Channel group + name */
   .channel-select-stack {
     grid-template-columns: minmax(105px, 0.34fr) minmax(0, 1fr) 38px 38px;
     gap: 6px;
@@ -749,7 +746,6 @@ button.auto-all-btn:hover {
     white-space: normal;
   }
 
-  /* Vid scan */
   .vid-scan-control { flex-wrap: wrap; width: 100%; min-width: 0; }
   .vid-scan-number { flex: 0 0 100%; width: 100%; }
   .vid-scan-number input { display: block; margin: auto; }
@@ -776,7 +772,6 @@ button.auto-all-btn:hover {
     font-size: 11px;
   }
 
-  /* Range inputs */
   .vid-range-inputs { flex-direction: row; align-items: center; }
   .vid-range-inputs input {
     flex: 1 1 70px;
@@ -788,7 +783,6 @@ button.auto-all-btn:hover {
     flex: 0 0 auto;
   }
 
-  /* Result table */
   .result-table-wrap { max-height: 250px; }
   .result-table { font-size: 11px; min-width: 380px; }
   .result-table th, .result-table td { padding: 6px 8px; }
@@ -853,6 +847,7 @@ button.auto-all-btn:hover {
           <button id="stopAutoAllBtn" class="stop-btn" type="button" aria-label="Dừng DÒ TỰ ĐỘNG" style="display:none;">⏹ DỪNG DÒ</button>
         </div>
         <div id="channelCounter" class="counter"></div>
+        <div id="autoAllStatus" class="auto-all-status" style="display:none;"></div>
       </div>
 
       <div>
@@ -884,6 +879,7 @@ button.auto-all-btn:hover {
       <div class="result-summary" id="resultSummary">
         <span>🔍 Tổng số link phát được: <span class="found-count" id="foundLinks">0</span></span>
         <button class="result-clear-btn" onclick="exportResultsToExcel()">📊 XUẤT EXCEL</button>
+        <button class="result-clear-btn" id="exportM3uBtn" onclick="exportResultsToM3u()" disabled title="Chưa nạp được m3uiptv.m3u">📺 XUẤT M3U</button>
         <button class="result-clear-btn" onclick="clearResults()">🗑 XÓA</button>
       </div>
     </div>
@@ -893,7 +889,7 @@ button.auto-all-btn:hover {
 <!-- FREEM3U SCANNING -->
 <div class="card scan-panel" id="vidScanPanel">
   <div class="panel-head">
-    <label>▸ FREEM3U // DÒ LINK https://freem3u.xyz/api/live/play.m3u8?vid=*kênh*</number></label>
+    <label>▸ FREEM3U // DÒ LINK https://freem3u.xyz/api/live/play.m3u8?vid=*kênh*</label>
     <button class="secondary panel-toggle" type="button" onclick="togglePanel('vidScanBody','vidScanToggle')" aria-expanded="true">
       <span id="vidScanToggle">▲ ẨN</span>
     </button>
@@ -974,8 +970,6 @@ function populateChannelSelect(preferredCode = "") {
   updateUrl();
 }
 
-// Danh sach kenh duoc nap tu file channel.txt.
-// Dong bat dau bang # duoc xem la tieu de nhom, vi du: #vtv, #htv.
 async function loadChannels() {
   try {
     const response = await fetch("channel.txt", { cache: "no-store" });
@@ -1023,7 +1017,6 @@ async function loadChannels() {
     return false;
   }
 }
-
 
 const templates = [];
 
@@ -1090,7 +1083,11 @@ const state = {
   lastFoundIndex: null,
   manualChannelCode: "",
   
-  VID_SCAN_MAX: 999
+  VID_SCAN_MAX: 999,
+  VID_SCAN_TIMEOUT: 15000,
+
+  iptvM3uLines: [],
+  iptvM3uLoaded: false
 };
 
 const video = document.getElementById("video");
@@ -1142,8 +1139,6 @@ function getUrl(index = Number(templateSelect.value)) {
     : getActiveChannelCode();
   return templates[index].url.replaceAll("{code}", code);
 }
-
-
 
 function getVidUrl(number) {
   return "https://freem3u.xyz/api/live/play.m3u8?vid=" + number;
@@ -1338,6 +1333,9 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
   let nativeCleanup = null;
   let localHls = null;
 
+  const onVideoPlaying = () => finish(true);
+  const onVideoError = () => finish(false);
+
   const cleanup = () => {
     if (timer) clearTimeout(timer);
     timer = null;
@@ -1353,6 +1351,8 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
       localHls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
       localHls.off(Hls.Events.ERROR, onHlsError);
     }
+    video.removeEventListener("playing", onVideoPlaying);
+    video.removeEventListener("error", onVideoError);
   };
 
   const finish = (success) => {
@@ -1367,13 +1367,10 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
   const onHlsError = (event, data) => {
     if (data?.fatal) finish(false);
   };
-  const onVideoPlaying = () => finish(true);
-  const onVideoError = () => finish(false);
 
   if (onPlaying) video.addEventListener("playing", onVideoPlaying, { once: true });
   if (onError) video.addEventListener("error", onVideoError, { once: true });
 
-  // Native HLS (Safari/iOS and other browsers that expose native HLS)
   if (isNativeHLSSupported()) {
     const onLoadedMetadata = () => video.play().catch(() => {});
     const onErrorNative = () => finish(false);
@@ -1636,8 +1633,6 @@ function tryAutoScanLink(index, token, mode = "normal") {
       resolve(!!ok);
     };
 
-    // Dùng một video probe RIÊNG. Không dùng player chính khi tự động dò,
-    // tránh probe AVC bị ảnh hưởng bởi stream/link trước đó.
     probeVideo = document.createElement("video");
     probeVideo.muted = true;
     probeVideo.playsInline = true;
@@ -1647,10 +1642,8 @@ function tryAutoScanLink(index, token, mode = "normal") {
     probeVideo.style.cssText = "position:fixed;left:-99999px;top:-99999px;width:1px;height:1px;opacity:0;pointer-events:none;";
     document.body.appendChild(probeVideo);
 
-    // Cho AVC/HLS đủ thời gian để manifest hoặc level đầu tiên được tải.
     timer = setTimeout(() => finish(false), 15000);
 
-    // Native HLS (Safari/iOS)
     if (isNativeHLSSupported()) {
       const onLoadedMetadata = () => finish(true);
       const onCanPlay = () => finish(true);
@@ -1678,7 +1671,6 @@ function tryAutoScanLink(index, token, mode = "normal") {
       return;
     }
 
-    // HLS.js probe
     if (isHlsSupported()) {
       try {
         probeHls = new Hls({
@@ -1692,8 +1684,6 @@ function tryAutoScanLink(index, token, mode = "normal") {
         });
         state.activeProbeHls = probeHls;
 
-        // MANIFEST_PARSED là tín hiệu chính. LEVEL_LOADED / FRAG_LOADED
-        // là fallback cho một số AVC playlist không phát sinh sự kiện như mong đợi.
         if (isHlsEventsAvailable()) {
           const onManifestParsed = () => finish(true);
           const onLevelLoaded = () => finish(true);
@@ -1707,8 +1697,6 @@ function tryAutoScanLink(index, token, mode = "normal") {
           probeHls.once(Hls.Events.FRAG_LOADED, onFragLoaded);
           probeHls.on(Hls.Events.ERROR, onHlsError);
 
-          const oldCleanup = cleanup;
-          // Gắn listener cleanup vào HLS instance để tránh listener sót lại.
           probeHls.__autoProbeCleanup = () => {
             try { probeHls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed); } catch (e) {}
             try { probeHls.off(Hls.Events.LEVEL_LOADED, onLevelLoaded); } catch (e) {}
@@ -1843,6 +1831,7 @@ function stopAutoChannelScan() {
   cancelActiveProbe();
   setAutoAllStatus("⏹ Đã dừng DÒ TỰ ĐỘNG. Kết quả đã tìm được vẫn được giữ lại.", "error");
   setStatus("⏹ Đã dừng dò kênh — kết quả đã tìm được vẫn còn bên dưới.", "error");
+  if (autoAllStatus) autoAllStatus.style.display = "none";
 }
 
 function autoScanAllChannels() {
@@ -1856,11 +1845,8 @@ function autoScanAllChannels() {
     return;
   }
 
-  // Nếu đang chạy FreeM3U thì dừng trước khi bắt đầu.
   stopRangeVidScan({ silent: true });
   resetAutoScanIndex();
-
-  // Giữ nguyên kết quả cũ khi dò lại; kết quả mới sẽ nối tiếp xuống dưới.
 
   state.autoAllScanning = true;
   state.autoAllToken++;
@@ -1868,6 +1854,7 @@ function autoScanAllChannels() {
   state.autoAllChannelIndex = Math.max(0, channelSelect.selectedIndex);
   state.autoAllLinkIndex = 0;
   setAutoAllButtons(true);
+  if (autoAllStatus) autoAllStatus.style.display = "block";
 
   const scanStep = () => {
     if (token !== state.autoAllToken || !state.autoAllScanning) return;
@@ -1887,7 +1874,6 @@ function autoScanAllChannels() {
     const linkIndex = state.autoAllLinkIndex;
     const code = scanChannels[channelIndex];
 
-    // Chuyển UI sang đúng kênh/link đang dò.
     state.manualChannelCode = "";
     const manualInput = document.getElementById("manualChannelInput");
     if (manualInput) manualInput.value = "";
@@ -1906,7 +1892,6 @@ function autoScanAllChannels() {
     tryAutoScanLink(linkIndex, token, "all").then((success) => {
       if (token !== state.autoAllToken || !state.autoAllScanning) return;
 
-      // tryAutoScanLink dùng getActiveChannelCode(), nên kết quả đã gắn đúng kênh.
       state.autoAllLinkIndex++;
       if (success) {
         setAutoAllStatus(
@@ -1949,6 +1934,7 @@ function updateResultTable() {
   if (state.foundResults.length === 0) {
     tbody.innerHTML = `<tr><td colspan="5" class="no-results">⚪ Chưa tìm thấy link nào phát được. Hãy bấm DÒ KÊNH.</td></tr>`;
     if (foundSpan) foundSpan.textContent = '0';
+    updateExportM3uButton();
     return;
   }
 
@@ -1971,6 +1957,7 @@ function updateResultTable() {
     tbody.appendChild(tr);
   });
   if (foundSpan) foundSpan.textContent = state.foundResults.length;
+  updateExportM3uButton();
 }
 
 function addFoundResult(index, url, channel = getActiveChannelCode()) {
@@ -1981,6 +1968,7 @@ function addFoundResult(index, url, channel = getActiveChannelCode()) {
   state.foundResults.push({ index, name, url, channel });
   state.lastFoundIndex = index;
   updateResultTable();
+  updateExportM3uButton();
 }
 
 function exportResultsToExcel() {
@@ -2233,6 +2221,161 @@ function resetVidScan() {
 }
 
 /* =========================================================
+   IPTV M3U IMPORT — THAY LINK ĐÃ DÒ VÀO FILE M3U GỐC
+========================================================= */
+
+// Chuẩn hóa tvg-id / channel code để so khớp
+// vtv1hd     -> vtv1
+// vtv5hdtnb  -> vtv5tnb
+// vtv5hdtn   -> vtv5tn
+// VTV1-HD    -> vtv1
+function normalizeTvgId(id) {
+  return String(id || '').toLowerCase()
+    .replace(/[^a-z0-9]/g, '')                       // bỏ ký tự đặc biệt
+    .replace(/(fullhd|fhd|uhd|4k|sd|hd)$/g, '')      // bỏ đuôi cuối
+    .replace(/hd(?=[a-z])/g, '');                    // bỏ "hd" giữa chữ-số
+}
+
+// Parse file m3u — giữ NGUYÊN VĂN từng dòng để xuất lại y chang
+function parseIptvM3u(text) {
+  const lines = text.split(/\r?\n/);
+  const result = [];
+  let pendingTvgId = null;
+  let pendingExtinf = false;
+
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+
+    if (!trimmed) {
+      result.push({ type: 'blank', raw: raw });
+      continue;
+    }
+
+    if (trimmed.startsWith('#EXTM3U')) {
+      result.push({ type: 'header', raw: raw });
+      continue;
+    }
+
+    if (trimmed.startsWith('#EXTINF')) {
+      const m = trimmed.match(/tvg-id="([^"]*)"/i);
+      pendingTvgId = m ? m[1] : '';
+      pendingExtinf = true;
+      result.push({ type: 'extinf', raw: raw, tvgId: pendingTvgId });
+      continue;
+    }
+
+    if (trimmed.startsWith('#EXTVLCOPT') || trimmed.startsWith('#EXTVLC')) {
+      result.push({ type: 'vlcopt', raw: raw });
+      continue;
+    }
+
+    if (trimmed.startsWith('#')) {
+      result.push({ type: 'comment', raw: raw });
+      continue;
+    }
+
+    if (/^https?:\/\//i.test(trimmed)) {
+      result.push({
+        type: 'url',
+        raw: raw,
+        forTvgId: pendingExtinf ? pendingTvgId : null
+      });
+      pendingExtinf = false;
+      pendingTvgId = null;
+      continue;
+    }
+
+    result.push({ type: 'other', raw: raw });
+  }
+
+  return result;
+}
+
+// Nạp file m3uiptv.m3u khi khởi động app
+async function loadIptvM3u() {
+  try {
+    const res = await fetch('m3uiptv.m3u', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    state.iptvM3uLines = parseIptvM3u(text);
+
+    const urlCount = state.iptvM3uLines.filter(l => l.type === 'url').length;
+    state.iptvM3uLoaded = true;
+
+    console.log(`✅ Đã nạp m3uiptv.m3u — ${urlCount} kênh`);
+    updateExportM3uButton();
+    return true;
+  } catch (err) {
+    console.warn('⚠️ Không nạp được m3uiptv.m3u:', err.message);
+    state.iptvM3uLoaded = false;
+    updateExportM3uButton();
+    return false;
+  }
+}
+
+// Bật/tắt nút XUẤT M3U tuỳ trạng thái
+function updateExportM3uButton() {
+  const btn = document.getElementById('exportM3uBtn');
+  if (!btn) return;
+
+  if (!state.iptvM3uLoaded) {
+    btn.disabled = true;
+    btn.title = 'Chưa nạp được m3uiptv.m3u (đặt file cùng thư mục index.html)';
+    return;
+  }
+  if (!state.foundResults.length) {
+    btn.disabled = true;
+    btn.title = 'Chưa có kết quả dò để thay link';
+    return;
+  }
+  btn.disabled = false;
+  btn.title = 'Xuất file m3uiptv.m3u với link mới đã dò được';
+}
+
+// Xuất file m3u — CHỈ THAY DÒNG URL, giữ nguyên mọi thứ khác
+function exportResultsToM3u() {
+  if (!state.iptvM3uLoaded) {
+    setStatus('⚠️ Chưa nạp được m3uiptv.m3u — đặt file cùng thư mục index.html', 'error');
+    return;
+  }
+  if (!state.foundResults.length) {
+    setStatus('⚠️ Chưa có kết quả dò để thay link', 'error');
+    return;
+  }
+
+  const newLinks = new Map();
+  state.foundResults.forEach(r => {
+    const key = normalizeTvgId(r.channel);
+    if (key && !newLinks.has(key)) newLinks.set(key, r.url);
+  });
+
+  let replaced = 0;
+  const output = state.iptvM3uLines.map(line => {
+    if (line.type !== 'url' || !line.forTvgId) return line.raw;
+
+    const key = normalizeTvgId(line.forTvgId);
+    const newUrl = newLinks.get(key);
+    if (newUrl) {
+      replaced++;
+      return newUrl;
+    }
+    return line.raw;
+  });
+
+  const blob = new Blob([output.join('\n')], { type: 'audio/x-mpegurl' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+  a.download = `m3uiptv_${stamp}.m3u`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+
+  setStatus(`📺 Đã xuất m3uiptv.m3u — thay ${replaced}/${newLinks.size} link`, 'ok');
+}
+
+/* =========================================================
    UI UPDATE
 ========================================================= */
 function updateUrl() {
@@ -2326,15 +2469,14 @@ document.getElementById("manualChannelInput")?.addEventListener("keydown", funct
    INITIALIZATION
 ========================================================= */
 async function init() {
-  // Load stream links from link.txt
   const templatesLoaded = await loadTemplates();
   if (!templatesLoaded) return;
 
-  // Load channel list from channel.txt
   const channelsLoaded = await loadChannels();
   if (!channelsLoaded) return;
 
-  // Populate dropdowns
+  await loadIptvM3u();
+
   populateChannelGroupSelect();
   populateChannelSelect("angiang");
 
@@ -2345,10 +2487,8 @@ async function init() {
     templateSelect.appendChild(option);
   });
 
-  // Set defaults
   templateSelect.value = "0";
 
-  // Bind iOS buttons
   bindIOSButton(prevChannelBtn, prevChannel);
   bindIOSButton(nextChannelBtn, nextChannel);
   bindIOSButton(autoScanBtn, autoScanLinks);
@@ -2356,7 +2496,6 @@ async function init() {
   bindIOSButton(autoAllScanBtn, autoScanAllChannels);
   bindIOSButton(stopAutoAllBtn, stopAutoChannelScan);
 
-  // Set initial state
   document.getElementById("channelToggle")?.setAttribute("aria-expanded", "true");
   document.getElementById("vidScanToggle")?.setAttribute("aria-expanded", "true");
 
@@ -2368,9 +2507,9 @@ async function init() {
   console.log("📱 iOS:", isIOS());
   console.log("🎬 Native HLS:", isNativeHLSSupported());
   console.log("📦 HLS.js:", isHlsSupported());
+  console.log("📺 IPTV M3U:", state.iptvM3uLoaded ? "đã nạp" : "chưa nạp");
 }
 
-// Run initialization
 if (document.readyState === "complete" || document.readyState === "interactive") {
   init();
 } else {
