@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>M3U8 STREAM SCANNING .....</title>
+<title>DÒ KÊNH TIVI</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -2294,7 +2294,8 @@ function parseIptvM3u(text) {
 // Nạp file m3uiptv.m3u khi khởi động app
 async function loadIptvM3u() {
   try {
-    const res = await fetch('m3uiptv.m3u', { cache: 'no-store' });
+    // Thay đổi: Sử dụng link từ GitHub thay vì file cục bộ
+    const res = await fetch('https://raw.githubusercontent.com/thanhthovn/iOSPremium/refs/heads/main/TRUYENHINHCAPVIETNAM.m3u', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     state.iptvM3uLines = parseIptvM3u(text);
