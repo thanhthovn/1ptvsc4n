@@ -1,18 +1,24 @@
 from pathlib import Path
 from datetime import datetime, timezone
+import re
 import time
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
-URL = "https://thanhthovn.github.io/1ptvsc4n/"
+# IPTV SCANNING CHANNEL is a modal inside iOSPremium, not the separate 1ptvsc4n page.
+URL = "https://thanhthovn.github.io/iOSPremium/"
 OUTPUT_DIR = Path("output")
 MAX_SCAN_SECONDS = 4 * 60 * 60
-POLL_SECONDS = 5
+POLL_SECONDS = 3
+
+
+def local_timestamp():
+    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 
 
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    started = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    started = local_timestamp()
     errors = []
 
     with sync_playwright() as p:
@@ -22,90 +28,122 @@ def main():
         page.set_default_timeout(30_000)
 
         page.on("pageerror", lambda exc: errors.append(f"Page error: {exc}"))
-        page.on("console", lambda msg: print(f"[browser:{msg.type}] {msg.text}") if msg.type == "error" else None)
+        page.on(
+            "console",
+            lambda msg: print(f"[browser:{msg.type}] {msg.text}")
+            if msg.type == "error" else None,
+        )
 
         try:
             print(f"Opening {URL}")
             page.goto(URL, wait_until="domcontentloaded", timeout=60_000)
-            page.locator("#autoAllScanBtn").wait_for(state="visible", timeout=60_000)
 
-            # Wait for the channel and link templates to finish loading.
-            page.wait_for_function(
-                """() => {
-                    const channels = document.querySelector('#channelSelect');
-                    const templates = document.querySelector('#templateSelect');
-                    return channels && templates &&
-                           channels.options.length > 0 &&
-                           templates.options.length > 0;
-                }""",
-                timeout=90_000,
-            )
+            # This button opens the scanner modal on the same iOSPremium page.
+            scanner_button = page.locator("#cinemaxBtn")
+            scanner_button.wait_for(state="visible", timeout=60_000)
+            print("Opening IPTV SCANNING CHANNEL modal...")
+            scanner_button.click()
 
-            # This button performs the site's full automatic channel + link scan.
-            print("Starting full automatic IPTV channel/link scan...")
-            page.locator("#autoAllScanBtn").click()
+            modal = page.locator(".scanner-modal")
+            modal.wait_for(state="visible", timeout=30_000)
+            summary = modal.locator("#scannerSummary")
+            results = modal.locator("#scannerResults")
+            load_button = modal.locator("#scannerLoad")
+            check_all_button = modal.locator("#scannerTestAll")
+            export_button = modal.locator("#scannerExportM3U")
+
+            # The modal automatically tries to load linkworks.txt. Retry once if needed.
+            deadline = time.monotonic() + 90
+            retried_load = False
+            while time.monotonic() < deadline:
+                status = summary.inner_text().strip()
+                rows = results.locator(".scanner-link").count()
+                if check_all_button.is_enabled() and rows > 0:
+                    break
+                if (
+                    not retried_load
+                    and load_button.is_enabled()
+                    and ("Không tải được" in status or "Không đọc được" in status)
+                ):
+                    load_button.click()
+                    retried_load = True
+                page.wait_for_timeout(1000)
+            else:
+                raise TimeoutError(
+                    "The scanner modal did not load linkworks.txt within 90 seconds. "
+                    f"Last status: {summary.inner_text().strip()}"
+                )
+
+            total_links = results.locator(".scanner-link").count()
+            print(f"Loaded {total_links} scanner links. Clicking KIỂM TRA TẤT CẢ...")
+            check_all_button.click()
 
             deadline = time.monotonic() + MAX_SCAN_SECONDS
-            last_status = ""
+            saw_running = False
+            last_summary = ""
             while time.monotonic() < deadline:
                 page.wait_for_timeout(POLL_SECONDS * 1000)
+                status = summary.inner_text().strip()
+                if status and status != last_summary:
+                    print(f"[scanner] {status}")
+                    last_summary = status
 
-                status_locator = page.locator("#autoAllStatus")
-                status = status_locator.inner_text().strip() if status_locator.count() else ""
-                if status and status != last_status:
-                    print(f"[scan] {status}")
-                    last_status = status
-
-                normalized = status.casefold()
-                if "đã dò xong" in normalized or "dò tự động hoàn tất" in normalized:
+                if check_all_button.is_disabled():
+                    saw_running = True
+                elif saw_running:
+                    # The site re-enables this button after the full scan completes.
                     break
-
-                # Stop early on a visible error if the site did not start scanning.
-                body_text = page.locator("body").inner_text().casefold()
-                if not status and ("chưa có danh sách kênh" in body_text or "chưa nạp được" in body_text):
-                    raise RuntimeError("Trang chưa tải được danh sách kênh/link cần thiết.")
             else:
-                raise TimeoutError(f"Automatic scan did not finish within {MAX_SCAN_SECONDS // 60} minutes.")
+                raise TimeoutError(
+                    f"Checking all links exceeded {MAX_SCAN_SECONDS // 60} minutes."
+                )
 
-            found_text = page.locator("#foundLinks").inner_text().strip()
-            try:
-                found_count = int(found_text)
-            except ValueError:
-                found_count = 0
-
-            final_text = page.locator("body").inner_text().strip()
-            (OUTPUT_DIR / "ket_qua.txt").write_text(final_text, encoding="utf-8")
-            (OUTPUT_DIR / "scan-summary.txt").write_text(
+            final_summary = summary.inner_text().strip()
+            results_text = results.inner_text().strip()
+            modal_text = (
+                "IPTV SCANNING CHANNEL — TEXT RESULTS\n"
                 f"Started: {started}\n"
-                f"Finished: {datetime.now(timezone.utc).astimezone().isoformat(timespec='seconds')}\n"
-                f"Found working links: {found_count}\n"
-                f"Final scan status: {last_status}\n",
+                f"Finished: {local_timestamp()}\n\n"
+                f"SUMMARY\n{final_summary}\n\n"
+                f"RESULTS\n{results_text}\n"
+            )
+            (OUTPUT_DIR / "ket_qua.txt").write_text(modal_text, encoding="utf-8")
+            (OUTPUT_DIR / "scanner-summary.txt").write_text(
+                f"Started: {started}\n"
+                f"Finished: {local_timestamp()}\n"
+                f"Total links loaded: {total_links}\n"
+                f"Final scanner summary: {final_summary}\n",
                 encoding="utf-8",
             )
 
-            print(f"Scan complete. Found links: {found_count}")
-            if found_count <= 0:
-                print("No working links found; skipping M3U export.")
-                return
-
-            export_button = page.locator("#exportM3uBtn")
-            export_button.wait_for(state="visible", timeout=30_000)
-            page.wait_for_function(
-                "() => { const b = document.querySelector('#exportM3uBtn'); return b && !b.disabled; }",
-                timeout=60_000,
+            match = re.search(
+                r"PHÁT ĐƯỢC:\s*(\d+)\s*kênh",
+                final_summary,
+                re.IGNORECASE,
             )
+            playable_channels = int(match.group(1)) if match else 0
+            print(f"Checking complete. Playable channels: {playable_channels}")
 
-            print("Exporting M3U...")
-            with page.expect_download(timeout=30_000) as download_info:
-                export_button.click()
+            if playable_channels > 0:
+                print("Clicking XUẤT M3U...")
+                with page.expect_download(timeout=60_000) as download_info:
+                    export_button.click()
 
-            download = download_info.value
-            suggested = Path(download.suggested_filename).name
-            if not suggested.lower().endswith(".m3u"):
-                suggested = "m3uiptv_result.m3u"
-            destination = OUTPUT_DIR / suggested
-            download.save_as(str(destination))
-            print(f"M3U saved to {destination}")
+                download = download_info.value
+                filename = Path(download.suggested_filename).name
+                if not filename.lower().endswith(".m3u"):
+                    filename = "TRUYENHINHCAPVIETNAM_checked.m3u"
+                destination = OUTPUT_DIR / filename
+                download.save_as(str(destination))
+                print(f"M3U saved to {destination}")
+
+                (OUTPUT_DIR / "ket_qua.txt").write_text(
+                    modal_text
+                    + f"\nPOST-EXPORT STATUS\n{summary.inner_text().strip()}\n",
+                    encoding="utf-8",
+                )
+            else:
+                print("No playable channels reported; skipping M3U export.")
 
             (OUTPUT_DIR / "browser-errors.txt").write_text(
                 "\n".join(errors) if errors else "No browser page errors recorded.\n",
