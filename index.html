@@ -1084,7 +1084,9 @@ const state = {
   manualChannelCode: "",
   
   VID_SCAN_MAX: 999,
-  VID_SCAN_TIMEOUT: 15000,
+  VID_SCAN_TIMEOUT: 10000,
+  VID_SCAN_HARD_TIMEOUT: 20000,
+  NO_SIGNAL_TIMEOUT: 8000,
 
   iptvM3uLines: [],
   iptvM3uLoaded: false
@@ -1213,6 +1215,12 @@ function stopRangeVidScan(options = {}) {
   state.freem3uPlaying = false;
   state.freem3uPlayingNumber = null;
   setRangeScanButtons(false);
+
+  // Gọi cancel để settle promise đang chờ
+  if (state.activePlaybackCancel) {
+    try { state.activePlaybackCancel(); } catch (e) {}
+    state.activePlaybackCancel = null;
+  }
   cancelActiveProbe();
   destroyPlayer();
   if (!silent) {
@@ -1223,12 +1231,15 @@ function stopRangeVidScan(options = {}) {
 
 function destroyPlayer() {
   if (state.hls) {
-    state.hls.destroy();
+    const h = state.hls;
     state.hls = null;
+    try { h.destroy(); } catch (e) {}
   }
-  video.pause();
-  video.removeAttribute("src");
-  video.load();
+  try {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+  } catch (e) {}
 }
 
 function togglePanel(bodyId, toggleId) {
@@ -1337,22 +1348,21 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
   const onVideoError = () => finish(false);
 
   const cleanup = () => {
-    if (timer) clearTimeout(timer);
-    timer = null;
+    if (timer) { clearTimeout(timer); timer = null; }
     if (state.activeNativeTimeout) {
       clearTimeout(state.activeNativeTimeout);
       state.activeNativeTimeout = null;
     }
     if (nativeCleanup) {
-      nativeCleanup();
+      try { nativeCleanup(); } catch (e) {}
       nativeCleanup = null;
     }
     if (localHls && isHlsEventsAvailable()) {
-      localHls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed);
-      localHls.off(Hls.Events.ERROR, onHlsError);
+      try { localHls.off(Hls.Events.MANIFEST_PARSED, onManifestParsed); } catch(e) {}
+      try { localHls.off(Hls.Events.ERROR, onHlsError); } catch(e) {}
     }
-    video.removeEventListener("playing", onVideoPlaying);
-    video.removeEventListener("error", onVideoError);
+    try { video.removeEventListener("playing", onVideoPlaying); } catch(e) {}
+    try { video.removeEventListener("error", onVideoError); } catch(e) {}
   };
 
   const finish = (success) => {
@@ -1363,7 +1373,9 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
     else onError?.();
   };
 
-  const onManifestParsed = () => video.play().catch(() => {});
+  const onManifestParsed = () => {
+    try { video.play().catch(() => {}); } catch(e) {}
+  };
   const onHlsError = (event, data) => {
     if (data?.fatal) finish(false);
   };
@@ -1372,16 +1384,23 @@ function setupHlsPlayback(url, { onPlaying, onError, timeout = 15000 } = {}) {
   if (onError) video.addEventListener("error", onVideoError, { once: true });
 
   if (isNativeHLSSupported()) {
-    const onLoadedMetadata = () => video.play().catch(() => {});
+    const onLoadedMetadata = () => {
+      try { video.play().catch(() => {}); } catch(e) {}
+    };
     const onErrorNative = () => finish(false);
     nativeCleanup = () => {
-      video.removeEventListener("loadedmetadata", onLoadedMetadata);
-      video.removeEventListener("error", onErrorNative);
+      try { video.removeEventListener("loadedmetadata", onLoadedMetadata); } catch(e) {}
+      try { video.removeEventListener("error", onErrorNative); } catch(e) {}
     };
     video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
     video.addEventListener("error", onErrorNative, { once: true });
-    video.src = url;
-    video.load();
+    try {
+      video.src = url;
+      video.load();
+    } catch(e) {
+      finish(false);
+      return { cancel: () => finish(false) };
+    }
   } else if (isHlsSupported()) {
     try {
       localHls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
@@ -1656,10 +1675,10 @@ function tryAutoScanLink(index, token, mode = "normal") {
       probeVideo.addEventListener("error", onError, { once: true });
 
       nativeCleanup = () => {
-        probeVideo?.removeEventListener("loadedmetadata", onLoadedMetadata);
-        probeVideo?.removeEventListener("canplay", onCanPlay);
-        probeVideo?.removeEventListener("playing", onPlaying);
-        probeVideo?.removeEventListener("error", onError);
+        try { probeVideo?.removeEventListener("loadedmetadata", onLoadedMetadata); } catch(e) {}
+        try { probeVideo?.removeEventListener("canplay", onCanPlay); } catch(e) {}
+        try { probeVideo?.removeEventListener("playing", onPlaying); } catch(e) {}
+        try { probeVideo?.removeEventListener("error", onError); } catch(e) {}
       };
 
       try {
@@ -2086,19 +2105,33 @@ function addVidFoundResult(number, url, destination = '') {
 /* =========================================================
    FREEM3U RANGE SCAN
 ========================================================= */
-async function checkNoSignal(url) {
+async function checkNoSignal(url, timeoutMs = state.NO_SIGNAL_TIMEOUT) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, { redirect: "follow", cache: "no-store" });
+    const response = await fetch(url, {
+      redirect: "follow",
+      cache: "no-store",
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+
     const finalUrl = response.url || "";
     if (finalUrl.toLowerCase().includes("no-signal")) {
       return { noSignal: true, destination: finalUrl };
     }
 
-    const text = await response.text();
+    // Đọc body với timeout riêng
+    const text = await Promise.race([
+      response.text(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("body timeout")), 5000))
+    ]);
     const noSignal = text.toLowerCase().includes("no-signal");
     return { noSignal, destination: finalUrl };
   } catch (e) {
-    return { noSignal: false, destination: "" };
+    clearTimeout(timer);
+    // Lỗi mạng / CORS → coi như KHÔNG phải no-signal (chấp nhận link)
+    return { noSignal: false, destination: "", error: true };
   }
 }
 
@@ -2110,27 +2143,50 @@ function tryVidNumber(number, token) {
     }
 
     const url = getVidUrl(number);
+    let settled = false;
+    let hardTimer = null;
+
+    const settle = (ok) => {
+      if (settled) return;
+      settled = true;
+      if (hardTimer) { clearTimeout(hardTimer); hardTimer = null; }
+      resolve(ok);
+    };
+
+    // Timeout cứng — KHÔNG BAO GIỜ treo quá 20s cho 1 số
+    hardTimer = setTimeout(() => {
+      if (token === state.vidScanToken && state.vidScanning) {
+        setVidScanStatus("⏱ Kênh #" + number + " — quá thời gian, bỏ qua", "error");
+      }
+      try { state.activePlaybackCancel?.(); } catch(e) {}
+      settle(false);
+    }, state.VID_SCAN_HARD_TIMEOUT);
+
     destroyPlayer();
 
     const cancelFn = setupHlsPlayback(url, {
       timeout: state.VID_SCAN_TIMEOUT,
       onPlaying: async () => {
-        const check = await checkNoSignal(url);
+        const check = await checkNoSignal(url).catch(() => ({ noSignal: false, destination: "", error: true }));
         if (token !== state.vidScanToken || !state.vidScanning) {
-          resolve(false);
+          settle(false);
           return;
         }
         if (check.noSignal) {
           setVidScanStatus("🔴 Kênh #" + number + " — KHÔNG TÍN HIỆU", "error");
-          resolve(false);
+          settle(false);
           return;
         }
         addVidFoundResult(number, url, check.destination);
-        resolve(true);
+        settle(true);
       },
-      onError: () => resolve(false)
+      onError: () => settle(false)
     });
-    state.activePlaybackCancel = cancelFn ? cancelFn.cancel : null;
+
+    state.activePlaybackCancel = () => {
+      try { cancelFn?.cancel?.(); } catch(e) {}
+      settle(false);
+    };
   });
 }
 
@@ -2211,6 +2267,10 @@ function resetVidScan() {
   state.freem3uPlayingNumber = null;
   state.vidScanNumber = 1;
   state.vidFoundResults = [];
+  if (state.activePlaybackCancel) {
+    try { state.activePlaybackCancel(); } catch (e) {}
+    state.activePlaybackCancel = null;
+  }
   cancelActiveProbe();
   destroyPlayer();
   setRangeScanButtons(false);
@@ -2224,19 +2284,13 @@ function resetVidScan() {
    IPTV M3U IMPORT — THAY LINK ĐÃ DÒ VÀO FILE M3U GỐC
 ========================================================= */
 
-// Chuẩn hóa tvg-id / channel code để so khớp
-// vtv1hd     -> vtv1
-// vtv5hdtnb  -> vtv5tnb
-// vtv5hdtn   -> vtv5tn
-// VTV1-HD    -> vtv1
 function normalizeTvgId(id) {
   return String(id || '').toLowerCase()
-    .replace(/[^a-z0-9]/g, '')                       // bỏ ký tự đặc biệt
-    .replace(/(fullhd|fhd|uhd|4k|sd|hd)$/g, '')      // bỏ đuôi cuối
-    .replace(/hd(?=[a-z])/g, '');                    // bỏ "hd" giữa chữ-số
+    .replace(/[^a-z0-9]/g, '')
+    .replace(/(fullhd|fhd|uhd|4k|sd|hd)$/g, '')
+    .replace(/hd(?=[a-z])/g, '');
 }
 
-// Parse file m3u — giữ NGUYÊN VĂN từng dòng để xuất lại y chang
 function parseIptvM3u(text) {
   const lines = text.split(/\r?\n/);
   const result = [];
@@ -2291,10 +2345,8 @@ function parseIptvM3u(text) {
   return result;
 }
 
-// Nạp file m3uiptv.m3u khi khởi động app
 async function loadIptvM3u() {
   try {
-    // Thay đổi: Sử dụng link từ GitHub thay vì file cục bộ
     const res = await fetch('https://raw.githubusercontent.com/thanhthovn/iOSPremium/refs/heads/main/TRUYENHINHCAPVIETNAM.m3u', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
@@ -2314,7 +2366,6 @@ async function loadIptvM3u() {
   }
 }
 
-// Bật/tắt nút XUẤT M3U tuỳ trạng thái
 function updateExportM3uButton() {
   const btn = document.getElementById('exportM3uBtn');
   if (!btn) return;
@@ -2333,8 +2384,6 @@ function updateExportM3uButton() {
   btn.title = 'Xuất file m3uiptv.m3u với link mới đã dò được';
 }
 
-// Xuất file m3u — CHỈ THAY DÒNG URL, giữ nguyên mọi thứ khác
-// Nếu 1 kênh có nhiều link → chọn link có số thứ tự (index) NHỎ NHẤT
 function exportResultsToM3u() {
   if (!state.iptvM3uLoaded) {
     setStatus('⚠️ Chưa nạp được m3uiptv.m3u — đặt file cùng thư mục index.html', 'error');
@@ -2345,8 +2394,6 @@ function exportResultsToM3u() {
     return;
   }
 
-  // Sắp xếp theo số thứ tự link TĂNG DẦN
-  // → link có index nhỏ hơn được ưu tiên (lấy link đầu tiên map được)
   const sortedResults = [...state.foundResults].sort((a, b) => {
     const ai = Number.isFinite(a.index) ? a.index : 999999;
     const bi = Number.isFinite(b.index) ? b.index : 999999;
@@ -2382,7 +2429,6 @@ function exportResultsToM3u() {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 
-  // Log chi tiết link đã chọn cho từng kênh
   const detail = [...newLinks.entries()]
     .map(([k, v]) => {
       const found = state.foundResults.find(r => r.url === v);
