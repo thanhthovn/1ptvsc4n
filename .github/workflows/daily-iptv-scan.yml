@@ -7,7 +7,7 @@ on:
     - cron: "0 20 * * *"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: daily-iptv-scan
@@ -35,6 +35,28 @@ jobs:
 
       - name: Scan channels, check links, and export M3U
         run: python main.py
+
+      - name: Publish M3U file to repository root
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(output/*.m3u output/*.M3U)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No M3U was exported; leaving the repository M3U unchanged."
+            exit 0
+          fi
+          cp "${files[0]}" TRUYENHINHCAPVIETNAM_checked.m3u
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add TRUYENHINHCAPVIETNAM_checked.m3u
+          if git diff --cached --quiet; then
+            echo "The published M3U has not changed; no commit needed."
+          else
+            git commit -m "Update checked IPTV M3U playlist"
+            git push
+          fi
 
       - name: Upload scan results and M3U
         if: always()
