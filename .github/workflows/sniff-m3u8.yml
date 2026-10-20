@@ -14,71 +14,116 @@ permissions:
 jobs:
   extract:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install yt-dlp
-        run: python -m pip install --upgrade yt-dlp
+      - name: Install Playwright
+        run: |
+          python -m pip install --upgrade playwright
+          python -m playwright install --with-deps chromium
 
-      - name: Validate and extract media URLs
+      - name: Open page and capture M3U8 network requests
         env:
           TARGET_URL: ${{ inputs.url }}
         run: |
           python - <<'PY'
+          import asyncio
+          import ipaddress
           import os
-          import re
-          import subprocess
+          import socket
           import sys
           from urllib.parse import urlparse
 
-          url = os.environ["TARGET_URL"].strip()
-          parsed = urlparse(url)
+          from playwright.async_api import async_playwright
+
+          target = os.environ["TARGET_URL"].strip()
+          parsed = urlparse(target)
           if parsed.scheme not in ("http", "https") or not parsed.hostname:
               sys.exit("URL không hợp lệ: chỉ chấp nhận HTTP/HTTPS.")
 
-          # Refuse local and private destinations to reduce SSRF risk.
-          host = parsed.hostname.lower()
-          if host in {"localhost", "127.0.0.1", "::1", "0.0.0.0"}:
-              sys.exit("Không chấp nhận địa chỉ loopback/local.")
-          if re.match(r"^(10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)", host):
-              sys.exit("Không chấp nhận địa chỉ mạng riêng/link-local.")
+          # Reject obvious local/private targets before opening the page.
+          host = parsed.hostname
+          if host.lower() == "localhost":
+              sys.exit("Không chấp nhận địa chỉ local.")
+          try:
+              addresses = {item[4][0] for item in socket.getaddrinfo(host, None)}
+              if not addresses or any(not ipaddress.ip_address(addr).is_global for addr in addresses):
+                  sys.exit("Từ chối hostname trỏ tới IP không công khai.")
+          except socket.gaierror:
+              sys.exit("Không phân giải được hostname.")
 
-          result = subprocess.run(
-              [sys.executable, "-m", "yt_dlp", "--no-warnings",
-               "--no-playlist", "--get-url", url],
-              capture_output=True, text=True, timeout=180,
-          )
-          all_urls = [
-              line.strip() for line in result.stdout.splitlines()
-              if line.strip().startswith(("http://", "https://"))
-          ]
-          m3u8_urls = [
-              item for item in all_urls
-              if ".m3u8" in urlparse(item).path.lower()
-          ]
+          found = set()
+          tasks = set()
+
+          def consider(url, content_type=""):
+              if not url.startswith(("http://", "https://")):
+                  return
+              path = urlparse(url).path.lower()
+              ctype = content_type.lower()
+              if ".m3u8" in path or "mpegurl" in ctype or "vnd.apple.mpegurl" in ctype:
+                  found.add(url)
+
+          async def main():
+              async with async_playwright() as p:
+                  browser = await p.chromium.launch(headless=True)
+                  context = await browser.new_context(
+                      viewport={"width": 1365, "height": 900},
+                      ignore_https_errors=True,
+                  )
+                  page = await context.new_page()
+
+                  page.on("request", lambda req: consider(req.url))
+
+                  def on_response(response):
+                      async def inspect():
+                          try:
+                              headers = await response.all_headers()
+                              consider(response.url, headers.get("content-type", ""))
+                          except Exception:
+                              pass
+                      task = asyncio.create_task(inspect())
+                      tasks.add(task)
+                      task.add_done_callback(tasks.discard)
+
+                  page.on("response", on_response)
+
+                  try:
+                      await page.goto(target, wait_until="domcontentloaded", timeout=45000)
+                  except Exception as exc:
+                      print(f"Trang không tải hoàn chỉnh: {type(exc).__name__}")
+
+                  # Give JavaScript players time to initialize and request manifests.
+                  await page.wait_for_timeout(25000)
+                  try:
+                      await page.evaluate("""() => {
+                        document.querySelectorAll('video').forEach(v => {
+                          v.muted = true;
+                          const p = v.play();
+                          if (p && p.catch) p.catch(() => {});
+                        });
+                      }""")
+                  except Exception:
+                      pass
+                  await page.wait_for_timeout(10000)
+                  if tasks:
+                      await asyncio.gather(*list(tasks), return_exceptions=True)
+                  await browser.close()
+
+          asyncio.run(main())
 
           with open("m3u8-links.txt", "w", encoding="utf-8") as f:
-              if m3u8_urls:
-                  f.write("\n".join(dict.fromkeys(m3u8_urls)) + "\n")
+              if found:
+                  f.write("\\n".join(sorted(found)) + "\\n")
               else:
-                  f.write("Không tìm thấy URL M3U8.\n")
-                  if all_urls:
-                      f.write("\nCác URL media khác được phát hiện:\n")
-                      f.write("\n".join(dict.fromkeys(all_urls)) + "\n")
-                  if result.stderr:
-                      f.write("\nThông báo yt-dlp:\n")
-                      f.write(result.stderr[-5000:])
+                  f.write("Không bắt được URL M3U8 từ request/response của trang.\\n")
+                  f.write("Thử URL trang phát video trực tiếp; một số trang cần đăng nhập hoặc thao tác phát thủ công.\\n")
 
-          print(f"Đã tìm thấy {len(m3u8_urls)} URL M3U8.")
-          for item in dict.fromkeys(m3u8_urls):
-              print(item)
-          if result.returncode != 0:
-              print("yt-dlp không trích xuất được hoàn toàn; xem file artifact để biết chi tiết.")
-          PY
+          # Do not print full URLs because signed links may contain private tokens.
+          print(f"Đã bắt được {len(found)} URL M3U8. Tải artifact m3u8-links để xem kết quả.")
 
       - name: Upload results
         uses: actions/upload-artifact@v4
