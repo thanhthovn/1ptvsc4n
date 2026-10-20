@@ -9,13 +9,20 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: m3u8-link-finder
+  cancel-in-progress: false
 
 jobs:
   extract:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -45,7 +52,6 @@ jobs:
           if parsed.scheme not in ("http", "https") or not parsed.hostname:
               sys.exit("URL không hợp lệ: chỉ chấp nhận HTTP/HTTPS.")
 
-          # Reject obvious local/private targets before opening the page.
           host = parsed.hostname
           if host.lower() == "localhost":
               sys.exit("Không chấp nhận địa chỉ local.")
@@ -64,7 +70,7 @@ jobs:
                   return
               path = urlparse(url).path.lower()
               ctype = content_type.lower()
-              if ".m3u8" in path or "mpegurl" in ctype or "vnd.apple.mpegurl" in ctype:
+              if ".m3u8" in path or "mpegurl" in ctype:
                   found.add(url)
 
           async def main():
@@ -75,7 +81,6 @@ jobs:
                       ignore_https_errors=True,
                   )
                   page = await context.new_page()
-
                   page.on("request", lambda req: consider(req.url))
 
                   def on_response(response):
@@ -90,14 +95,13 @@ jobs:
                       task.add_done_callback(tasks.discard)
 
                   page.on("response", on_response)
-
                   try:
                       await page.goto(target, wait_until="domcontentloaded", timeout=45000)
                   except Exception as exc:
                       print(f"Trang không tải hoàn chỉnh: {type(exc).__name__}")
 
-                  # Give JavaScript players time to initialize and request manifests.
-                  await page.wait_for_timeout(25000)
+                  # Wait for JavaScript players to initialize and request manifests.
+                  await page.wait_for_timeout(20000)
                   try:
                       await page.evaluate("""() => {
                         document.querySelectorAll('video').forEach(v => {
@@ -108,27 +112,34 @@ jobs:
                       }""")
                   except Exception:
                       pass
-                  await page.wait_for_timeout(10000)
+                  await page.wait_for_timeout(15000)
                   if tasks:
                       await asyncio.gather(*list(tasks), return_exceptions=True)
                   await browser.close()
 
           asyncio.run(main())
 
-          with open("m3u8-links.txt", "w", encoding="utf-8") as f:
+          output = "m3u8.txt"
+          with open(output, "w", encoding="utf-8") as f:
               if found:
-                  f.write("\\n".join(sorted(found)) + "\\n")
+                  f.write("\n".join(sorted(found)) + "\n")
               else:
-                  f.write("Không bắt được URL M3U8 từ request/response của trang.\\n")
-                  f.write("Thử URL trang phát video trực tiếp; một số trang cần đăng nhập hoặc thao tác phát thủ công.\\n")
+                  f.write("# Không bắt được URL M3U8 từ request/response của trang.\n")
+                  f.write("# Thử URL trang phát video trực tiếp hoặc trang cần thao tác phát.\n")
 
-          # Do not print full URLs because signed links may contain private tokens.
-          print(f"Đã bắt được {len(found)} URL M3U8. Tải artifact m3u8-links để xem kết quả.")
+          # Avoid printing signed URLs that may contain temporary access tokens.
+          print(f"Đã bắt được {len(found)} URL M3U8; sẽ lưu kết quả vào m3u8.txt trong repo.")
 
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: m3u8-links
-          path: m3u8-links.txt
-          if-no-files-found: error
-          retention-days: 1
+      - name: Commit m3u8.txt to repository
+        env:
+          TARGET_URL: ${{ inputs.url }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add m3u8.txt
+          if git diff --cached --quiet; then
+            echo "m3u8.txt không thay đổi, không cần commit."
+          else
+            git commit -m "Update detected M3U8 links"
+            git push
+          fi
